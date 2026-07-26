@@ -633,17 +633,28 @@ export function CheckInApp() {
                 </div>
               </section>
 
-              <section className="settings-block philosophy">
-                <span className="overline">关于产品</span>
-                <blockquote>
-                  “成长不是由几个重大事件组成，而是由无数微小行动累积而成。”
-                </blockquote>
-                <ul>
-                  <li>记录成长，而不是记录失败</li>
-                  <li>默认展示已经做到的事情</li>
-                  <li>数据服务于回顾，而不是竞争</li>
-                </ul>
-              </section>
+              <details className="settings-block philosophy">
+                <summary>
+                  <span className="philosophy-title">
+                    <i aria-hidden="true">○</i>
+                    <span>
+                      <strong>关于栗子打卡</strong>
+                      <small>产品理念与记录原则</small>
+                    </span>
+                  </span>
+                  <span className="summary-chevron" aria-hidden="true">⌄</span>
+                </summary>
+                <div className="philosophy-content">
+                  <blockquote>
+                    “成长不是由几个重大事件组成，而是由无数微小行动累积而成。”
+                  </blockquote>
+                  <ul>
+                    <li>记录成长，而不是记录失败</li>
+                    <li>默认展示已经做到的事情</li>
+                    <li>数据服务于回顾，而不是竞争</li>
+                  </ul>
+                </div>
+              </details>
 
               <section className="settings-block data-settings">
                 <div>

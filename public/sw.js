@@ -1,4 +1,4 @@
-const CACHE_NAME = "lizi-growth-v9";
+const CACHE_NAME = "lizi-growth-v10";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/og.png"];
 
 self.addEventListener("install", (event) => {

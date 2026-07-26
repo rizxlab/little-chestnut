@@ -553,6 +553,49 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fffdf9;
   font-size: 10px;
 }
+.philosophy {
+  overflow: hidden;
+  padding: 0;
+  border-color: rgba(221, 208, 193, .62);
+  background: rgba(255, 253, 249, .5);
+}
+.philosophy summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 17px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.philosophy summary::-webkit-details-marker { display: none; }
+.philosophy-title { display: flex; align-items: center; gap: 10px; }
+.philosophy-title > i {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 10px;
+  color: #9d9185;
+  background: #f3ede4;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-style: normal;
+}
+.philosophy-title > span { display: grid; gap: 2px; }
+.philosophy-title strong { color: #786f67; font-size: 10px; font-weight: 600; }
+.philosophy-title small { color: #aaa097; font-size: 8px; }
+.summary-chevron {
+  color: #aaa097;
+  font-size: 15px;
+  transition: transform 180ms ease;
+}
+.philosophy[open] .summary-chevron { transform: rotate(180deg); }
+.philosophy-content {
+  border-top: 1px solid rgba(221, 208, 193, .55);
+  padding: 2px 17px 17px;
+  animation: fade-in 180ms ease;
+}
 .philosophy blockquote {
   margin: 13px 0 17px;
   color: var(--chestnut);
