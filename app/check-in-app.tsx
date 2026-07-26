@@ -291,6 +291,7 @@ export function CheckInApp() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [shellBalance, setShellBalance] = useState(0);
   const [shellsEarned, setShellsEarned] = useState(0);
+  const [bankDropKey, setBankDropKey] = useState(0);
   const [rewardClaims, setRewardClaims] = useState<RewardClaim[]>([]);
   const [pendingReward, setPendingReward] = useState<Reward | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(
@@ -386,6 +387,14 @@ export function CheckInApp() {
       }),
     );
   }, [areas, actions, records, rewardClaims, shellBalance, shellsEarned, ready]);
+
+  useEffect(() => {
+    if (tab !== "profile") return;
+    const frame = window.requestAnimationFrame(() => {
+      setBankDropKey((current) => current + 1);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [tab]);
 
   const todayRecords = useMemo(
     () => records.filter((record) => isToday(new Date(record.createdAt))),
@@ -854,6 +863,7 @@ export function CheckInApp() {
   const actionMenuTodayCount = recordActionMenu
     ? todayRecords.filter((record) => record.actionId === recordActionMenu.id).length
     : 0;
+  const visibleShellCount = Math.min(12, shellBalance);
   const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
 
   return (
@@ -1282,9 +1292,22 @@ export function CheckInApp() {
                   <div className="shell-jar" aria-hidden="true">
                     <span className="jar-lid" />
                     <span className="jar-glass">
-                      <i>栗</i>
-                      <i>栗</i>
-                      <i>栗</i>
+                      {visibleShellCount === 0 && <small>等待第一枚</small>}
+                      {Array.from({ length: visibleShellCount }, (_, index) => {
+                        const isNewest = index === visibleShellCount - 1;
+                        return (
+                          <i
+                            className={isNewest ? "falling-shell" : ""}
+                            key={
+                              isNewest
+                                ? `newest-shell-${bankDropKey}`
+                                : `settled-shell-${index}`
+                            }
+                          >
+                            栗
+                          </i>
+                        );
+                      })}
                     </span>
                   </div>
                   <div className="shell-balance">
