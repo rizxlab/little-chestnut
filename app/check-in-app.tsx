@@ -2322,6 +2322,18 @@ export function CheckInApp() {
                 <div className="profile-heading-row">
                   <h1>{tr("我的栗子", "My Chestnuts")}</h1>
                   <button
+                    className={`profile-account-button ${account ? "" : "guest"}`}
+                    type="button"
+                    aria-label={
+                      account
+                        ? tr("编辑个人信息", "Edit profile")
+                        : tr("登录账号", "Sign in")
+                    }
+                    onClick={openProfileEditor}
+                  >
+                    <span aria-hidden="true">栗</span>
+                  </button>
+                  <button
                     className="settings-entry-button"
                     type="button"
                     aria-label={tr("打开设置", "Open settings")}
@@ -2334,40 +2346,6 @@ export function CheckInApp() {
                     </span>
                   </button>
                 </div>
-              </section>
-
-              <section className="account-strip" aria-label={tr("账号状态", "Account status")}>
-                <button
-                  className="account-avatar-button"
-                  type="button"
-                  aria-label={
-                    account
-                      ? tr("编辑个人信息", "Edit profile")
-                      : tr("登录账号", "Sign in")
-                  }
-                  onClick={openProfileEditor}
-                >
-                  <span aria-hidden="true">栗</span>
-                </button>
-                <div>
-                  <small>{tr("账号状态", "Account status")}</small>
-                  <strong>
-                    {account?.username || tr("未登录", "Not signed in")}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (account) {
-                      void logout();
-                    } else {
-                      setLoginError("");
-                      setShowLogin(true);
-                    }
-                  }}
-                >
-                  {account ? tr("退出登录", "Sign out") : tr("登录", "Sign in")}
-                </button>
               </section>
 
               <section className="shell-bank" aria-labelledby="shell-bank-title">
@@ -2692,6 +2670,16 @@ export function CheckInApp() {
             </label>
             <button className="save-button" type="submit">
               {tr("保存", "Save")}
+            </button>
+            <button
+              className="profile-editor-logout"
+              type="button"
+              onClick={() => {
+                setShowProfileEditor(false);
+                void logout();
+              }}
+            >
+              {tr("退出登录", "Sign out")}
             </button>
           </form>
         </div>
