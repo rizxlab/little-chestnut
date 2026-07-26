@@ -279,7 +279,8 @@ export function CheckInApp() {
   const [draftValue, setDraftValue] = useState(1);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
-  const [tabMotion, setTabMotion] = useState<"from-left" | "from-right">("from-right");
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [shellBalance, setShellBalance] = useState(0);
   const [shellsEarned, setShellsEarned] = useState(0);
@@ -290,7 +291,8 @@ export function CheckInApp() {
   );
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => localDay(new Date()));
   const appScrollRef = useRef<HTMLDivElement | null>(null);
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
 
   useEffect(() => {
     try {
@@ -599,15 +601,19 @@ export function CheckInApp() {
     showToast("成长标签已创建");
   }
 
-  function changeTab(nextTab: Tab) {
-    if (nextTab === tab) return;
-    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
-    const nextIndex = NAV_ITEMS.findIndex((item) => item.id === nextTab);
-    setTabMotion(nextIndex > currentIndex ? "from-right" : "from-left");
-    setTab(nextTab);
+  function scrollScreenToTop(selector: string) {
     window.requestAnimationFrame(() => {
-      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
+      const screen = appScrollRef.current?.querySelector<HTMLElement>(selector);
+      if (screen) screen.scrollTop = 0;
     });
+  }
+
+  function changeTab(nextTab: Tab) {
+    setDragOffset(0);
+    setIsDraggingTabs(false);
+    if (nextTab === tab) return;
+    setTab(nextTab);
+    scrollScreenToTop(`[data-tab="${nextTab}"]`);
   }
 
   function openCalendar() {
@@ -615,16 +621,12 @@ export function CheckInApp() {
     setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
     setSelectedCalendarDay(localDay(now));
     setShowCalendar(true);
-    window.requestAnimationFrame(() => {
-      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
-    });
+    scrollScreenToTop(".calendar-screen");
   }
 
   function closeCalendar() {
     setShowCalendar(false);
-    window.requestAnimationFrame(() => {
-      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
-    });
+    scrollScreenToTop(`[data-tab="${tab}"]`);
   }
 
   function returnToToday() {
@@ -634,9 +636,7 @@ export function CheckInApp() {
     setConfirmDialog(null);
     setPendingReward(null);
     changeTab("today");
-    window.requestAnimationFrame(() => {
-      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
-    });
+    scrollScreenToTop('[data-tab="today"]');
   }
 
   function shiftCalendarMonth(offset: number) {
@@ -658,22 +658,62 @@ export function CheckInApp() {
     touchStartRef.current = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
+      time: Date.now(),
     };
+    gestureAxisRef.current = null;
+  }
+
+  function handleTouchMove(event: ReactTouchEvent<HTMLDivElement>) {
+    const start = touchStartRef.current;
+    if (!start || event.touches.length !== 1) return;
+
+    const deltaX = event.touches[0].clientX - start.x;
+    const deltaY = event.touches[0].clientY - start.y;
+    if (!gestureAxisRef.current) {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 7) return;
+      gestureAxisRef.current =
+        Math.abs(deltaX) > Math.abs(deltaY) * 1.08 ? "horizontal" : "vertical";
+    }
+    if (gestureAxisRef.current !== "horizontal") return;
+
+    event.preventDefault();
+    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
+    const atFirstEdge = currentIndex === 0 && deltaX > 0;
+    const atLastEdge = currentIndex === NAV_ITEMS.length - 1 && deltaX < 0;
+    setIsDraggingTabs(true);
+    setDragOffset(atFirstEdge || atLastEdge ? deltaX * 0.24 : deltaX);
   }
 
   function handleTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
     const start = touchStartRef.current;
     touchStartRef.current = null;
-    if (!start || event.changedTouches.length !== 1) return;
+    const gestureAxis = gestureAxisRef.current;
+    gestureAxisRef.current = null;
+    if (!start || event.changedTouches.length !== 1 || gestureAxis !== "horizontal") {
+      setIsDraggingTabs(false);
+      setDragOffset(0);
+      return;
+    }
 
     const deltaX = event.changedTouches[0].clientX - start.x;
-    const deltaY = event.changedTouches[0].clientY - start.y;
-    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.25) return;
-
     const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
     const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
-    if (nextIndex < 0 || nextIndex >= NAV_ITEMS.length) return;
-    changeTab(NAV_ITEMS[nextIndex].id);
+    const velocity = Math.abs(deltaX) / Math.max(1, Date.now() - start.time);
+    const shouldSwitch = Math.abs(deltaX) >= 68 || velocity >= 0.42;
+
+    if (shouldSwitch && nextIndex >= 0 && nextIndex < NAV_ITEMS.length) {
+      changeTab(NAV_ITEMS[nextIndex].id);
+    } else {
+      setIsDraggingTabs(false);
+      setDragOffset(0);
+    }
+  }
+
+  function cancelTouchGesture() {
+    touchStartRef.current = null;
+    gestureAxisRef.current = null;
+    setIsDraggingTabs(false);
+    setDragOffset(0);
   }
 
   function resetData() {
@@ -709,6 +749,7 @@ export function CheckInApp() {
   const shellProgress = nextReward
     ? Math.min(100, (shellBalance / nextReward.cost) * 100)
     : 100;
+  const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
 
   return (
     <main className="shell">
@@ -741,10 +782,9 @@ export function CheckInApp() {
           className="app-scroll"
           ref={appScrollRef}
           onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onTouchCancel={() => {
-            touchStartRef.current = null;
-          }}
+          onTouchCancel={cancelTouchGesture}
         >
           {showCalendar && (
             <div className="screen calendar-screen">
@@ -863,8 +903,15 @@ export function CheckInApp() {
             </div>
           )}
 
-          {!showCalendar && tab === "today" && (
-            <div className={`screen ${tabMotion}`}>
+          {!showCalendar && (
+            <div className="tab-viewport">
+              <div
+                className={`tab-track ${isDraggingTabs ? "dragging" : ""}`}
+                style={{
+                  transform: `translate3d(calc(${-activeTabIndex * 100}% + ${dragOffset}px), 0, 0)`,
+                }}
+              >
+            <div className="screen tab-screen" data-tab="today" aria-hidden={tab !== "today"}>
               <section className="welcome">
                 <button
                   className="date-display"
@@ -999,10 +1046,8 @@ export function CheckInApp() {
                 )}
               </section>
             </div>
-          )}
 
-          {!showCalendar && tab === "growth" && (
-            <div className={`screen ${tabMotion}`}>
+            <div className="screen tab-screen" data-tab="growth" aria-hidden={tab !== "growth"}>
               <section className="page-heading">
                 <span className="overline">GROWTH OVERVIEW</span>
                 <h1>成长正在发生</h1>
@@ -1093,10 +1138,8 @@ export function CheckInApp() {
                 )}
               </section>
             </div>
-          )}
 
-          {!showCalendar && tab === "profile" && (
-            <div className={`screen ${tabMotion}`}>
+            <div className="screen tab-screen" data-tab="profile" aria-hidden={tab !== "profile"}>
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
@@ -1278,6 +1321,8 @@ export function CheckInApp() {
                 </div>
                 <button type="button" onClick={resetData}>清空并重置</button>
               </section>
+            </div>
+              </div>
             </div>
           )}
         </div>
