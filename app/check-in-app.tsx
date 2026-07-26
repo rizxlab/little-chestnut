@@ -379,6 +379,7 @@ export function CheckInApp() {
   const [modalDrag, setModalDrag] = useState<{ id: string; offset: number } | null>(null);
   const [tab, setTab] = useState<Tab>("today");
   const [growthPeriod, setGrowthPeriod] = useState<GrowthPeriod>("today");
+  const [actionAreaFilter, setActionAreaFilter] = useState("all");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
@@ -1739,6 +1740,16 @@ export function CheckInApp() {
       : todayRecords.length >= 10
         ? "milestone-10"
         : "";
+  const activeActionAreaFilter =
+    actionAreaFilter === "all" || areas.some((area) => area.id === actionAreaFilter)
+      ? actionAreaFilter
+      : "all";
+  const visibleTodayActions =
+    activeActionAreaFilter === "all"
+      ? actions
+      : actions.filter((action) =>
+          normalizedTagIds(action).includes(activeActionAreaFilter),
+        );
 
   return (
     <main className="shell">
@@ -2084,8 +2095,34 @@ export function CheckInApp() {
               </section>
 
               <section className="content-section today-actions-section">
+                <div
+                  className="action-filter-list"
+                  role="group"
+                  aria-label={tr("按成长领域筛选小事", "Filter actions by growth area")}
+                >
+                  <button
+                    className={activeActionAreaFilter === "all" ? "active" : ""}
+                    type="button"
+                    aria-pressed={activeActionAreaFilter === "all"}
+                    onClick={() => setActionAreaFilter("all")}
+                  >
+                    {tr("全部", "All")}
+                  </button>
+                  {areas.map((area) => (
+                    <button
+                      className={activeActionAreaFilter === area.id ? "active" : ""}
+                      type="button"
+                      key={area.id}
+                      aria-pressed={activeActionAreaFilter === area.id}
+                      onClick={() => setActionAreaFilter(area.id)}
+                    >
+                      <span aria-hidden="true">{area.icon}</span>
+                      {area.name}
+                    </button>
+                  ))}
+                </div>
                 <div className="quick-grid">
-                  {actions.slice(0, 6).map((action) => {
+                  {visibleTodayActions.map((action) => {
                     const actionTags = tagsFor(action);
                     const primaryTag = actionTags[0] || areas[0];
                     const todayCount = todayRecords.filter(
@@ -2139,6 +2176,11 @@ export function CheckInApp() {
                     );
                   })}
                 </div>
+                {!visibleTodayActions.length && (
+                  <div className="action-filter-empty">
+                    {tr("这个成长领域还没有关联的小事", "No actions in this growth area yet")}
+                  </div>
+                )}
               </section>
             </div>
 
