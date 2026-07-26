@@ -696,14 +696,6 @@ export function CheckInApp() {
       credentials: "same-origin",
     }).catch(() => null);
     setServerHydrated(false);
-    setReady(false);
-    setAccount(null);
-    setTab("today");
-    setShowCalendar(false);
-    setShowSettings(false);
-    setShowRewardManager(false);
-    setShowRewardEditor(false);
-    setToasts([]);
     setLoginPassword("");
   }
 
