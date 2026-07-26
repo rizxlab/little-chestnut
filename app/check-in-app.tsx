@@ -304,6 +304,7 @@ export function CheckInApp() {
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const toastTimers = useRef<number[]>([]);
   const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
+  const [showActionManager, setShowActionManager] = useState(false);
   const [showActionEditor, setShowActionEditor] = useState(false);
   const [showAreaEditor, setShowAreaEditor] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
@@ -959,6 +960,7 @@ export function CheckInApp() {
   }
 
   function openActionEditor(action?: MicroAction) {
+    setShowActionManager(false);
     setEditingAction(action || null);
     setDraftName(action?.name || "");
     setDraftIcon(action?.icon || "🌱");
@@ -967,6 +969,11 @@ export function CheckInApp() {
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
+  }
+
+  function closeActionEditor() {
+    setShowActionEditor(false);
+    setShowActionManager(true);
   }
 
   function toggleDraftTag(tagId: string) {
@@ -1017,6 +1024,7 @@ export function CheckInApp() {
       showToast("新的微行动已加入");
     }
     setShowActionEditor(false);
+    setShowActionManager(true);
   }
 
   function deleteAction(action: MicroAction) {
@@ -1085,6 +1093,7 @@ export function CheckInApp() {
   function returnToToday() {
     setShowCalendar(false);
     setShowSettings(false);
+    setShowActionManager(false);
     setShowActionEditor(false);
     setShowAreaEditor(false);
     setShowRewardManager(false);
@@ -1925,7 +1934,7 @@ export function CheckInApp() {
                     <span className="overline">行动管理</span>
                     <h2>我的微行动</h2>
                   </div>
-                  <button type="button" onClick={() => openActionEditor()}>＋ 新建</button>
+                  <button type="button" onClick={() => setShowActionManager(true)}>＋ 新建</button>
                 </div>
 
                 <div className="tag-action-grid">
@@ -1947,8 +1956,7 @@ export function CheckInApp() {
                             ))}
                           </span>
                         </div>
-                        <div className="row-actions">
-                          <button type="button" onClick={() => openActionEditor(action)}>编辑项目</button>
+                        <div className="row-actions single-action">
                           <button type="button" onClick={() => deleteAction(action)}>删除</button>
                         </div>
                       </article>
@@ -2062,8 +2070,65 @@ export function CheckInApp() {
         </div>
       )}
 
+      {showActionManager && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowActionManager(false)}>
+          <section
+            className="bottom-sheet action-manager"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="action-manager-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowActionManager(false)}
+            >
+              ×
+            </button>
+            <span className="overline">行动管理</span>
+            <h2 id="action-manager-title">微行动管理</h2>
+            <button
+              className="action-manager-create"
+              type="button"
+              onClick={() => openActionEditor()}
+            >
+              <span aria-hidden="true">＋</span>
+              <div>
+                <strong>新建微行动</strong>
+                <small>添加一件想记录的小事</small>
+              </div>
+            </button>
+            <div className="action-manager-list">
+              {actions.map((action) => {
+                const actionTags = tagsFor(action);
+                return (
+                  <button
+                    type="button"
+                    key={action.id}
+                    aria-label={`修改${action.name}`}
+                    onClick={() => openActionEditor(action)}
+                  >
+                    <span aria-hidden="true">{action.icon}</span>
+                    <div>
+                      <strong>{action.name}</strong>
+                      <small>
+                        {actionTags.map((tag) => tag.name).join(" · ")}
+                        {action.timerSeconds ? ` · 计时 ${action.timerSeconds} 秒` : ""}
+                      </small>
+                    </div>
+                    <i aria-hidden="true">›</i>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      )}
+
       {showActionEditor && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowActionEditor(false)}>
+        <div className="modal-backdrop" role="presentation" onClick={closeActionEditor}>
           <form
             className="bottom-sheet action-editor"
             onSubmit={saveAction}
@@ -2073,7 +2138,7 @@ export function CheckInApp() {
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowActionEditor(false)}
+              onClick={closeActionEditor}
             >
               ×
             </button>

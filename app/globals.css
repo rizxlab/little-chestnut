@@ -1178,6 +1178,10 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--chestnut);
   font-weight: 700;
 }
+.tag-action-card .row-actions.single-action button {
+  color: #985a50;
+  font-weight: 400;
+}
 
 .stat-grid {
   display: grid;
@@ -1814,7 +1818,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 25px;
   cursor: pointer;
 }
-.action-editor h2, .area-editor h2, .reward-editor h2, .reward-manager h2, .confirm-sheet h2, .reward-sheet h2 {
+.action-editor h2, .action-manager h2, .area-editor h2, .reward-editor h2, .reward-manager h2, .confirm-sheet h2, .reward-sheet h2 {
   margin: 6px 28px 20px 0;
   font-family: STKaiti, KaiTi, serif;
   font-size: 23px;
@@ -1911,14 +1915,18 @@ button { -webkit-tap-highlight-color: transparent; }
   scroll-padding-bottom: 180px;
   overscroll-behavior: contain;
 }
-.reward-manager {
+.reward-manager,
+.action-manager {
   max-height: calc(100dvh - 28px);
   overflow-y: auto;
   padding-bottom: max(26px, env(safe-area-inset-bottom));
 }
-.reward-manager h2 { margin-bottom: 14px; }
+.reward-manager h2,
+.action-manager h2 { margin-bottom: 14px; }
 .reward-manager-create,
-.reward-manager-list > button {
+.reward-manager-list > button,
+.action-manager-create,
+.action-manager-list > button {
   display: grid;
   width: 100%;
   grid-template-columns: 40px 1fr auto;
@@ -1932,13 +1940,16 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fffdf9;
   cursor: pointer;
 }
-.reward-manager-create {
+.reward-manager-create,
+.action-manager-create {
   border-color: rgba(111, 59, 39, .18);
   color: var(--chestnut);
   background: #fff8ed;
 }
 .reward-manager-create > span,
-.reward-manager-list > button > span {
+.reward-manager-list > button > span,
+.action-manager-create > span,
+.action-manager-list > button > span {
   display: grid;
   width: 40px;
   height: 40px;
@@ -1947,40 +1958,51 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #f3e8da;
   font-size: 19px;
 }
-.reward-manager-create > span {
+.reward-manager-create > span,
+.action-manager-create > span {
   color: #fffaf0;
   background: var(--chestnut);
   font-family: Georgia, serif;
 }
 .reward-manager-create > div,
-.reward-manager-list > button > div {
+.reward-manager-list > button > div,
+.action-manager-create > div,
+.action-manager-list > button > div {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
 .reward-manager-create strong,
-.reward-manager-list strong { font-size: 11px; }
+.reward-manager-list strong,
+.action-manager-create strong,
+.action-manager-list strong { font-size: 11px; }
 .reward-manager-create small,
-.reward-manager-list small {
+.reward-manager-list small,
+.action-manager-create small,
+.action-manager-list small {
   overflow: hidden;
   color: var(--muted);
   font-size: 8px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.reward-manager-list {
+.reward-manager-list,
+.action-manager-list {
   display: grid;
   gap: 8px;
   margin-top: 9px;
 }
-.reward-manager-list > button > i {
+.reward-manager-list > button > i,
+.action-manager-list > button > i {
   color: #a7988a;
   font-family: Georgia, serif;
   font-size: 20px;
   font-style: normal;
 }
 .reward-manager-create:active,
-.reward-manager-list > button:active { transform: scale(.98); }
+.reward-manager-list > button:active,
+.action-manager-create:active,
+.action-manager-list > button:active { transform: scale(.98); }
 .delete-reward-button {
   width: 100%;
   border: 0;
@@ -2339,6 +2361,16 @@ html[data-theme="dark"] .timer-editor-setting > button {
 }
 html[data-theme="dark"] .timer-editor-setting > button.enabled {
   border-color: rgba(225, 173, 140, .36);
+  background: #382a23;
+}
+html[data-theme="dark"] .action-manager-list > button {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #1e1916;
+}
+html[data-theme="dark"] .action-manager-create {
+  border-color: rgba(225, 173, 140, .36);
+  color: #f2c1a2;
   background: #382a23;
 }
 html[data-theme="dark"] .timer-clock > div {
