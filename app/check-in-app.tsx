@@ -292,6 +292,10 @@ export function CheckInApp() {
   const [ready, setReady] = useState(false);
   const [orbitRippleKey, setOrbitRippleKey] = useState(0);
   const [recordActionMenu, setRecordActionMenu] = useState<MicroAction | null>(null);
+  const [recordActionMenuPosition, setRecordActionMenuPosition] = useState({
+    left: 12,
+    top: 12,
+  });
   const [lastCheckedAction, setLastCheckedAction] = useState<{
     id: string;
     token: number;
@@ -752,6 +756,24 @@ export function CheckInApp() {
     }
   }
 
+  function openRecordActionMenu(action: MicroAction, rect: DOMRect) {
+    const menuWidth = 132;
+    const menuHeight = 52;
+    const viewportPadding = 12;
+    const left = Math.min(
+      window.innerWidth - menuWidth - viewportPadding,
+      Math.max(viewportPadding, rect.left + rect.width - menuWidth),
+    );
+    const preferredTop = rect.bottom + 7;
+    const top =
+      preferredTop + menuHeight > window.innerHeight - viewportPadding
+        ? Math.max(viewportPadding, rect.top - menuHeight - 7)
+        : preferredTop;
+
+    setRecordActionMenuPosition({ left, top });
+    setRecordActionMenu(action);
+  }
+
   function startActionLongPress(
     action: MicroAction,
     event: ReactPointerEvent<HTMLButtonElement>,
@@ -759,9 +781,10 @@ export function CheckInApp() {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     clearLongPressTimer();
     longPressStartRef.current = { x: event.clientX, y: event.clientY };
+    const actionRect = event.currentTarget.getBoundingClientRect();
     longPressTimerRef.current = window.setTimeout(() => {
       suppressQuickClickRef.current = action.id;
-      setRecordActionMenu(action);
+      openRecordActionMenu(action, actionRect);
       if ("vibrate" in navigator) navigator.vibrate(12);
       window.setTimeout(() => {
         if (suppressQuickClickRef.current === action.id) {
@@ -807,30 +830,6 @@ export function CheckInApp() {
       return;
     }
     undoRecord(latestRecord.id);
-    setRecordActionMenu(null);
-  }
-
-  function clearTodayActionRecords() {
-    if (!recordActionMenu) return;
-    const matchingIds = new Set(
-      records
-        .filter(
-          (record) =>
-            record.actionId === recordActionMenu.id
-            && isToday(new Date(record.createdAt)),
-        )
-        .map((record) => record.id),
-    );
-    if (!matchingIds.size) {
-      showToast("今天还没有这项记录", "没有可清除内容");
-      setRecordActionMenu(null);
-      return;
-    }
-    setRecords((current) => current.filter((record) => !matchingIds.has(record.id)));
-    setShellBalance((current) => Math.max(0, current - matchingIds.size));
-    setShellsEarned((current) => Math.max(0, current - matchingIds.size));
-    setLastCheckedAction(null);
-    showToast(`已清除今天的 ${matchingIds.size} 次“${recordActionMenu.name}”`, "记录已整理");
     setRecordActionMenu(null);
   }
 
@@ -1563,7 +1562,10 @@ export function CheckInApp() {
                         onClick={() => handleQuickActionClick(action)}
                         onContextMenu={(event) => {
                           event.preventDefault();
-                          setRecordActionMenu(action);
+                          openRecordActionMenu(
+                            action,
+                            event.currentTarget.getBoundingClientRect(),
+                          );
                         }}
                         onPointerDown={(event) => startActionLongPress(action, event)}
                         onPointerMove={moveActionLongPress}
@@ -2221,56 +2223,30 @@ export function CheckInApp() {
       )}
 
       {recordActionMenu && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setRecordActionMenu(null)}>
+        <div
+          className="record-action-layer"
+          role="presentation"
+          onClick={() => setRecordActionMenu(null)}
+        >
           <section
-            className="bottom-sheet record-action-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="record-action-title"
+            className="record-action-popover"
+            role="menu"
+            aria-label={tr("调整打卡记录", "Adjust check-in")}
+            style={{
+              left: recordActionMenuPosition.left,
+              top: recordActionMenuPosition.top,
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             <button
-              className="close-button"
               type="button"
-              aria-label="关闭"
-              onClick={() => setRecordActionMenu(null)}
+              role="menuitem"
+              disabled={actionMenuTodayCount === 0}
+              onClick={undoLatestActionRecord}
             >
-              ×
+              <span aria-hidden="true">↶</span>
+              <strong>{tr("撤销一次", "Undo once")}</strong>
             </button>
-            <div className="record-action-heading">
-              <span aria-hidden="true">{recordActionMenu.icon}</span>
-              <div>
-                <small>整理今天的打卡</small>
-                <h2 id="record-action-title">{recordActionMenu.name}</h2>
-              </div>
-              <strong>{actionMenuTodayCount} 次</strong>
-            </div>
-            <p>长按不会新增记录。你可以修正刚才手快多按的次数。</p>
-            <div className="record-action-options">
-              <button
-                type="button"
-                disabled={actionMenuTodayCount === 0}
-                onClick={undoLatestActionRecord}
-              >
-                <span aria-hidden="true">↶</span>
-                <div>
-                  <strong>撤销最近一次</strong>
-                  <small>只移除今天最后一次打卡</small>
-                </div>
-              </button>
-              <button
-                className="clear-records"
-                type="button"
-                disabled={actionMenuTodayCount === 0}
-                onClick={clearTodayActionRecords}
-              >
-                <span aria-hidden="true">−</span>
-                <div>
-                  <strong>清除今日记录</strong>
-                  <small>移除今天这个项目的全部打卡</small>
-                </div>
-              </button>
-            </div>
           </section>
         </div>
       )}
