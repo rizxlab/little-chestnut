@@ -3165,24 +3165,35 @@ export function CheckInApp() {
             </span>
             <div
               className={`timer-clock ${timerPhase}`}
-              style={{
-                background:
-                  timerPhase === "success"
-                    ? "conic-gradient(#6f9466 360deg, rgba(111, 148, 102, .12) 0deg)"
-                    : timerPhase === "preparing"
-                      ? `conic-gradient(#8993aa ${
-                          (timerSecondsLeft / 3) * 360
-                        }deg, rgba(137, 147, 170, .14) 0deg)`
-                      : `conic-gradient(var(--chestnut) ${
-                          (
-                              timerSecondsLeft
-                              / Math.max(
-                                1,
-                                (timerAction.timerSeconds || 1) * timerMultiplier,
-                              )
-                            ) * 360
-                        }deg, rgba(111, 59, 39, .1) 0deg)`,
-              }}
+              style={
+                {
+                  "--timer-progress": `${
+                    timerPhase === "success"
+                      ? 360
+                      : timerPhase === "preparing"
+                        ? (timerSecondsLeft / 3) * 360
+                        : (
+                            timerSecondsLeft
+                            / Math.max(
+                              1,
+                              (timerAction.timerSeconds || 1) * timerMultiplier,
+                            )
+                          ) * 360
+                  }deg`,
+                  "--timer-ring-color":
+                    timerPhase === "success"
+                      ? "#6f9466"
+                      : timerPhase === "preparing"
+                        ? "#8993aa"
+                        : "var(--chestnut)",
+                  "--timer-ring-track":
+                    timerPhase === "success"
+                      ? "rgba(111, 148, 102, .12)"
+                      : timerPhase === "preparing"
+                        ? "rgba(137, 147, 170, .14)"
+                        : "rgba(111, 59, 39, .1)",
+                } as CSSProperties
+              }
             >
               {timerPhase === "success" && (
                 <span className="timer-success-burst" aria-hidden="true">

@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@property --timer-progress {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 :root {
   --ink: #28231e;
   --muted: #7e7469;
@@ -2615,8 +2621,12 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 auto 18px;
   place-items: center;
   border-radius: 50%;
+  background: conic-gradient(
+    var(--timer-ring-color, var(--chestnut)) var(--timer-progress),
+    var(--timer-ring-track, rgba(111, 59, 39, .1)) 0deg
+  );
   box-shadow: 0 14px 35px rgba(111, 59, 39, .14);
-  transition: background 220ms linear, transform 220ms ease;
+  transition: --timer-progress 1100ms linear, transform 220ms ease;
 }
 .timer-clock > div {
   display: grid;
@@ -2638,7 +2648,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 9px;
   font-weight: 700;
   letter-spacing: .16em;
-  animation: ready-pulse 900ms ease-in-out infinite;
+  animation: ready-pulse 1800ms ease-in-out infinite;
 }
 .timer-clock.preparing {
   width: 146px;
@@ -2646,7 +2656,7 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow:
     0 14px 34px rgba(91, 103, 130, .18),
     0 0 0 7px rgba(137, 147, 170, .07);
-  animation: ready-clock-breathe 900ms ease-in-out infinite;
+  animation: ready-clock-breathe 1800ms ease-in-out infinite;
 }
 .timer-clock.preparing > div {
   width: 124px;
@@ -2678,6 +2688,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-clock small { color: var(--muted); font-size: 9px; }
 .timer-clock.success {
   position: relative;
+  transition: none;
   box-shadow:
     0 14px 38px rgba(89, 133, 83, .24),
     0 0 0 8px rgba(111, 148, 102, .08);
