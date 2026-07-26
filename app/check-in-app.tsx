@@ -1731,10 +1731,7 @@ export function CheckInApp() {
                 </div>
               </section>
 
-              <section className="content-section">
-                <div className="section-title-row simple-title-row">
-                  <h2>{tr("记录一件小事", "Record a small thing")}</h2>
-                </div>
+              <section className="content-section today-actions-section">
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
                     const actionTags = tagsFor(action);

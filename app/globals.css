@@ -687,6 +687,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .content-section { padding-top: 30px; }
+.today-actions-section { padding-top: 21px; }
 .section-title-row {
   display: flex;
   align-items: end;
