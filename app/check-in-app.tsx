@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Tab = "today" | "actions" | "growth" | "settings";
 type Source = "主动记录" | "随机行动";
@@ -36,6 +36,12 @@ type GrowthRecord = {
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+};
+
+type ToastState = {
+  title: string;
+  message: string;
+  undoRecordId?: string;
 };
 
 const STORAGE_KEY = "lizi-growth-v2";
@@ -115,7 +121,8 @@ export function CheckInApp() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const toastTimer = useRef<number | null>(null);
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
@@ -183,9 +190,17 @@ export function CheckInApp() {
     }));
   }
 
-  function showToast(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2200);
+  function showToast(
+    message: string,
+    title = "操作完成",
+    undoRecordId?: string,
+  ) {
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    setToast({ title, message, undoRecordId });
+    toastTimer.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimer.current = null;
+    }, undoRecordId ? 4200 : 2200);
   }
 
   function recordAction(action: MicroAction, source: Source = "主动记录") {
@@ -201,7 +216,16 @@ export function CheckInApp() {
       createdAt: new Date().toISOString(),
     };
     setRecords((current) => [record, ...current]);
-    showToast(`${action.icon} 已记录 · ${area.name} +${action.value}`);
+    showToast(
+      `${action.icon} ${action.name} · ${area.name} +${action.value}`,
+      "成长已记录",
+      record.id,
+    );
+  }
+
+  function undoRecord(recordId: string) {
+    setRecords((current) => current.filter((record) => record.id !== recordId));
+    showToast("刚刚的成长记录已移除", "已撤销");
   }
 
   function openActionEditor(action?: MicroAction) {
@@ -644,9 +668,18 @@ export function CheckInApp() {
         <div className="toast" role="status">
           <span className="toast-check" aria-hidden="true">✓</span>
           <span className="toast-copy">
-            <strong>成长已记录</strong>
-            <small>{toast}</small>
+            <strong>{toast.title}</strong>
+            <small>{toast.message}</small>
           </span>
+          {toast.undoRecordId && (
+            <button
+              className="toast-undo"
+              type="button"
+              onClick={() => undoRecord(toast.undoRecordId!)}
+            >
+              撤销
+            </button>
+          )}
         </div>
       )}
 
