@@ -313,13 +313,27 @@ export function CheckInApp() {
           {tab === "today" && (
             <div className="screen">
               <section className="welcome">
-                <span className="date-label">
-                  {new Intl.DateTimeFormat("zh-CN", {
-                    month: "long",
-                    day: "numeric",
-                    weekday: "long",
-                  }).format(new Date())}
-                </span>
+                <div className="date-display" aria-label={new Intl.DateTimeFormat("zh-CN", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "long",
+                }).format(new Date())}>
+                  <strong>
+                    {new Intl.DateTimeFormat("zh-CN", { day: "2-digit" }).format(new Date())}
+                  </strong>
+                  <span>
+                    <b>
+                      {new Intl.DateTimeFormat("zh-CN", {
+                        year: "numeric",
+                        month: "long",
+                      }).format(new Date())}
+                    </b>
+                    <small>
+                      {new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(new Date())}
+                    </small>
+                  </span>
+                </div>
                 <h1>{greeting()}，今天想留下什么？</h1>
                 <p>不用完成一整件大事，记录一个已经发生的小行动就很好。</p>
               </section>

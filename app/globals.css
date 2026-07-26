@@ -122,8 +122,43 @@ button { -webkit-tap-highlight-color: transparent; }
   animation: fade-in 220ms ease;
 }
 
-.welcome { padding: 4px 2px 20px; }
-.date-label, .overline {
+.welcome { padding: 2px 2px 20px; }
+.date-display {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 8px 13px 8px 10px;
+  background: rgba(255, 253, 248, .78);
+  box-shadow: 0 7px 20px rgba(71, 46, 30, .05);
+}
+.date-display > strong {
+  min-width: 43px;
+  border-right: 1px solid var(--line);
+  padding-right: 10px;
+  color: var(--chestnut);
+  font-family: Georgia, serif;
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1;
+}
+.date-display > span {
+  display: grid;
+  gap: 2px;
+}
+.date-display b {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+.date-display small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.overline {
   color: var(--chestnut);
   font-size: 10px;
   font-weight: 700;
