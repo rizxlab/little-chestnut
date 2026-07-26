@@ -2600,19 +2600,29 @@ export function CheckInApp() {
             </button>
             <div className="reward-manager-list">
               {rewards.map((reward) => (
-                <button
-                  type="button"
-                  key={reward.id}
-                  aria-label={`修改${reward.name}`}
-                  onClick={() => openRewardEditor(reward)}
-                >
-                  <span aria-hidden="true">{reward.icon}</span>
-                  <div>
-                    <strong>{reward.name}</strong>
-                    <small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small>
-                  </div>
-                  <i aria-hidden="true">›</i>
-                </button>
+                <div className="reward-manager-item" key={reward.id}>
+                  <button
+                    className="reward-manager-edit"
+                    type="button"
+                    aria-label={`修改${reward.name}`}
+                    onClick={() => openRewardEditor(reward)}
+                  >
+                    <span aria-hidden="true">{reward.icon}</span>
+                    <div>
+                      <strong>{reward.name}</strong>
+                      <small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small>
+                    </div>
+                    <i aria-hidden="true">›</i>
+                  </button>
+                  <button
+                    className="reward-manager-delete"
+                    type="button"
+                    aria-label={`删除${reward.name}`}
+                    onClick={() => deleteReward(reward)}
+                  >
+                    删除
+                  </button>
+                </div>
               ))}
             </div>
           </section>

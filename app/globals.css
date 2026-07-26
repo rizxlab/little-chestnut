@@ -2182,7 +2182,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .reward-manager h2,
 .action-manager h2 { margin-bottom: 14px; }
 .reward-manager-create,
-.reward-manager-list > button,
+.reward-manager-edit,
 .action-manager-create,
 .action-manager-list > button {
   display: grid;
@@ -2205,7 +2205,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fff8ed;
 }
 .reward-manager-create > span,
-.reward-manager-list > button > span,
+.reward-manager-edit > span,
 .action-manager-create > span,
 .action-manager-list > button > span {
   display: grid;
@@ -2223,7 +2223,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-family: Georgia, serif;
 }
 .reward-manager-create > div,
-.reward-manager-list > button > div,
+.reward-manager-edit > div,
 .action-manager-create > div,
 .action-manager-list > button > div {
   display: grid;
@@ -2250,15 +2250,40 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 8px;
   margin-top: 9px;
 }
-.reward-manager-list > button > i,
+.reward-manager-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: stretch;
+}
+.reward-manager-edit > i,
 .action-manager-list > button > i {
   color: #a7988a;
   font-family: Georgia, serif;
   font-size: 20px;
   font-style: normal;
 }
+.reward-manager-delete {
+  display: grid;
+  min-height: 64px;
+  place-items: center;
+  border: 1px solid rgba(161, 81, 69, .16);
+  border-radius: 16px;
+  padding: 0;
+  color: #a1554b;
+  background: rgba(249, 235, 228, .72);
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+.reward-manager-delete:active {
+  border-color: rgba(161, 81, 69, .3);
+  background: rgba(245, 220, 211, .9);
+  transform: scale(.96);
+}
 .reward-manager-create:active,
-.reward-manager-list > button:active,
+.reward-manager-edit:active,
 .action-manager-create:active,
 .action-manager-list > button:active { transform: scale(.98); }
 .delete-reward-button,
@@ -2635,6 +2660,16 @@ html[data-theme="dark"] .quick-action.completed,
 html[data-theme="dark"] .reward-grid article.available {
   border-color: rgba(215, 154, 121, .35);
   background: #382a23;
+}
+html[data-theme="dark"] .reward-manager-edit {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #261f1b;
+}
+html[data-theme="dark"] .reward-manager-delete {
+  border-color: rgba(220, 132, 119, .22);
+  color: #e4a198;
+  background: rgba(89, 47, 42, .45);
 }
 html[data-theme="dark"] .calendar-record-list .action-tag-list i.shell-gain-tag {
   border-color: rgba(225, 173, 140, .28);
