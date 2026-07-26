@@ -1470,6 +1470,8 @@ button { -webkit-tap-highlight-color: transparent; }
     linear-gradient(135deg, rgba(255, 249, 239, .88), rgba(251, 244, 233, .64)),
     var(--paper);
 }
+.week-progress-group .growth-progress-heading h2 { color: #6f7f63; }
+.month-progress-group .growth-progress-heading h2 { color: #7b6f8f; }
 .growth-area-icon {
   display: grid;
   width: 40px;
@@ -2797,6 +2799,8 @@ html[data-theme="dark"] .today-progress-group .growth-area {
     linear-gradient(135deg, rgba(69, 51, 42, .66), rgba(41, 33, 29, .72)),
     var(--paper);
 }
+html[data-theme="dark"] .week-progress-group .growth-progress-heading h2 { color: #a8bd9c; }
+html[data-theme="dark"] .month-progress-group .growth-progress-heading h2 { color: #b8a9cf; }
 html[data-theme="dark"] .reward-manager-edit {
   border-color: var(--line);
   color: var(--ink);

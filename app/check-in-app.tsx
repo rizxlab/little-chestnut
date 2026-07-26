@@ -1366,8 +1366,12 @@ export function CheckInApp() {
   const locale = language === "zh" ? "zh-CN" : "en-US";
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
   const todayProgressTotals = totalsFor(todayRecords);
+  const weekProgressTotals = totalsFor(weekRecords);
+  const monthProgressTotals = totalsFor(monthRecords);
   const allTotals = totalsFor(records);
   const maxTodayAreaTotal = Math.max(1, ...todayProgressTotals.map((area) => area.total));
+  const maxWeekAreaTotal = Math.max(1, ...weekProgressTotals.map((area) => area.total));
+  const maxMonthAreaTotal = Math.max(1, ...monthProgressTotals.map((area) => area.total));
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
   const nextReward = [...rewards]
     .filter((reward) => reward.cost > shellBalance)
@@ -1878,6 +1882,62 @@ export function CheckInApp() {
                             <i
                               style={{
                                 width: `${Math.max(area.total ? 12 : 0, (area.total / maxTodayAreaTotal) * 100)}%`,
+                                background: area.color,
+                              }}
+                            />
+                          </span>
+                        </div>
+                        <strong className="area-total">{area.total}</strong>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="growth-progress-group week-progress-group">
+                  <div className="growth-progress-heading">
+                    <h2>{tr("本周进度", "This week's progress")}</h2>
+                    <small>{weekRecords.length} {tr("件小事", "actions")}</small>
+                  </div>
+                  <div className="growth-areas">
+                    {weekProgressTotals.map((area) => (
+                      <article className="growth-area" key={`week-${area.id}`}>
+                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
+                          {area.icon}
+                        </span>
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span className="progress-track">
+                            <i
+                              style={{
+                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxWeekAreaTotal) * 100)}%`,
+                                background: area.color,
+                              }}
+                            />
+                          </span>
+                        </div>
+                        <strong className="area-total">{area.total}</strong>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="growth-progress-group month-progress-group">
+                  <div className="growth-progress-heading">
+                    <h2>{tr("本月进度", "This month's progress")}</h2>
+                    <small>{monthRecords.length} {tr("件小事", "actions")}</small>
+                  </div>
+                  <div className="growth-areas">
+                    {monthProgressTotals.map((area) => (
+                      <article className="growth-area" key={`month-${area.id}`}>
+                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
+                          {area.icon}
+                        </span>
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span className="progress-track">
+                            <i
+                              style={{
+                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxMonthAreaTotal) * 100)}%`,
                                 background: area.color,
                               }}
                             />
