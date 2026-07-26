@@ -1418,7 +1418,6 @@ export function CheckInApp() {
               <section className="content-section">
                 <div className="section-title-row simple-title-row">
                   <h2>记录一件小事</h2>
-                  <button type="button" onClick={() => changeTab("profile")}>管理</button>
                 </div>
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
