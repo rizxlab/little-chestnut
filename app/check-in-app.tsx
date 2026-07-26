@@ -317,7 +317,7 @@ export function CheckInApp() {
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
   const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
-  const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running">("idle");
+  const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running" | "success">("idle");
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [showAreaManager, setShowAreaManager] = useState(false);
@@ -553,6 +553,17 @@ export function CheckInApp() {
   useEffect(() => {
     if (!timerAction || timerPhase === "idle") return;
 
+    if (timerPhase === "success") {
+      const completedAction = timerAction;
+      const timer = window.setTimeout(() => {
+        setTimerAction(null);
+        setTimerPhase("idle");
+        setTimerSecondsLeft(0);
+        recordAction(completedAction);
+      }, 1050);
+      return () => window.clearTimeout(timer);
+    }
+
     if (timerSecondsLeft > 0) {
       const timer = window.setTimeout(() => {
         setTimerSecondsLeft((current) => Math.max(0, current - 1));
@@ -567,12 +578,9 @@ export function CheckInApp() {
       return;
     }
 
-    const completedAction = timerAction;
-    setTimerAction(null);
-    setTimerPhase("idle");
+    setTimerPhase("success");
     setTimerSecondsLeft(0);
     if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
-    recordAction(completedAction);
   }, [timerAction, timerPhase, timerSecondsLeft]);
 
   useEffect(() => {
@@ -868,9 +876,17 @@ export function CheckInApp() {
   }
 
   function closeActionTimer() {
+    if (timerPhase === "success") return;
     setTimerAction(null);
     setTimerPhase("idle");
     setTimerSecondsLeft(0);
+  }
+
+  function skipActionTimer() {
+    if (!timerAction || timerPhase === "success") return;
+    setTimerPhase("success");
+    setTimerSecondsLeft(0);
+    if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
   }
 
   function undoLatestActionRecord() {
@@ -2630,25 +2646,33 @@ export function CheckInApp() {
       )}
 
       {timerAction && (
-        <div className="modal-backdrop timer-backdrop" role="presentation" onClick={closeActionTimer}>
+        <div
+          className="modal-backdrop timer-backdrop"
+          role="presentation"
+          onClick={timerPhase === "success" ? undefined : closeActionTimer}
+        >
           <section
-            className="bottom-sheet timer-sheet"
+            className={`bottom-sheet timer-sheet ${timerPhase === "success" ? "timer-succeeded" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="timer-title"
             aria-describedby="timer-description"
             onClick={(event) => event.stopPropagation()}
           >
-            <button
-              className="close-button"
-              type="button"
-              aria-label={tr("关闭计时", "Close timer")}
-              onClick={closeActionTimer}
-            >
-              ×
-            </button>
+            {timerPhase !== "success" && (
+              <button
+                className="close-button"
+                type="button"
+                aria-label={tr("关闭计时", "Close timer")}
+                onClick={closeActionTimer}
+              >
+                ×
+              </button>
+            )}
             <span className="overline">
-              {timerPhase === "preparing"
+              {timerPhase === "success"
+                ? tr("完成", "COMPLETE")
+                : timerPhase === "preparing"
                 ? tr("准备一下", "GET READY")
                 : timerPhase === "running"
                   ? tr("正在计时", "IN PROGRESS")
@@ -2657,24 +2681,42 @@ export function CheckInApp() {
             <div
               className={`timer-clock ${timerPhase}`}
               style={{
-                background: `conic-gradient(var(--chestnut) ${
-                  timerPhase === "preparing"
-                    ? (timerSecondsLeft / 3) * 360
-                    : (timerSecondsLeft / Math.max(1, timerAction.timerSeconds || 1)) * 360
-                }deg, rgba(111, 59, 39, .1) 0deg)`,
+                background:
+                  timerPhase === "success"
+                    ? "conic-gradient(#6f9466 360deg, rgba(111, 148, 102, .12) 0deg)"
+                    : `conic-gradient(var(--chestnut) ${
+                        timerPhase === "preparing"
+                          ? (timerSecondsLeft / 3) * 360
+                          : (timerSecondsLeft / Math.max(1, timerAction.timerSeconds || 1)) * 360
+                      }deg, rgba(111, 59, 39, .1) 0deg)`,
               }}
             >
-              <div>
-                <span aria-hidden="true">
-                  {timerPhase === "preparing" ? "●" : timerAction.icon}
+              {timerPhase === "success" && (
+                <span className="timer-success-burst" aria-hidden="true">
+                  <b /><b /><b /><b /><b /><b />
                 </span>
-                <strong>{timerSecondsLeft}</strong>
-                <small>{tr("秒", "sec")}</small>
+              )}
+              <div>
+                {timerPhase === "success" ? (
+                  <span className="timer-success-check" aria-hidden="true">✓</span>
+                ) : (
+                  <>
+                    <span aria-hidden="true">
+                      {timerPhase === "preparing" ? "●" : timerAction.icon}
+                    </span>
+                    <strong>{timerSecondsLeft}</strong>
+                    <small>{tr("秒", "sec")}</small>
+                  </>
+                )}
               </div>
             </div>
-            <h2 id="timer-title">{timerAction.name}</h2>
-            <p id="timer-description">
-              {timerPhase === "preparing"
+            <h2 id="timer-title">
+              {timerPhase === "success" ? tr("打卡成功", "Check-in complete") : timerAction.name}
+            </h2>
+            <p id="timer-description" aria-live="polite">
+              {timerPhase === "success"
+                ? tr(`${timerAction.name}已完成，成长正在记录`, `${timerAction.name} is complete and being recorded`)
+                : timerPhase === "preparing"
                 ? tr("保持准备，计时马上开始", "Get ready — the timer is about to start")
                 : timerPhase === "running"
                   ? tr("保持住，结束后会自动打卡", "Keep going — completion will check in automatically")
@@ -2689,9 +2731,21 @@ export function CheckInApp() {
                   {tr("开始", "Start")}
                 </button>
               </div>
+            ) : timerPhase !== "success" ? (
+              <div className="dialog-actions timer-live-actions">
+                <button className="dialog-button secondary" type="button" onClick={closeActionTimer}>
+                  {tr("取消计时", "Cancel timer")}
+                </button>
+                <button className="dialog-button timer-skip-button" type="button" onClick={skipActionTimer}>
+                  {tr("跳过并完成", "Skip and complete")}
+                </button>
+              </div>
             ) : (
-              <button className="timer-cancel-button" type="button" onClick={closeActionTimer}>
-                {tr("取消计时", "Cancel timer")}
+              <small className="timer-success-note">{tr("正在保存…", "Saving…")}</small>
+            )}
+            {timerPhase === "idle" && (
+              <button className="timer-skip-link" type="button" onClick={skipActionTimer}>
+                {tr("已经完成？跳过计时直接打卡", "Already done? Skip the timer")}
               </button>
             )}
           </section>
