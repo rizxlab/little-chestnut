@@ -2696,7 +2696,6 @@ export function CheckInApp() {
                 autoComplete="nickname"
                 placeholder={tr("例如：小栗", "For example: Lizi")}
                 onChange={(event) => setDraftProfileNickname(event.target.value)}
-                autoFocus
               />
             </label>
             <button className="save-button" type="submit">
