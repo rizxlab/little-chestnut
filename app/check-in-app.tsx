@@ -40,11 +40,6 @@ type GrowthRecord = {
   createdAt: string;
 };
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-};
-
 type ToastState = {
   id: string;
   title: string;
@@ -135,9 +130,6 @@ export function CheckInApp() {
   const [ready, setReady] = useState(false);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const toastTimers = useRef<number[]>([]);
-  const [installPrompt, setInstallPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
   const [showActionEditor, setShowActionEditor] = useState(false);
   const [showAreaEditor, setShowAreaEditor] = useState(false);
@@ -167,13 +159,7 @@ export function CheckInApp() {
       navigator.serviceWorker.register("/sw.js");
     }
 
-    const handleInstall = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handleInstall);
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleInstall);
       toastTimers.current.forEach((timer) => window.clearTimeout(timer));
     };
   }, []);
@@ -340,16 +326,6 @@ export function CheckInApp() {
     showToast("成长领域已创建");
   }
 
-  async function install() {
-    if (installPrompt) {
-      await installPrompt.prompt();
-      await installPrompt.userChoice;
-      setInstallPrompt(null);
-      return;
-    }
-    setShowInstallHelp(true);
-  }
-
   function changeTab(nextTab: Tab) {
     if (nextTab === tab) return;
     const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
@@ -422,9 +398,6 @@ export function CheckInApp() {
           <button className="wordmark" type="button" onClick={() => changeTab("today")}>
             <span className="brand-seed" aria-hidden="true">栗</span>
             <strong>栗子打卡</strong>
-          </button>
-          <button className="install-link" type="button" onClick={install}>
-            安装到桌面
           </button>
         </header>
 
@@ -939,39 +912,6 @@ export function CheckInApp() {
         </div>
       )}
 
-      {showInstallHelp && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowInstallHelp(false)}>
-          <section
-            className="bottom-sheet install-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="install-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button
-              className="close-button"
-              type="button"
-              aria-label="关闭"
-              onClick={() => setShowInstallHelp(false)}
-            >
-              ×
-            </button>
-            <span className="brand-seed sheet-seed" aria-hidden="true">栗</span>
-            <h2 id="install-title">添加到手机桌面</h2>
-            <div className="instruction">
-              <span>iPhone</span>
-              <p>用 Safari 打开，点底部“分享”，再选“添加到主屏幕”。</p>
-            </div>
-            <div className="instruction">
-              <span>Android</span>
-              <p>用 Chrome 打开，点右上角菜单，再选“安装应用”。</p>
-            </div>
-            <button className="save-button" type="button" onClick={() => setShowInstallHelp(false)}>
-              我知道了
-            </button>
-          </section>
-        </div>
-      )}
     </main>
   );
 }

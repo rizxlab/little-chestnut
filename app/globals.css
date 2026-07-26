@@ -95,16 +95,6 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 20px;
 }
 
-.install-link {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 8px 12px;
-  color: var(--chestnut);
-  background: #fffaf2;
-  font-size: 11px;
-  cursor: pointer;
-}
-
 .app-scroll {
   min-height: 0;
   overflow-x: hidden;
@@ -790,7 +780,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 25px;
   cursor: pointer;
 }
-.action-editor h2, .area-editor h2, .install-sheet h2, .confirm-sheet h2 {
+.action-editor h2, .area-editor h2, .confirm-sheet h2 {
   margin: 6px 28px 20px 0;
   font-family: STKaiti, KaiTi, serif;
   font-size: 23px;
@@ -881,17 +871,6 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 8px 20px rgba(159, 98, 86, .18);
 }
 .dialog-button:active { transform: scale(.97); }
-.sheet-seed { width: 50px; height: 50px; }
-.instruction {
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 12px;
-  border-top: 1px solid var(--line);
-  padding: 14px 0;
-}
-.instruction span { color: var(--chestnut); font-size: 11px; font-weight: 700; }
-.instruction p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
-
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
 @keyframes page-from-right {
   from { opacity: 0; transform: translateX(28px); }
