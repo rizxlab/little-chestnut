@@ -688,13 +688,13 @@ export function CheckInApp() {
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
-                <p>为微行动贴上多个成长标签，让一次行动产生多面的积累。</p>
+                <p>在这里整理微行动与成长标签，记录请回到“今日”页面。</p>
               </section>
 
               <section className="settings-block profile-actions">
                 <div className="settings-heading">
                   <div>
-                    <span className="overline">微行动</span>
+                    <span className="overline">行动管理</span>
                     <h2>我的微行动</h2>
                   </div>
                   <button type="button" onClick={() => openActionEditor()}>＋ 新建</button>
@@ -705,14 +705,9 @@ export function CheckInApp() {
                     const actionTags = tagsFor(action);
                     return (
                       <article className="tag-action-card" key={action.id}>
-                        <button
-                          className="tag-action-record"
-                          type="button"
-                          onClick={() => recordAction(action)}
-                        >
+                        <div className="tag-action-summary">
                           <span className="tag-action-icon">{action.icon}</span>
                           <strong>{action.name}</strong>
-                          <i aria-hidden="true">＋</i>
                           <span className="action-tag-list">
                             {actionTags.map((tag) => (
                               <small
@@ -723,9 +718,9 @@ export function CheckInApp() {
                               </small>
                             ))}
                           </span>
-                        </button>
+                        </div>
                         <div className="row-actions">
-                          <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
+                          <button type="button" onClick={() => openActionEditor(action)}>编辑项目</button>
                           <button type="button" onClick={() => deleteAction(action)}>删除</button>
                         </div>
                       </article>
