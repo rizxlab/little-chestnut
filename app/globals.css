@@ -420,8 +420,35 @@ button { -webkit-tap-highlight-color: transparent; }
 .quick-action:active { transform: scale(.975); }
 .quick-action:hover { border-color: #d8c7b5; box-shadow: 0 9px 24px rgba(71,46,30,.07); }
 .quick-action.completed {
-  border-color: rgba(111, 59, 39, .2);
-  background: #fffaf2;
+  border-color: rgba(150, 83, 53, .48);
+  background:
+    radial-gradient(circle at 88% 14%, rgba(205, 148, 108, .16), transparent 52px),
+    linear-gradient(145deg, #fff9ef, #f7eadc);
+  box-shadow:
+    inset 0 0 0 1px rgba(111, 59, 39, .07),
+    0 9px 23px rgba(91, 54, 34, .1);
+}
+.quick-action.completed::before {
+  position: absolute;
+  top: -1px;
+  right: 15px;
+  left: 15px;
+  height: 3px;
+  border-radius: 0 0 99px 99px;
+  background: linear-gradient(90deg, #cf9a72, var(--chestnut), #cf9a72);
+  content: "";
+  pointer-events: none;
+}
+.quick-action.completed strong {
+  color: var(--chestnut);
+  font-weight: 700;
+}
+.quick-action.completed .action-icon {
+  box-shadow: 0 6px 14px rgba(111, 59, 39, .11);
+  transform: scale(1.05);
+}
+.quick-action.completed > .action-tag-list small {
+  background: rgba(255, 253, 248, .66);
 }
 .action-icon {
   display: grid;
@@ -431,6 +458,7 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   border-radius: 14px;
   font-size: 20px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 .quick-action strong {
   overflow: hidden;
