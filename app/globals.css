@@ -1156,6 +1156,16 @@ button { -webkit-tap-highlight-color: transparent; }
   font-style: normal;
   line-height: 1;
 }
+.calendar-record-list .action-tag-list i.shell-gain-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border-color: rgba(177, 123, 56, .28);
+  color: #8a5a27;
+  background: linear-gradient(135deg, rgba(255, 244, 216, .92), rgba(242, 222, 181, .7));
+  font-weight: 700;
+}
+.shell-gain-tag span { font-size: 8px; }
 .primary-add {
   display: flex;
   width: 100%;
@@ -2485,6 +2495,11 @@ html[data-theme="dark"] .quick-action.completed,
 html[data-theme="dark"] .reward-grid article.available {
   border-color: rgba(215, 154, 121, .35);
   background: #382a23;
+}
+html[data-theme="dark"] .calendar-record-list .action-tag-list i.shell-gain-tag {
+  border-color: rgba(225, 173, 140, .28);
+  color: #efbf85;
+  background: rgba(111, 72, 39, .42);
 }
 html[data-theme="dark"] .action-icon,
 html[data-theme="dark"] .record-icon,

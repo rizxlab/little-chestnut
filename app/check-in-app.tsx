@@ -1523,6 +1523,10 @@ export function CheckInApp() {
                                 {tag.name} +{record.value}
                               </i>
                             ))}
+                            <i className="shell-gain-tag">
+                              <span aria-hidden="true">🌰</span>
+                              栗壳 +1
+                            </i>
                           </span>
                         </div>
                       </article>
