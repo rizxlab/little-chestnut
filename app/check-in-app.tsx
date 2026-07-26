@@ -24,7 +24,8 @@ type MicroAction = {
   id: string;
   name: string;
   icon: string;
-  areaId: string;
+  tagIds: string[];
+  areaId?: string;
   value: number;
   repeatable: boolean;
 };
@@ -34,7 +35,8 @@ type GrowthRecord = {
   actionId: string;
   actionName: string;
   icon: string;
-  areaId: string;
+  tagIds: string[];
+  areaId?: string;
   value: number;
   source: Source;
   createdAt: string;
@@ -55,6 +57,7 @@ type ConfirmDialog =
 const STORAGE_KEY = "lizi-growth-v2";
 
 const DEFAULT_AREAS: Area[] = [
+  { id: "health", name: "健康", icon: "💚", color: "#4f8069", isDefault: true },
   { id: "body", name: "身体", icon: "🌱", color: "#667957", isDefault: true },
   { id: "learn", name: "学习", icon: "📚", color: "#56748a", isDefault: true },
   { id: "create", name: "创造", icon: "🎨", color: "#8a6478", isDefault: true },
@@ -63,12 +66,12 @@ const DEFAULT_AREAS: Area[] = [
 ];
 
 const DEFAULT_ACTIONS: MicroAction[] = [
-  { id: "water", name: "喝一杯水", icon: "💧", areaId: "body", value: 1, repeatable: true },
-  { id: "stretch", name: "拉伸 5 秒", icon: "🙆", areaId: "body", value: 1, repeatable: true },
-  { id: "read", name: "阅读一页", icon: "📖", areaId: "learn", value: 1, repeatable: true },
-  { id: "word", name: "学一个单词", icon: "🔤", areaId: "learn", value: 1, repeatable: true },
-  { id: "sketch", name: "画一个草图", icon: "✏️", areaId: "create", value: 1, repeatable: true },
-  { id: "idea", name: "记录一个灵感", icon: "💡", areaId: "create", value: 1, repeatable: true },
+  { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["health", "body"], value: 1, repeatable: true },
+  { id: "stretch", name: "拉伸 5 秒", icon: "🙆", tagIds: ["health", "body"], value: 1, repeatable: true },
+  { id: "read", name: "阅读一页", icon: "📖", tagIds: ["learn", "mind"], value: 1, repeatable: true },
+  { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["learn"], value: 1, repeatable: true },
+  { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create", "mind"], value: 1, repeatable: true },
+  { id: "idea", name: "记录一个灵感", icon: "💡", tagIds: ["create", "mind"], value: 1, repeatable: true },
 ];
 
 const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
@@ -122,6 +125,11 @@ function formatRecordDate(value: string) {
   }).format(date);
 }
 
+function normalizedTagIds(value: { tagIds?: string[]; areaId?: string }) {
+  if (value.tagIds?.length) return value.tagIds;
+  return value.areaId ? [value.areaId] : [];
+}
+
 export function CheckInApp() {
   const [tab, setTab] = useState<Tab>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
@@ -136,7 +144,7 @@ export function CheckInApp() {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftIcon, setDraftIcon] = useState("🌱");
-  const [draftArea, setDraftArea] = useState("body");
+  const [draftTags, setDraftTags] = useState<string[]>(["body"]);
   const [draftValue, setDraftValue] = useState(1);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
@@ -147,9 +155,35 @@ export function CheckInApp() {
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (stored?.areas?.length) setAreas(stored.areas);
-      if (stored?.actions?.length) setActions(stored.actions);
-      if (Array.isArray(stored?.records)) setRecords(stored.records);
+      if (stored?.areas?.length) {
+        setAreas([
+          ...stored.areas,
+          ...DEFAULT_AREAS.filter(
+            (defaultArea) => !stored.areas.some((area: Area) => area.id === defaultArea.id),
+          ),
+        ]);
+      }
+      if (stored?.actions?.length) {
+        setActions(
+          stored.actions.map((action: MicroAction) => {
+            const defaultAction = DEFAULT_ACTIONS.find((item) => item.id === action.id);
+            return {
+              ...action,
+              tagIds: action.tagIds?.length
+                ? action.tagIds
+                : defaultAction?.tagIds || normalizedTagIds(action),
+            };
+          }),
+        );
+      }
+      if (Array.isArray(stored?.records)) {
+        setRecords(
+          stored.records.map((record: GrowthRecord) => ({
+            ...record,
+            tagIds: normalizedTagIds(record),
+          })),
+        );
+      }
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -185,15 +219,17 @@ export function CheckInApp() {
     });
   }, [records]);
 
-  function areaFor(id: string) {
-    return areas.find((area) => area.id === id) || areas[0];
+  function tagsFor(value: { tagIds?: string[]; areaId?: string }) {
+    return normalizedTagIds(value)
+      .map((id) => areas.find((area) => area.id === id))
+      .filter((area): area is Area => Boolean(area));
   }
 
   function totalsFor(source: GrowthRecord[]) {
     return areas.map((area) => ({
       ...area,
       total: source
-        .filter((record) => record.areaId === area.id)
+        .filter((record) => normalizedTagIds(record).includes(area.id))
         .reduce((sum, record) => sum + record.value, 0),
     }));
   }
@@ -232,20 +268,22 @@ export function CheckInApp() {
   }
 
   function recordAction(action: MicroAction, source: Source = "主动记录") {
-    const area = areaFor(action.areaId);
+    const actionTags = tagsFor(action);
     const record: GrowthRecord = {
       id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
       actionId: action.id,
       actionName: action.name,
       icon: action.icon,
-      areaId: action.areaId,
+      tagIds: actionTags.map((tag) => tag.id),
       value: action.value,
       source,
       createdAt: new Date().toISOString(),
     };
     setRecords((current) => [record, ...current]);
     showToast(
-      `${action.icon} ${action.name} · ${area.name} +${action.value}`,
+      `${action.icon} ${action.name} · ${actionTags
+        .map((tag) => `${tag.name} +${action.value}`)
+        .join(" · ")}`,
       "成长已记录",
       record.id,
     );
@@ -260,14 +298,22 @@ export function CheckInApp() {
     setEditingAction(action || null);
     setDraftName(action?.name || "");
     setDraftIcon(action?.icon || "🌱");
-    setDraftArea(action?.areaId || areas[0]?.id || "body");
+    setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
     setDraftValue(action?.value || 1);
     setShowActionEditor(true);
   }
 
+  function toggleDraftTag(tagId: string) {
+    setDraftTags((current) =>
+      current.includes(tagId)
+        ? current.filter((id) => id !== tagId)
+        : [...current, tagId],
+    );
+  }
+
   function saveAction(event: FormEvent) {
     event.preventDefault();
-    if (!draftName.trim()) return;
+    if (!draftName.trim() || !draftTags.length) return;
 
     if (editingAction) {
       setActions((current) =>
@@ -277,7 +323,7 @@ export function CheckInApp() {
                 ...action,
                 name: draftName.trim(),
                 icon: draftIcon.trim() || "🌱",
-                areaId: draftArea,
+                tagIds: draftTags,
                 value: Math.max(1, draftValue),
               }
             : action,
@@ -291,7 +337,7 @@ export function CheckInApp() {
           id: `action-${Date.now()}`,
           name: draftName.trim(),
           icon: draftIcon.trim() || "🌱",
-          areaId: draftArea,
+          tagIds: draftTags,
           value: Math.max(1, draftValue),
           repeatable: true,
         },
@@ -323,7 +369,7 @@ export function CheckInApp() {
     };
     setAreas((current) => [...current, area]);
     setShowAreaEditor(false);
-    showToast("成长领域已创建");
+    showToast("成长标签已创建");
   }
 
   function changeTab(nextTab: Tab) {
@@ -473,7 +519,8 @@ export function CheckInApp() {
                 </div>
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
-                    const area = areaFor(action.areaId);
+                    const actionTags = tagsFor(action);
+                    const primaryTag = actionTags[0] || areas[0];
                     return (
                       <button
                         className="quick-action"
@@ -481,11 +528,20 @@ export function CheckInApp() {
                         key={action.id}
                         onClick={() => recordAction(action)}
                       >
-                        <span className="action-icon" style={{ background: `${area.color}18` }}>
+                        <span className="action-icon" style={{ background: `${primaryTag.color}18` }}>
                           {action.icon}
                         </span>
                         <strong>{action.name}</strong>
-                        <small style={{ color: area.color }}>{area.name} +{action.value}</small>
+                        <span className="action-tag-list compact">
+                          {actionTags.map((tag) => (
+                            <small
+                              key={tag.id}
+                              style={{ color: tag.color, borderColor: `${tag.color}35` }}
+                            >
+                              {tag.name} +{action.value}
+                            </small>
+                          ))}
+                        </span>
                         <i aria-hidden="true">＋</i>
                       </button>
                     );
@@ -503,7 +559,7 @@ export function CheckInApp() {
                 {records.length ? (
                   <div className="record-list">
                     {records.slice(0, 5).map((record) => {
-                      const area = areaFor(record.areaId);
+                      const recordTags = tagsFor(record);
                       return (
                         <article className="record-row" key={record.id}>
                           <span className="record-icon">{record.icon}</span>
@@ -511,7 +567,13 @@ export function CheckInApp() {
                             <strong>{record.actionName}</strong>
                             <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
                           </div>
-                          <span style={{ color: area.color }}>{area.name} +{record.value}</span>
+                          <span className="record-tag-list">
+                            {recordTags.map((tag) => (
+                              <small key={tag.id} style={{ color: tag.color }}>
+                                {tag.name} +{record.value}
+                              </small>
+                            ))}
+                          </span>
                         </article>
                       );
                     })}
@@ -555,8 +617,8 @@ export function CheckInApp() {
               <section className="content-section growth-section">
                 <div className="section-title-row">
                   <div>
-                    <span className="overline">成长领域</span>
-                    <h2>你在把时间放在哪里</h2>
+                    <span className="overline">成长标签</span>
+                    <h2>你的行动正在滋养什么</h2>
                   </div>
                 </div>
                 <div className="growth-areas">
@@ -592,14 +654,21 @@ export function CheckInApp() {
                 {records.length ? (
                   <div className="timeline">
                     {records.slice(0, 12).map((record) => {
-                      const area = areaFor(record.areaId);
+                      const recordTags = tagsFor(record);
+                      const primaryTag = recordTags[0] || areas[0];
                       return (
                         <article key={record.id}>
-                          <i style={{ background: area.color }} />
+                          <i style={{ background: primaryTag.color }} />
                           <div>
                             <small>{formatRecordDate(record.createdAt)}</small>
                             <strong>{record.icon} {record.actionName}</strong>
-                            <span style={{ color: area.color }}>{area.name} +{record.value}</span>
+                            <span className="timeline-tags">
+                              {recordTags.map((tag) => (
+                                <i key={tag.id} style={{ color: tag.color }}>
+                                  {tag.name} +{record.value}
+                                </i>
+                              ))}
+                            </span>
                           </div>
                         </article>
                       );
@@ -619,7 +688,7 @@ export function CheckInApp() {
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
-                <p>管理微行动和成长方向，让它更贴近你的节奏。</p>
+                <p>为微行动贴上多个成长标签，让一次行动产生多面的积累。</p>
               </section>
 
               <section className="settings-block profile-actions">
@@ -631,38 +700,35 @@ export function CheckInApp() {
                   <button type="button" onClick={() => openActionEditor()}>＋ 新建</button>
                 </div>
 
-                <div className="action-library profile-library">
-                  {areas.map((area) => {
-                    const areaActions = actions.filter((action) => action.areaId === area.id);
-                    if (!areaActions.length) return null;
+                <div className="tag-action-grid">
+                  {actions.map((action) => {
+                    const actionTags = tagsFor(action);
                     return (
-                      <section className="area-group" key={area.id}>
-                        <div className="area-group-title">
-                          <span>{area.icon}</span>
-                          <strong>{area.name}</strong>
-                          <small>{areaActions.length} 个行动</small>
+                      <article className="tag-action-card" key={action.id}>
+                        <button
+                          className="tag-action-record"
+                          type="button"
+                          onClick={() => recordAction(action)}
+                        >
+                          <span className="tag-action-icon">{action.icon}</span>
+                          <strong>{action.name}</strong>
+                          <i aria-hidden="true">＋</i>
+                          <span className="action-tag-list">
+                            {actionTags.map((tag) => (
+                              <small
+                                key={tag.id}
+                                style={{ color: tag.color, borderColor: `${tag.color}35` }}
+                              >
+                                {tag.name} +{action.value}
+                              </small>
+                            ))}
+                          </span>
+                        </button>
+                        <div className="row-actions">
+                          <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
+                          <button type="button" onClick={() => deleteAction(action)}>删除</button>
                         </div>
-                        {areaActions.map((action) => (
-                          <article className="library-row" key={action.id}>
-                            <button
-                              className="library-record"
-                              type="button"
-                              onClick={() => recordAction(action)}
-                            >
-                              <span>{action.icon}</span>
-                              <div>
-                                <strong>{action.name}</strong>
-                                <small>完成后 {area.name} +{action.value}</small>
-                              </div>
-                              <i>＋</i>
-                            </button>
-                            <div className="row-actions">
-                              <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
-                              <button type="button" onClick={() => deleteAction(action)}>删除</button>
-                            </div>
-                          </article>
-                        ))}
-                      </section>
+                      </article>
                     );
                   })}
                 </div>
@@ -671,8 +737,8 @@ export function CheckInApp() {
               <section className="settings-block">
                 <div className="settings-heading">
                   <div>
-                    <span className="overline">成长领域</span>
-                    <h2>我关注的方向</h2>
+                    <span className="overline">成长标签</span>
+                    <h2>我的标签</h2>
                   </div>
                   <button type="button" onClick={addArea}>＋ 添加</button>
                 </div>
@@ -809,15 +875,33 @@ export function CheckInApp() {
                 />
               </label>
             </div>
-            <label>
-              成长领域
-              <select value={draftArea} onChange={(event) => setDraftArea(event.target.value)}>
-                {areas.map((area) => (
-                  <option value={area.id} key={area.id}>{area.icon} {area.name}</option>
-                ))}
-              </select>
-            </label>
-            <button className="save-button" type="submit">
+            <fieldset className="tag-fieldset">
+              <legend>成长标签 <small>可多选</small></legend>
+              <div className="tag-picker">
+                {areas.map((area) => {
+                  const selected = draftTags.includes(area.id);
+                  return (
+                    <button
+                      className={selected ? "selected" : ""}
+                      type="button"
+                      key={area.id}
+                      aria-pressed={selected}
+                      style={selected ? { borderColor: area.color, color: area.color } : undefined}
+                      onClick={() => toggleDraftTag(area.id)}
+                    >
+                      {area.icon} {area.name}
+                      <span>{selected ? "✓" : "＋"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {!draftTags.length && <small className="field-hint">至少选择一个成长标签</small>}
+            </fieldset>
+            <button
+              className="save-button"
+              type="submit"
+              disabled={!draftName.trim() || !draftTags.length}
+            >
               {editingAction ? "保存修改" : "加入我的微行动"}
             </button>
           </form>
@@ -839,9 +923,9 @@ export function CheckInApp() {
             >
               ×
             </button>
-            <span className="overline">新的成长领域</span>
-            <h2>你还想关注什么？</h2>
-            <p className="sheet-description">给新的成长方向一个简单、容易辨认的名字。</p>
+            <span className="overline">新的成长标签</span>
+            <h2>你还想积累什么？</h2>
+            <p className="sheet-description">创建一个标签，再把它贴到一个或多个微行动上。</p>
             <div className="area-form-row">
               <label>
                 图标
@@ -852,7 +936,7 @@ export function CheckInApp() {
                 />
               </label>
               <label>
-                领域名称
+                标签名称
                 <input
                   value={draftAreaName}
                   onChange={(event) => setDraftAreaName(event.target.value)}
@@ -861,7 +945,7 @@ export function CheckInApp() {
                 />
               </label>
             </div>
-            <button className="save-button" type="submit">添加成长领域</button>
+            <button className="save-button" type="submit">添加成长标签</button>
           </form>
         </div>
       )}
@@ -889,7 +973,7 @@ export function CheckInApp() {
             </h2>
             <p id="confirm-description">
               {confirmDialog.kind === "reset-data"
-                ? "所有成长记录会被清空，微行动和成长领域将恢复默认状态。此操作无法撤销。"
+                ? "所有成长记录会被清空，微行动和成长标签将恢复默认状态。此操作无法撤销。"
                 : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
             </p>
             <div className="dialog-actions">
