@@ -651,7 +651,9 @@ export function CheckInApp() {
         <nav className="bottom-nav" aria-label="主要导航">
           {NAV_ITEMS.map((item) => (
             <button
-              className={tab === item.id ? "active" : ""}
+              className={`${tab === item.id ? "active" : ""} ${
+                item.id === "today" ? "primary-tab" : ""
+              }`}
               type="button"
               key={item.id}
               onClick={() => setTab(item.id)}

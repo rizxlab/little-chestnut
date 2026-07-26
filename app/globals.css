@@ -612,6 +612,33 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .bottom-nav button span { font-family: Georgia, serif; font-size: 18px; line-height: 1; }
 .bottom-nav button.active { color: var(--chestnut); }
+.bottom-nav button.primary-tab {
+  color: var(--chestnut);
+  font-size: 10px;
+  font-weight: 700;
+}
+.bottom-nav button.primary-tab span {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  margin-top: -9px;
+  place-items: center;
+  border: 4px solid var(--paper);
+  border-radius: 50%;
+  color: #fff9ef;
+  background: var(--chestnut);
+  box-shadow:
+    0 7px 18px rgba(111, 59, 39, .25),
+    0 0 0 1px rgba(111, 59, 39, .1);
+  font-size: 14px;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.bottom-nav button.primary-tab.active span {
+  transform: translateY(-3px) scale(1.08);
+  box-shadow:
+    0 10px 24px rgba(111, 59, 39, .32),
+    0 0 0 5px rgba(200, 144, 114, .13);
+}
 
 .toast {
   position: fixed;
