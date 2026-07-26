@@ -1582,7 +1582,6 @@ export function CheckInApp() {
                 </button>
                 <span className="overline">SETTINGS</span>
                 <h1>{tr("设置", "Settings")}</h1>
-                <p>{tr("调整栗子小事的显示方式。", "Personalize how Lizi looks and feels.")}</p>
               </section>
 
               <section className="settings-panel">
