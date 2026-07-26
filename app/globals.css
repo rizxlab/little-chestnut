@@ -2653,7 +2653,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-duration-picker button:disabled { opacity: .3; cursor: default; }
 .timer-duration-picker strong {
   display: grid;
-  grid-template-columns: auto auto;
+  grid-template-columns: max-content max-content;
+  column-gap: 5px;
   justify-content: center;
   align-items: baseline;
   color: var(--chestnut);
@@ -2662,9 +2663,16 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 400;
   line-height: 1;
 }
+.timer-duration-picker strong b {
+  min-width: 0;
+  font: inherit;
+  font-weight: inherit;
+  white-space: nowrap;
+}
 .timer-duration-picker strong small {
   color: var(--muted);
   font-size: 9px;
+  white-space: nowrap;
 }
 .timer-duration-picker strong em {
   grid-column: 1 / -1;

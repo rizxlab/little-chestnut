@@ -644,7 +644,7 @@ export function CheckInApp() {
         setTimerSecondsLeft(0);
         setTimerMultiplier(1);
         recordActionMultiple(completedAction, completedCount);
-      }, 1050);
+      }, 1900);
       return () => window.clearTimeout(timer);
     }
 
@@ -3023,7 +3023,7 @@ export function CheckInApp() {
                     −
                   </button>
                   <strong>
-                    {(timerAction.timerSeconds || 1) * timerMultiplier}
+                    <b>{(timerAction.timerSeconds || 1) * timerMultiplier}</b>
                     <small>{tr("秒", " sec")}</small>
                     <em>× {timerMultiplier} {tr("次", "check-ins")}</em>
                   </strong>
