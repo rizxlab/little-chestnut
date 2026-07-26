@@ -1,6 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  FormEvent,
+  TouchEvent as ReactTouchEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 type Tab = "today" | "growth" | "profile";
 type Source = "主动记录" | "随机行动";
@@ -141,6 +148,9 @@ export function CheckInApp() {
   const [draftValue, setDraftValue] = useState(1);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
+  const [tabMotion, setTabMotion] = useState<"from-left" | "from-right">("from-right");
+  const appScrollRef = useRef<HTMLDivElement | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     try {
@@ -340,6 +350,45 @@ export function CheckInApp() {
     setShowInstallHelp(true);
   }
 
+  function changeTab(nextTab: Tab) {
+    if (nextTab === tab) return;
+    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
+    const nextIndex = NAV_ITEMS.findIndex((item) => item.id === nextTab);
+    setTabMotion(nextIndex > currentIndex ? "from-right" : "from-left");
+    setTab(nextTab);
+    window.requestAnimationFrame(() => {
+      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
+    });
+  }
+
+  function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
+    if (event.touches.length !== 1) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("input, select, textarea")) {
+      touchStartRef.current = null;
+      return;
+    }
+    touchStartRef.current = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
+  }
+
+  function handleTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start || event.changedTouches.length !== 1) return;
+
+    const deltaX = event.changedTouches[0].clientX - start.x;
+    const deltaY = event.changedTouches[0].clientY - start.y;
+    if (Math.abs(deltaX) < 56 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.25) return;
+
+    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
+    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
+    if (nextIndex < 0 || nextIndex >= NAV_ITEMS.length) return;
+    changeTab(NAV_ITEMS[nextIndex].id);
+  }
+
   function resetData() {
     setConfirmDialog({ kind: "reset-data" });
   }
@@ -356,7 +405,7 @@ export function CheckInApp() {
       setAreas(DEFAULT_AREAS);
       setActions(DEFAULT_ACTIONS);
       setRecords([]);
-      setTab("today");
+      changeTab("today");
       showToast("已恢复为新的开始");
     }
     setConfirmDialog(null);
@@ -370,7 +419,7 @@ export function CheckInApp() {
     <main className="shell">
       <section className="app-frame">
         <header className="app-header">
-          <button className="wordmark" type="button" onClick={() => setTab("today")}>
+          <button className="wordmark" type="button" onClick={() => changeTab("today")}>
             <span className="brand-seed" aria-hidden="true">栗</span>
             <strong>栗子打卡</strong>
           </button>
@@ -379,9 +428,17 @@ export function CheckInApp() {
           </button>
         </header>
 
-        <div className="app-scroll">
+        <div
+          className="app-scroll"
+          ref={appScrollRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={() => {
+            touchStartRef.current = null;
+          }}
+        >
           {tab === "today" && (
-            <div className="screen">
+            <div className={`screen ${tabMotion}`}>
               <section className="welcome">
                 <div className="date-display" aria-label={new Intl.DateTimeFormat("zh-CN", {
                   year: "numeric",
@@ -439,7 +496,7 @@ export function CheckInApp() {
                     <span className="overline">快速记录</span>
                     <h2>点一下，3 秒完成</h2>
                   </div>
-                  <button type="button" onClick={() => setTab("profile")}>管理</button>
+                  <button type="button" onClick={() => changeTab("profile")}>管理</button>
                 </div>
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
@@ -497,7 +554,7 @@ export function CheckInApp() {
           )}
 
           {tab === "growth" && (
-            <div className="screen">
+            <div className={`screen ${tabMotion}`}>
               <section className="page-heading">
                 <span className="overline">GROWTH OVERVIEW</span>
                 <h1>成长正在发生</h1>
@@ -585,7 +642,7 @@ export function CheckInApp() {
           )}
 
           {tab === "profile" && (
-            <div className="screen">
+            <div className={`screen ${tabMotion}`}>
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
@@ -697,7 +754,7 @@ export function CheckInApp() {
               }`}
               type="button"
               key={item.id}
-              onClick={() => setTab(item.id)}
+              onClick={() => changeTab(item.id)}
               aria-current={tab === item.id ? "page" : undefined}
             >
               <span aria-hidden="true">{item.icon}</span>

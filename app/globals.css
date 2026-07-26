@@ -111,6 +111,7 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
+  touch-action: pan-y;
 }
 .app-scroll::-webkit-scrollbar { display: none; }
 
@@ -119,6 +120,8 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 26px 22px 36px;
   animation: fade-in 220ms ease;
 }
+.screen.from-right { animation: page-from-right 260ms ease; }
+.screen.from-left { animation: page-from-left 260ms ease; }
 
 .welcome { padding: 2px 2px 20px; }
 .date-display {
@@ -890,6 +893,12 @@ button { -webkit-tap-highlight-color: transparent; }
 .instruction p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
+@keyframes page-from-right {
+  from { opacity: 0; transform: translateX(28px); }
+}
+@keyframes page-from-left {
+  from { opacity: 0; transform: translateX(-28px); }
+}
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(18px) scale(.92); }
 }
