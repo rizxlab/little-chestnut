@@ -616,17 +616,59 @@ button { -webkit-tap-highlight-color: transparent; }
 .toast {
   position: fixed;
   z-index: 50;
-  top: 24px;
+  display: grid;
+  width: min(calc(100% - 44px), 330px);
+  top: 32%;
   left: 50%;
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 999px;
-  padding: 11px 16px;
-  color: white;
-  background: rgba(48, 36, 29, .94);
-  box-shadow: 0 12px 35px rgba(37,25,18,.24);
+  grid-template-columns: 54px 1fr;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid rgba(111, 59, 39, .16);
+  border-radius: 23px;
+  padding: 17px 19px;
+  color: var(--ink);
+  background: rgba(255, 253, 248, .97);
+  box-shadow:
+    0 26px 70px rgba(43, 29, 21, .24),
+    0 0 0 999px rgba(52, 38, 30, .08);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  backdrop-filter: blur(16px);
+  animation: toast-in 360ms cubic-bezier(.22, 1.45, .43, 1);
+}
+.toast-check {
+  position: relative;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fffaf0;
+  background: var(--leaf);
+  box-shadow: 0 8px 22px rgba(100, 116, 82, .26);
+  font-size: 24px;
+}
+.toast-check::after {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(100, 116, 82, .24);
+  border-radius: 50%;
+  content: "";
+  animation: toast-ring 700ms ease-out;
+}
+.toast-copy {
+  display: grid;
+  gap: 5px;
+}
+.toast-copy strong {
+  color: var(--chestnut);
+  font-family: STKaiti, KaiTi, serif;
+  font-size: 20px;
+  font-weight: 600;
+}
+.toast-copy small {
+  color: var(--muted);
   font-size: 11px;
-  transform: translateX(-50%);
-  animation: toast-in 220ms ease;
 }
 
 .modal-backdrop {
@@ -705,7 +747,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .instruction p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
-@keyframes toast-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -40%) scale(.9); }
+}
+@keyframes toast-ring {
+  from { opacity: .9; transform: scale(.55); }
+  to { opacity: 0; transform: scale(1.45); }
+}
 @keyframes sheet-up { from { opacity: 0; transform: translateY(24px); } }
 
 @media (max-width: 550px) {

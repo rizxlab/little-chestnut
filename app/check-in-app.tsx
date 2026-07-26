@@ -185,7 +185,7 @@ export function CheckInApp() {
 
   function showToast(message: string) {
     setToast(message);
-    window.setTimeout(() => setToast(""), 1700);
+    window.setTimeout(() => setToast(""), 2200);
   }
 
   function recordAction(action: MicroAction, source: Source = "主动记录") {
@@ -640,7 +640,15 @@ export function CheckInApp() {
         </nav>
       </section>
 
-      {toast && <div className="toast" role="status">{toast}</div>}
+      {toast && (
+        <div className="toast" role="status">
+          <span className="toast-check" aria-hidden="true">✓</span>
+          <span className="toast-copy">
+            <strong>成长已记录</strong>
+            <small>{toast}</small>
+          </span>
+        </div>
+      )}
 
       {showActionEditor && (
         <div className="modal-backdrop" role="presentation" onClick={() => setShowActionEditor(false)}>
