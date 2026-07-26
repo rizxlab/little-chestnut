@@ -83,6 +83,7 @@ type ConfirmDialog =
   | { kind: "reset-data" };
 
 const STORAGE_KEY = "lizi-growth-v2";
+const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
 const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
 
 const DEFAULT_AREAS: Area[] = [
@@ -288,6 +289,7 @@ export function CheckInApp() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginPending, setLoginPending] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   const [tab, setTab] = useState<Tab>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
@@ -476,6 +478,23 @@ export function CheckInApp() {
     setServerHydrated(true);
   }
 
+  function hydrateGuest() {
+    let stored: unknown = null;
+    try {
+      stored = JSON.parse(
+        localStorage.getItem(GUEST_STORAGE_KEY)
+          || localStorage.getItem(STORAGE_KEY)
+          || "null",
+      );
+    } catch {
+      stored = null;
+    }
+    applyAccountData(stored, "guest");
+    setAccount(null);
+    setReady(true);
+    setServerHydrated(false);
+  }
+
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -487,9 +506,11 @@ export function CheckInApp() {
         if (response.ok) {
           const result = (await response.json()) as { account: Account };
           await hydrateAccount(result.account);
+        } else {
+          hydrateGuest();
         }
       } catch {
-        setAccount(null);
+        hydrateGuest();
       } finally {
         if (active) setAuthReady(true);
       }
@@ -507,7 +528,7 @@ export function CheckInApp() {
   }, []);
 
   useEffect(() => {
-    if (!ready || !account || !serverHydrated) return;
+    if (!ready) return;
     const data = {
       areas,
       actions,
@@ -519,9 +540,10 @@ export function CheckInApp() {
       preferences: { language, theme },
     };
     localStorage.setItem(
-      `${STORAGE_KEY}:${account.username}`,
+      account ? `${STORAGE_KEY}:${account.username}` : GUEST_STORAGE_KEY,
       JSON.stringify(data),
     );
+    if (!account || !serverHydrated) return;
     const timer = window.setTimeout(() => {
       void fetch("/api/account-data", {
         method: "PUT",
@@ -679,6 +701,7 @@ export function CheckInApp() {
       }
       await hydrateAccount(result.account);
       setLoginPassword("");
+      setShowLogin(false);
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "暂时无法登录");
     } finally {
@@ -708,7 +731,8 @@ export function CheckInApp() {
       method: "POST",
       credentials: "same-origin",
     }).catch(() => null);
-    setServerHydrated(false);
+    hydrateGuest();
+    setShowLogin(false);
     setLoginPassword("");
   }
 
@@ -1334,56 +1358,6 @@ export function CheckInApp() {
     );
   }
 
-  if (!account) {
-    return (
-      <main className="account-gate">
-        <form className="login-card" onSubmit={handleLogin}>
-          <div className="login-brand">
-            <span aria-hidden="true">栗</span>
-            <div>
-              <strong>栗子小事</strong>
-              <small>登录后，继续积累自己的小事</small>
-            </div>
-          </div>
-          <div className="login-heading">
-            <span className="overline">WELCOME BACK</span>
-            <h1>欢迎回来</h1>
-          </div>
-          <label>
-            账号
-            <input
-              value={loginUsername}
-              onChange={(event) => setLoginUsername(event.target.value)}
-              autoComplete="username"
-              inputMode="numeric"
-              placeholder="请输入账号"
-              autoFocus
-            />
-          </label>
-          <label>
-            密码
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(event) => setLoginPassword(event.target.value)}
-              autoComplete="current-password"
-              placeholder="请输入密码"
-            />
-          </label>
-          {loginError && <p className="login-error" role="alert">{loginError}</p>}
-          <button
-            className="login-button"
-            type="submit"
-            disabled={loginPending || !loginUsername.trim() || !loginPassword}
-          >
-            {loginPending ? "正在登录…" : "进入我的栗子"}
-          </button>
-          <small className="login-note">账号数据将独立保存并同步。</small>
-        </form>
-      </main>
-    );
-  }
-
   const tr = (zh: string, en: string) => (language === "zh" ? zh : en);
   const locale = language === "zh" ? "zh-CN" : "en-US";
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
@@ -1650,7 +1624,11 @@ export function CheckInApp() {
 
               <div className="settings-sync-note">
                 <span aria-hidden="true">✓</span>
-                <p>{tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.")}</p>
+                <p>
+                  {account
+                    ? tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.")
+                    : tr("设置与记录会保存在当前设备。", "Settings and records are saved on this device.")}
+                </p>
               </div>
             </div>
           )}
@@ -2034,13 +2012,27 @@ export function CheckInApp() {
                 </div>
               </section>
 
-              <section className="account-strip" aria-label={tr("当前账号", "Current account")}>
+              <section className="account-strip" aria-label={tr("账号状态", "Account status")}>
                 <span aria-hidden="true">栗</span>
                 <div>
-                  <small>{tr("当前账号", "Current account")}</small>
-                  <strong>{account.username}</strong>
+                  <small>{tr("账号状态", "Account status")}</small>
+                  <strong>
+                    {account?.username || tr("未登录", "Not signed in")}
+                  </strong>
                 </div>
-                <button type="button" onClick={logout}>{tr("退出登录", "Sign out")}</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (account) {
+                      void logout();
+                    } else {
+                      setLoginError("");
+                      setShowLogin(true);
+                    }
+                  }}
+                >
+                  {account ? tr("退出登录", "Sign out") : tr("登录", "Sign in")}
+                </button>
               </section>
 
               <section className="shell-bank" aria-labelledby="shell-bank-title">
@@ -2741,6 +2733,75 @@ export function CheckInApp() {
               ))}
             </div>
           </section>
+        </div>
+      )}
+
+      {showLogin && (
+        <div
+          className="account-gate login-modal-backdrop"
+          role="presentation"
+          onClick={() => setShowLogin(false)}
+        >
+          <form
+            className="login-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="login-title"
+            onSubmit={handleLogin}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label={tr("关闭登录", "Close sign in")}
+              onClick={() => setShowLogin(false)}
+            >
+              ×
+            </button>
+            <div className="login-brand">
+              <span aria-hidden="true">栗</span>
+              <div>
+                <strong>{tr("栗子小事", "Little Chestnut")}</strong>
+                <small>{tr("登录后，继续积累自己的小事", "Sign in to continue your progress")}</small>
+              </div>
+            </div>
+            <div className="login-heading">
+              <span className="overline">WELCOME BACK</span>
+              <h1 id="login-title">{tr("欢迎回来", "Welcome back")}</h1>
+            </div>
+            <label>
+              {tr("账号", "Account")}
+              <input
+                value={loginUsername}
+                onChange={(event) => setLoginUsername(event.target.value)}
+                autoComplete="username"
+                inputMode="numeric"
+                placeholder={tr("请输入账号", "Enter account")}
+                autoFocus
+              />
+            </label>
+            <label>
+              {tr("密码", "Password")}
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(event) => setLoginPassword(event.target.value)}
+                autoComplete="current-password"
+                placeholder={tr("请输入密码", "Enter password")}
+              />
+            </label>
+            {loginError && <p className="login-error" role="alert">{loginError}</p>}
+            <button
+              className="login-button"
+              type="submit"
+              disabled={loginPending || !loginUsername.trim() || !loginPassword}
+            >
+              {loginPending ? tr("正在登录…", "Signing in…") : tr("登录", "Sign in")}
+            </button>
+            <small className="login-note">
+              {tr("账号数据将独立保存并同步。", "Account data is saved and synced separately.")}
+            </small>
+          </form>
         </div>
       )}
 
