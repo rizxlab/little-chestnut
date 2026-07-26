@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CSSProperties,
   FormEvent,
   PointerEvent as ReactPointerEvent,
   TouchEvent as ReactTouchEvent,
@@ -337,6 +338,8 @@ export function CheckInApp() {
   const [loginError, setLoginError] = useState("");
   const [loginPending, setLoginPending] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [closingModal, setClosingModal] = useState<string | null>(null);
+  const [modalDrag, setModalDrag] = useState<{ id: string; offset: number } | null>(null);
   const [tab, setTab] = useState<Tab>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
@@ -403,6 +406,13 @@ export function CheckInApp() {
   const suppressQuickClickRef = useRef<string | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
+  const modalDragStartRef = useRef<{
+    id: string;
+    y: number;
+    time: number;
+  } | null>(null);
+  const modalDragCloseRef = useRef<(() => void) | null>(null);
+  const modalAnimationTimerRef = useRef<number | null>(null);
 
   function applyAccountData(value: unknown, username: string) {
     const stored =
@@ -581,6 +591,7 @@ export function CheckInApp() {
       active = false;
       toastTimers.current.forEach((timer) => window.clearTimeout(timer));
       if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
+      if (modalAnimationTimerRef.current) window.clearTimeout(modalAnimationTimerRef.current);
     };
   }, []);
 
@@ -639,11 +650,13 @@ export function CheckInApp() {
       const completedAction = timerAction;
       const completedCount = timerMultiplier;
       const timer = window.setTimeout(() => {
-        setTimerAction(null);
-        setTimerPhase("idle");
-        setTimerSecondsLeft(0);
-        setTimerMultiplier(1);
-        recordActionMultiple(completedAction, completedCount);
+        closeSecondaryModal("timer", () => {
+          setTimerAction(null);
+          setTimerPhase("idle");
+          setTimerSecondsLeft(0);
+          setTimerMultiplier(1);
+          recordActionMultiple(completedAction, completedCount);
+        });
       }, 1900);
       return () => window.clearTimeout(timer);
     }
@@ -760,7 +773,7 @@ export function CheckInApp() {
       }
       await hydrateAccount(result.account);
       setLoginPassword("");
-      setShowLogin(false);
+      closeSecondaryModal("login", () => setShowLogin(false));
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "暂时无法登录");
     } finally {
@@ -901,6 +914,97 @@ export function CheckInApp() {
     }
   }
 
+  function closeSecondaryModal(id: string, close: () => void) {
+    if (closingModal) return;
+    setClosingModal(id);
+    if (modalAnimationTimerRef.current) {
+      window.clearTimeout(modalAnimationTimerRef.current);
+    }
+    modalAnimationTimerRef.current = window.setTimeout(() => {
+      close();
+      setClosingModal(null);
+      setModalDrag(null);
+      modalDragStartRef.current = null;
+      modalDragCloseRef.current = null;
+      modalAnimationTimerRef.current = null;
+    }, 240);
+  }
+
+  function startModalDrag(
+    id: string,
+    close: () => void,
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    modalDragStartRef.current = { id, y: event.clientY, time: Date.now() };
+    modalDragCloseRef.current = close;
+    setModalDrag({ id, offset: 0 });
+  }
+
+  function moveModalDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    const start = modalDragStartRef.current;
+    if (!start) return;
+    setModalDrag({
+      id: start.id,
+      offset: Math.max(0, event.clientY - start.y),
+    });
+  }
+
+  function finishModalDrag(event: ReactPointerEvent<HTMLButtonElement>) {
+    const start = modalDragStartRef.current;
+    if (!start) return;
+    const offset = Math.max(0, event.clientY - start.y);
+    const velocity = offset / Math.max(1, Date.now() - start.time);
+    const close = modalDragCloseRef.current;
+    modalDragStartRef.current = null;
+    modalDragCloseRef.current = null;
+    if (close && (offset >= 78 || velocity >= 0.55)) {
+      closeSecondaryModal(start.id, close);
+    } else {
+      setModalDrag({ id: start.id, offset: 0 });
+      window.setTimeout(() => {
+        setModalDrag((current) =>
+          current?.id === start.id && current.offset === 0 ? null : current,
+        );
+      }, 180);
+    }
+  }
+
+  function cancelModalDrag() {
+    modalDragStartRef.current = null;
+    modalDragCloseRef.current = null;
+    setModalDrag(null);
+  }
+
+  function modalMotionClass(id: string, className: string) {
+    return `${className} secondary-modal-card${
+      closingModal === id ? " modal-closing" : ""
+    }${modalDrag?.id === id ? " modal-dragging" : ""}`;
+  }
+
+  function modalMotionStyle(id: string) {
+    return {
+      "--modal-drag-y": `${modalDrag?.id === id ? modalDrag.offset : 0}px`,
+    } as CSSProperties;
+  }
+
+  function modalDragHandle(id: string, close: () => void) {
+    return (
+      <button
+        className="modal-drag-handle"
+        type="button"
+        aria-label={tr("向下拖动关闭", "Drag down to close")}
+        onPointerDown={(event) => startModalDrag(id, close, event)}
+        onPointerMove={moveModalDrag}
+        onPointerUp={finishModalDrag}
+        onPointerCancel={cancelModalDrag}
+      >
+        <span aria-hidden="true" />
+      </button>
+    );
+  }
+
   function openRecordActionMenu(action: MicroAction, rect: DOMRect) {
     const menuWidth = 132;
     const menuHeight = 52;
@@ -1032,17 +1136,19 @@ export function CheckInApp() {
     setShellBalance((current) => Math.max(0, current - pendingReward.cost));
     setRewardClaims((current) => [claim, ...current]);
     showToast(`${pendingReward.icon} ${pendingReward.name}，现在就去享受吧`, "奖励已兑换");
-    setPendingReward(null);
+    closeSecondaryModal("reward-confirm", () => setPendingReward(null));
   }
 
   function openRewardEditor(reward?: Reward) {
-    setShowRewardManager(false);
-    setEditingReward(reward || null);
-    setDraftRewardName(reward?.name || "");
-    setDraftRewardDescription(reward?.description || "");
-    setDraftRewardIcon(reward?.icon || "🎁");
-    setDraftRewardCost(reward?.cost || 10);
-    setShowRewardEditor(true);
+    closeSecondaryModal("reward-manager", () => {
+      setShowRewardManager(false);
+      setEditingReward(reward || null);
+      setDraftRewardName(reward?.name || "");
+      setDraftRewardDescription(reward?.description || "");
+      setDraftRewardIcon(reward?.icon || "🎁");
+      setDraftRewardCost(reward?.cost || 10);
+      setShowRewardEditor(true);
+    });
   }
 
   function saveReward(event: FormEvent) {
@@ -1069,25 +1175,35 @@ export function CheckInApp() {
       ]);
       showToast("新的奖励已加入");
     }
-    setShowRewardEditor(false);
-    setShowRewardManager(true);
+    closeSecondaryModal("reward-editor", () => {
+      setShowRewardEditor(false);
+      setShowRewardManager(true);
+    });
   }
 
   function deleteReward(reward: Reward) {
-    setShowRewardEditor(false);
-    setConfirmDialog({ kind: "delete-reward", reward });
+    if (showRewardEditor) {
+      closeSecondaryModal("reward-editor", () => {
+        setShowRewardEditor(false);
+        setConfirmDialog({ kind: "delete-reward", reward });
+      });
+    } else {
+      setConfirmDialog({ kind: "delete-reward", reward });
+    }
   }
 
   function openActionEditor(action?: MicroAction) {
-    setShowActionManager(false);
-    setEditingAction(action || null);
-    setDraftName(action?.name || "");
-    setDraftIcon(action?.icon || "🌱");
-    setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
-    setDraftValue(action?.value || 1);
-    setDraftUsesTimer(Boolean(action?.timerSeconds));
-    setDraftTimerSeconds(action?.timerSeconds || 5);
-    setShowActionEditor(true);
+    closeSecondaryModal("action-manager", () => {
+      setShowActionManager(false);
+      setEditingAction(action || null);
+      setDraftName(action?.name || "");
+      setDraftIcon(action?.icon || "🌱");
+      setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
+      setDraftValue(action?.value || 1);
+      setDraftUsesTimer(Boolean(action?.timerSeconds));
+      setDraftTimerSeconds(action?.timerSeconds || 5);
+      setShowActionEditor(true);
+    });
   }
 
   function closeActionEditor() {
@@ -1142,28 +1258,30 @@ export function CheckInApp() {
       ]);
       showToast("新的微行动已加入");
     }
-    setShowActionEditor(false);
-    setShowActionManager(true);
+    closeSecondaryModal("action-editor", closeActionEditor);
   }
 
   function deleteAction(action: MicroAction) {
-    setShowActionEditor(false);
-    setShowActionManager(true);
-    setConfirmDialog({ kind: "delete-action", action });
+    closeSecondaryModal("action-editor", () => {
+      setShowActionEditor(false);
+      setShowActionManager(true);
+      setConfirmDialog({ kind: "delete-action", action });
+    });
   }
 
   function openAreaEditor(area?: Area) {
-    setShowAreaManager(false);
-    setEditingArea(area || null);
-    setDraftAreaName(area?.name || "");
-    setDraftAreaIcon(area?.icon || "🌿");
-    setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
-    setShowAreaEditor(true);
+    closeSecondaryModal("area-manager", () => {
+      setShowAreaManager(false);
+      setEditingArea(area || null);
+      setDraftAreaName(area?.name || "");
+      setDraftAreaIcon(area?.icon || "🌿");
+      setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
+      setShowAreaEditor(true);
+    });
   }
 
   function closeAreaEditor() {
-    setShowAreaEditor(false);
-    setShowAreaManager(true);
+    closeSecondaryModal("area-editor", closeAreaEditor);
   }
 
   function saveArea(event: FormEvent) {
@@ -1211,9 +1329,11 @@ export function CheckInApp() {
       showToast(`请先为“${blockingAction.name}”添加其他标签`, "暂时不能删除");
       return;
     }
-    setShowAreaEditor(false);
-    setShowAreaManager(true);
-    setConfirmDialog({ kind: "delete-area", area });
+    closeSecondaryModal("area-editor", () => {
+      setShowAreaEditor(false);
+      setShowAreaManager(true);
+      setConfirmDialog({ kind: "delete-area", area });
+    });
   }
 
   function scrollScreenToTop(selector: string) {
@@ -1410,7 +1530,7 @@ export function CheckInApp() {
       changeTab("today");
       showToast("已恢复为新的开始");
     }
-    setConfirmDialog(null);
+    closeSecondaryModal("confirm", () => setConfirmDialog(null));
   }
 
   if (!authReady) {
@@ -2421,19 +2541,25 @@ export function CheckInApp() {
       )}
 
       {showActionManager && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowActionManager(false)}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("action-manager", () => setShowActionManager(false))}
+        >
           <section
-            className="bottom-sheet action-manager"
+            className={modalMotionClass("action-manager", "bottom-sheet action-manager")}
+            style={modalMotionStyle("action-manager")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="action-manager-title"
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("action-manager", () => setShowActionManager(false))}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowActionManager(false)}
+              onClick={() => closeSecondaryModal("action-manager", () => setShowActionManager(false))}
             >
               ×
             </button>
@@ -2478,17 +2604,23 @@ export function CheckInApp() {
       )}
 
       {showActionEditor && (
-        <div className="modal-backdrop" role="presentation" onClick={closeActionEditor}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("action-editor", closeActionEditor)}
+        >
           <form
-            className="bottom-sheet action-editor"
+            className={modalMotionClass("action-editor", "bottom-sheet action-editor")}
+            style={modalMotionStyle("action-editor")}
             onSubmit={saveAction}
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("action-editor", closeActionEditor)}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={closeActionEditor}
+              onClick={() => closeSecondaryModal("action-editor", closeActionEditor)}
             >
               ×
             </button>
@@ -2591,19 +2723,25 @@ export function CheckInApp() {
       )}
 
       {showAreaManager && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowAreaManager(false)}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("area-manager", () => setShowAreaManager(false))}
+        >
           <section
-            className="bottom-sheet action-manager area-manager"
+            className={modalMotionClass("area-manager", "bottom-sheet action-manager area-manager")}
+            style={modalMotionStyle("area-manager")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="area-manager-title"
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("area-manager", () => setShowAreaManager(false))}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowAreaManager(false)}
+              onClick={() => closeSecondaryModal("area-manager", () => setShowAreaManager(false))}
             >
               ×
             </button>
@@ -2650,17 +2788,23 @@ export function CheckInApp() {
       )}
 
       {showAreaEditor && (
-        <div className="modal-backdrop" role="presentation" onClick={closeAreaEditor}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("area-editor", closeAreaEditor)}
+        >
           <form
-            className="bottom-sheet area-editor"
+            className={modalMotionClass("area-editor", "bottom-sheet area-editor")}
+            style={modalMotionStyle("area-editor")}
             onSubmit={saveArea}
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("area-editor", closeAreaEditor)}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={closeAreaEditor}
+              onClick={() => closeSecondaryModal("area-editor", closeAreaEditor)}
             >
               ×
             </button>
@@ -2721,17 +2865,23 @@ export function CheckInApp() {
       )}
 
       {showRewardEditor && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowRewardEditor(false)}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("reward-editor", () => setShowRewardEditor(false))}
+        >
           <form
-            className="bottom-sheet reward-editor"
+            className={modalMotionClass("reward-editor", "bottom-sheet reward-editor")}
+            style={modalMotionStyle("reward-editor")}
             onSubmit={saveReward}
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("reward-editor", () => setShowRewardEditor(false))}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowRewardEditor(false)}
+              onClick={() => closeSecondaryModal("reward-editor", () => setShowRewardEditor(false))}
             >
               ×
             </button>
@@ -2792,19 +2942,25 @@ export function CheckInApp() {
       )}
 
       {showRewardManager && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowRewardManager(false)}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("reward-manager", () => setShowRewardManager(false))}
+        >
           <section
-            className="bottom-sheet reward-manager"
+            className={modalMotionClass("reward-manager", "bottom-sheet reward-manager")}
+            style={modalMotionStyle("reward-manager")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reward-manager-title"
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("reward-manager", () => setShowRewardManager(false))}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowRewardManager(false)}
+              onClick={() => closeSecondaryModal("reward-manager", () => setShowRewardManager(false))}
             >
               ×
             </button>
@@ -2856,21 +3012,23 @@ export function CheckInApp() {
         <div
           className="account-gate login-modal-backdrop"
           role="presentation"
-          onClick={() => setShowLogin(false)}
+          onClick={() => closeSecondaryModal("login", () => setShowLogin(false))}
         >
           <form
-            className="login-card"
+            className={modalMotionClass("login", "login-card")}
+            style={modalMotionStyle("login")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="login-title"
             onSubmit={handleLogin}
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("login", () => setShowLogin(false))}
             <button
               className="close-button"
               type="button"
               aria-label={tr("关闭登录", "Close sign in")}
-              onClick={() => setShowLogin(false)}
+              onClick={() => closeSecondaryModal("login", () => setShowLogin(false))}
             >
               ×
             </button>
@@ -2925,22 +3083,31 @@ export function CheckInApp() {
         <div
           className="modal-backdrop timer-backdrop"
           role="presentation"
-          onClick={timerPhase === "success" ? undefined : closeActionTimer}
+          onClick={
+            timerPhase === "success"
+              ? undefined
+              : () => closeSecondaryModal("timer", closeActionTimer)
+          }
         >
           <section
-            className={`bottom-sheet timer-sheet ${timerPhase === "success" ? "timer-succeeded" : ""}`}
+            className={modalMotionClass(
+              "timer",
+              `bottom-sheet timer-sheet ${timerPhase === "success" ? "timer-succeeded" : ""}`,
+            )}
+            style={modalMotionStyle("timer")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="timer-title"
             aria-describedby="timer-description"
             onClick={(event) => event.stopPropagation()}
           >
+            {timerPhase !== "success" && modalDragHandle("timer", closeActionTimer)}
             {timerPhase !== "success" && (
               <button
                 className="close-button"
                 type="button"
                 aria-label={tr("关闭计时", "Close timer")}
-                onClick={closeActionTimer}
+                onClick={() => closeSecondaryModal("timer", closeActionTimer)}
               >
                 ×
               </button>
@@ -3046,7 +3213,11 @@ export function CheckInApp() {
             )}
             {timerPhase === "idle" ? (
               <div className="dialog-actions">
-                <button className="dialog-button secondary" type="button" onClick={closeActionTimer}>
+                <button
+                  className="dialog-button secondary"
+                  type="button"
+                  onClick={() => closeSecondaryModal("timer", closeActionTimer)}
+                >
                   {tr("取消", "Cancel")}
                 </button>
                 <button className="dialog-button timer-start-button" type="button" onClick={startActionTimer}>
@@ -3055,7 +3226,11 @@ export function CheckInApp() {
               </div>
             ) : timerPhase !== "success" ? (
               <div className="dialog-actions timer-live-actions">
-                <button className="dialog-button secondary" type="button" onClick={closeActionTimer}>
+                <button
+                  className="dialog-button secondary"
+                  type="button"
+                  onClick={() => closeSecondaryModal("timer", closeActionTimer)}
+                >
                   {tr("取消计时", "Cancel timer")}
                 </button>
                 <button className="dialog-button timer-skip-button" type="button" onClick={skipActionTimer}>
@@ -3107,21 +3282,23 @@ export function CheckInApp() {
         <div
           className="modal-backdrop reward-backdrop"
           role="presentation"
-          onClick={() => setPendingReward(null)}
+          onClick={() => closeSecondaryModal("reward-confirm", () => setPendingReward(null))}
         >
           <section
-            className="bottom-sheet reward-sheet"
+            className={modalMotionClass("reward-confirm", "bottom-sheet reward-sheet")}
+            style={modalMotionStyle("reward-confirm")}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reward-title"
             aria-describedby="reward-description"
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("reward-confirm", () => setPendingReward(null))}
             <button
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setPendingReward(null)}
+              onClick={() => closeSecondaryModal("reward-confirm", () => setPendingReward(null))}
             >
               ×
             </button>
@@ -3140,7 +3317,7 @@ export function CheckInApp() {
               <button
                 className="dialog-button secondary"
                 type="button"
-                onClick={() => setPendingReward(null)}
+                onClick={() => closeSecondaryModal("reward-confirm", () => setPendingReward(null))}
               >
                 再想想
               </button>
@@ -3153,21 +3330,30 @@ export function CheckInApp() {
       )}
 
       {confirmDialog && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmDialog(null)}>
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() => closeSecondaryModal("confirm", () => setConfirmDialog(null))}
+        >
           <section
-            className={`bottom-sheet confirm-sheet ${
-              confirmDialog.kind === "reset-data"
-              || confirmDialog.kind === "delete-reward"
-              || confirmDialog.kind === "delete-area"
-                ? "danger-sheet"
-                : ""
-            }`}
+            className={modalMotionClass(
+              "confirm",
+              `bottom-sheet confirm-sheet ${
+                confirmDialog.kind === "reset-data"
+                || confirmDialog.kind === "delete-reward"
+                || confirmDialog.kind === "delete-area"
+                  ? "danger-sheet"
+                  : ""
+              }`,
+            )}
+            style={modalMotionStyle("confirm")}
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-title"
             aria-describedby="confirm-description"
             onClick={(event) => event.stopPropagation()}
           >
+            {modalDragHandle("confirm", () => setConfirmDialog(null))}
             <span className="dialog-symbol" aria-hidden="true">
               {confirmDialog.kind === "reset-data" ? "↺" : "−"}
             </span>
@@ -3202,7 +3388,7 @@ export function CheckInApp() {
               <button
                 className="dialog-button secondary"
                 type="button"
-                onClick={() => setConfirmDialog(null)}
+                onClick={() => closeSecondaryModal("confirm", () => setConfirmDialog(null))}
               >
                 先保留
               </button>

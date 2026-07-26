@@ -75,9 +75,13 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .login-modal-backdrop {
   position: fixed;
-  z-index: 90;
+  z-index: 46;
+  place-items: start center;
   inset: 0;
-  padding: 20px;
+  padding:
+    max(72px, calc(env(safe-area-inset-top) + 58px))
+    20px
+    max(20px, env(safe-area-inset-bottom));
   background: rgba(43, 32, 26, .34);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   backdrop-filter: blur(14px) saturate(120%);
@@ -2043,7 +2047,7 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: start center;
   overflow-y: auto;
   padding:
-    max(28px, calc(env(safe-area-inset-top) + 14px))
+    max(72px, calc(env(safe-area-inset-top) + 58px))
     18px
     max(18px, env(safe-area-inset-bottom));
   background: rgba(42,33,27,.44);
@@ -2053,7 +2057,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .bottom-sheet {
   position: relative;
   width: min(100%, 500px);
-  max-height: calc(100dvh - 56px);
+  max-height: calc(100dvh - 90px);
   overflow-y: auto;
   border-radius: 27px;
   padding: 26px;
@@ -2062,6 +2066,43 @@ button { -webkit-tap-highlight-color: transparent; }
   animation: sheet-up 260ms ease;
   overscroll-behavior: contain;
   scroll-padding-block: 90px 200px;
+}
+.secondary-modal-card {
+  --modal-drag-y: 0px;
+  transform: translate3d(0, var(--modal-drag-y), 0);
+  animation: secondary-modal-slide-in 300ms cubic-bezier(.2, .82, .24, 1);
+  will-change: transform;
+}
+.secondary-modal-card.modal-dragging {
+  animation: none !important;
+  transition: transform 40ms linear;
+}
+.secondary-modal-card.modal-closing {
+  pointer-events: none;
+  animation: secondary-modal-slide-out 240ms cubic-bezier(.4, 0, .85, .35) forwards !important;
+}
+.modal-drag-handle {
+  position: sticky;
+  z-index: 4;
+  top: -22px;
+  display: grid;
+  width: 132px;
+  height: 30px;
+  margin: -23px auto 5px;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.modal-drag-handle:active { cursor: grabbing; }
+.modal-drag-handle span {
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(111, 59, 39, .25);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .48);
 }
 .close-button {
   position: absolute;
@@ -2154,15 +2195,15 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 800;
 }
 .action-editor {
-  min-height: min(680px, calc(100dvh - 56px));
-  max-height: calc(100dvh - 56px);
+  min-height: min(680px, calc(100dvh - 90px));
+  max-height: calc(100dvh - 90px);
   overflow-y: auto;
   padding-bottom: max(28px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
 .area-editor {
-  min-height: min(680px, calc(100dvh - 56px));
-  max-height: calc(100dvh - 56px);
+  min-height: min(680px, calc(100dvh - 90px));
+  max-height: calc(100dvh - 90px);
   overflow-y: auto;
   padding-bottom: max(28px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
@@ -2251,8 +2292,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-editor-setting > button.enabled > i b { transform: translateX(15px); }
 .timer-editor-setting > label { margin-top: 8px; }
 .reward-editor {
-  min-height: min(680px, calc(100dvh - 56px));
-  max-height: calc(100dvh - 56px);
+  min-height: min(680px, calc(100dvh - 90px));
+  max-height: calc(100dvh - 90px);
   overflow-y: auto;
   padding-bottom: max(30px, env(safe-area-inset-bottom));
   scroll-padding-bottom: 180px;
@@ -2260,8 +2301,8 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .reward-manager,
 .action-manager {
-  min-height: min(680px, calc(100dvh - 56px));
-  max-height: calc(100dvh - 56px);
+  min-height: min(680px, calc(100dvh - 90px));
+  max-height: calc(100dvh - 90px);
   overflow-y: auto;
   padding-bottom: max(26px, env(safe-area-inset-bottom));
 }
@@ -2440,7 +2481,7 @@ button { -webkit-tap-highlight-color: transparent; }
   -webkit-backdrop-filter: blur(26px) saturate(145%);
   backdrop-filter: blur(26px) saturate(145%);
   text-align: center;
-  animation: reward-dialog-in 250ms cubic-bezier(.2, .85, .25, 1);
+  animation: secondary-modal-slide-in 300ms cubic-bezier(.2, .82, .24, 1);
 }
 .record-action-layer {
   position: fixed;
@@ -2522,7 +2563,7 @@ button { -webkit-tap-highlight-color: transparent; }
   -webkit-backdrop-filter: blur(28px) saturate(148%);
   backdrop-filter: blur(28px) saturate(148%);
   text-align: center;
-  animation: timer-sheet-in 260ms cubic-bezier(.2, .85, .25, 1);
+  animation: secondary-modal-slide-in 300ms cubic-bezier(.2, .82, .24, 1);
 }
 .timer-sheet > .overline { display: block; margin-bottom: 18px; }
 .timer-clock {
@@ -3051,6 +3092,10 @@ html[data-theme="dark"] .toast {
 html[data-theme="dark"] .toast-copy strong,
 html[data-theme="dark"] .toast-copy small { color: #f0d7c5; }
 html[data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, .58); }
+html[data-theme="dark"] .modal-drag-handle span {
+  background: rgba(242, 193, 162, .3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
+}
 html[data-theme="dark"] .calendar-grid button { color: var(--muted); }
 html[data-theme="dark"] .calendar-grid button.selected { color: #211713; }
 html[data-theme="dark"] .check-control small { border-color: #2a221e; }
@@ -3079,6 +3124,26 @@ html[data-theme="dark"] .settings-heading h2 { color: #e2ad8e; }
   50% { transform: scale(1.06); }
 }
 @keyframes sheet-up { from { opacity: 0; transform: translateY(24px); } }
+@keyframes secondary-modal-slide-in {
+  from {
+    opacity: .18;
+    transform: translate3d(0, calc(100% + 90px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, var(--modal-drag-y, 0px), 0);
+  }
+}
+@keyframes secondary-modal-slide-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, var(--modal-drag-y, 0px), 0);
+  }
+  to {
+    opacity: .12;
+    transform: translate3d(0, calc(100% + 90px), 0);
+  }
+}
 @keyframes check-bounce {
   0% { transform: scale(.72); }
   55% { transform: scale(1.18); }
@@ -3115,10 +3180,15 @@ html[data-theme="dark"] .settings-heading h2 { color: #e2ad8e; }
 
 @media (max-width: 550px) {
   .account-gate { padding: 0; }
-  .login-modal-backdrop { padding: 14px; }
+  .login-modal-backdrop {
+    padding:
+      max(68px, calc(env(safe-area-inset-top) + 54px))
+      14px
+      max(14px, env(safe-area-inset-bottom));
+  }
   .login-modal-backdrop .login-card {
     width: 100%;
-    max-height: calc(100dvh - 28px);
+    max-height: calc(100dvh - 82px);
     border-radius: 28px;
     padding: 27px 24px 24px;
   }
@@ -3129,8 +3199,8 @@ html[data-theme="dark"] .settings-heading h2 { color: #e2ad8e; }
   .action-manager,
   .area-manager,
   .reward-manager {
-    min-height: calc(100dvh - 28px);
-    max-height: calc(100dvh - 28px);
+    min-height: calc(100dvh - 82px);
+    max-height: calc(100dvh - 82px);
   }
   .global-home-button {
     top: max(17px, env(safe-area-inset-top));
@@ -3145,16 +3215,21 @@ html[data-theme="dark"] .settings-heading h2 { color: #e2ad8e; }
   }
   .modal-backdrop {
     padding:
-      max(14px, env(safe-area-inset-top))
+      max(68px, calc(env(safe-area-inset-top) + 54px))
       14px
       max(14px, env(safe-area-inset-bottom));
   }
   .bottom-sheet {
-    max-height: calc(100dvh - 28px);
+    max-height: calc(100dvh - 82px);
     border-radius: 27px;
     padding-bottom: max(26px, env(safe-area-inset-bottom));
   }
-  .timer-backdrop { padding: 18px; }
+  .timer-backdrop {
+    padding:
+      max(68px, calc(env(safe-area-inset-top) + 54px))
+      18px
+      max(18px, env(safe-area-inset-bottom));
+  }
   .timer-backdrop .timer-sheet {
     border-radius: 29px;
     padding-bottom: 24px;
