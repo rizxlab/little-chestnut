@@ -1401,24 +1401,6 @@ export function CheckInApp() {
       </button>
 
       <section className="app-frame">
-        <header className="app-header">
-          <button
-            className="wordmark"
-            type="button"
-            onClick={() => {
-              closeCalendar();
-              setShowSettings(false);
-              changeTab("today");
-            }}
-          >
-            <span className="brand-seed" aria-hidden="true">栗</span>
-            <span className="wordmark-copy">
-              <strong>栗子小事</strong>
-              <small>Little Chestnut</small>
-            </span>
-          </button>
-        </header>
-
         <div
           className="app-scroll"
           ref={appScrollRef}
