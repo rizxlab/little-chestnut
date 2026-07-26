@@ -634,52 +634,6 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
 }
 
-.recent-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
-}
-.recent-records summary {
-  display: grid;
-  min-height: 46px;
-  grid-template-columns: 1fr auto 18px;
-  gap: 8px;
-  align-items: center;
-  padding: 4px 2px 0;
-  color: var(--ink);
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  list-style: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.recent-records summary::-webkit-details-marker { display: none; }
-.recent-records summary small {
-  color: var(--muted);
-  font-size: 8px;
-  font-weight: 500;
-}
-.recent-records summary i {
-  color: var(--muted);
-  font-size: 15px;
-  font-style: normal;
-  text-align: center;
-  transform: rotate(0);
-  transition: transform 220ms ease;
-}
-.recent-records[open] summary i { transform: rotate(180deg); }
-.recent-records[open] .record-list,
-.recent-records[open] .empty-state {
-  animation: record-list-reveal 220ms ease both;
-}
-.record-list { border-top: 0; }
-.record-row {
-  display: grid;
-  grid-template-columns: 38px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  border-bottom: 1px solid var(--line);
-  padding: 13px 0;
-}
 .record-icon {
   display: grid;
   width: 36px;
@@ -687,17 +641,6 @@ button { -webkit-tap-highlight-color: transparent; }
   place-items: center;
   border-radius: 13px;
   background: #f5eee3;
-}
-.record-row div { display: grid; gap: 3px; min-width: 0; }
-.record-row strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.record-row small, .record-row > span:last-child { color: var(--muted); font-size: 9px; }
-.record-tag-list {
-  display: flex;
-  max-width: 112px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 3px 7px;
-  text-align: right;
 }
 
 .empty-state {
@@ -1892,10 +1835,6 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes toast-ring {
   from { opacity: .9; transform: scale(.55); }
   to { opacity: 0; transform: scale(1.45); }
-}
-@keyframes record-list-reveal {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes account-pulse {
   0%, 100% { transform: scale(1); }
