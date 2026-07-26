@@ -1364,6 +1364,12 @@ export function CheckInApp() {
     : 0;
   const visibleShellCount = Math.min(12, shellBalance);
   const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
+  const todayCardMilestone =
+    todayRecords.length >= 20
+      ? "milestone-20"
+      : todayRecords.length >= 10
+        ? "milestone-10"
+        : "";
 
   return (
     <main className="shell">
@@ -1678,7 +1684,15 @@ export function CheckInApp() {
                 <h1>{greeting(language)}</h1>
               </section>
 
-              <section className="today-card">
+              <section className={`today-card ${todayCardMilestone}`}>
+                <span className="today-milestone-stars" aria-hidden="true">
+                  <b />
+                  <b />
+                  <b />
+                  <b />
+                  <b />
+                  <b />
+                </span>
                 <div className="today-card-copy">
                   <span>{tr("今日成长", "TODAY")}</span>
                   <strong>{todayRecords.length}</strong>
