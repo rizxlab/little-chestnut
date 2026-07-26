@@ -1004,6 +1004,31 @@ button { -webkit-tap-highlight-color: transparent; }
 .settings-option-copy > div { display: grid; gap: 3px; }
 .settings-option-copy strong { font-size: 12px; }
 .settings-option-copy small { color: var(--muted); font-size: 8px; }
+.settings-nickname-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 15px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.settings-nickname-field input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  outline: none;
+  padding: 12px 13px;
+  color: var(--ink);
+  background: rgba(255, 253, 249, .82);
+  font-size: 12px;
+}
+.settings-nickname-field input:focus {
+  border-color: #b99882;
+  box-shadow: 0 0 0 3px rgba(185, 152, 130, .11);
+}
+.settings-nickname-field > small {
+  color: var(--muted);
+  font-size: 8px;
+}
 .settings-segmented {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3004,6 +3029,7 @@ html[data-theme="dark"] .theme-choice-grid button.selected {
 html[data-theme="dark"] .action-editor input,
 html[data-theme="dark"] .area-editor input,
 html[data-theme="dark"] .reward-editor input,
+html[data-theme="dark"] .settings-nickname-field input,
 html[data-theme="dark"] .login-card input {
   border-color: var(--line);
   color: var(--ink);

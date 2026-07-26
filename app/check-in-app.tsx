@@ -329,6 +329,7 @@ function buildSampleRecords(): GrowthRecord[] {
 
 export function CheckInApp() {
   const [account, setAccount] = useState<Account | null>(null);
+  const [nickname, setNickname] = useState("");
   const [authReady, setAuthReady] = useState(false);
   const [serverHydrated, setServerHydrated] = useState(false);
   const [loginUsername, setLoginUsername] = useState("");
@@ -489,6 +490,15 @@ export function CheckInApp() {
       stored?.preferences && typeof stored.preferences === "object"
         ? (stored.preferences as { language?: Language; theme?: Theme })
         : null;
+    const profile =
+      stored?.profile && typeof stored.profile === "object"
+        ? (stored.profile as { nickname?: string })
+        : null;
+    setNickname(
+      typeof profile?.nickname === "string"
+        ? profile.nickname.slice(0, 16)
+        : "",
+    );
     setLanguage(preferences?.language === "en" ? "en" : "zh");
     setTheme(preferences?.theme === "dark" ? "dark" : "light");
     if (shouldSeedHistory) localStorage.setItem(sampleKey, "done");
@@ -536,6 +546,7 @@ export function CheckInApp() {
       stored = null;
     }
     applyAccountData(stored, "guest");
+    setNickname("");
     setAccount(null);
     setReady(true);
     setServerHydrated(false);
@@ -583,6 +594,7 @@ export function CheckInApp() {
       shellsEarned,
       rewards,
       rewardClaims,
+      profile: { nickname: account ? nickname.trim() : "" },
       preferences: { language, theme },
     };
     localStorage.setItem(
@@ -607,6 +619,7 @@ export function CheckInApp() {
     rewardClaims,
     rewards,
     language,
+    nickname,
     serverHydrated,
     shellBalance,
     shellsEarned,
@@ -769,6 +782,7 @@ export function CheckInApp() {
           shellsEarned,
           rewards,
           rewardClaims,
+          profile: { nickname: nickname.trim() },
           preferences: { language, theme },
         }),
       }).catch(() => null);
@@ -1609,6 +1623,54 @@ export function CheckInApp() {
               </section>
 
               <section className="settings-panel">
+                {account ? (
+                  <>
+                    <div className="settings-option-copy">
+                      <span className="settings-option-icon" aria-hidden="true">称</span>
+                      <div>
+                        <strong>{tr("账号昵称", "Nickname")}</strong>
+                        <small>
+                          {tr(
+                            "用于首页问候，只保存在当前账号中",
+                            "Shown in the home greeting and saved to this account",
+                          )}
+                        </small>
+                      </div>
+                    </div>
+                    <label className="settings-nickname-field">
+                      <span>{tr("昵称", "Nickname")}</span>
+                      <input
+                        value={nickname}
+                        maxLength={16}
+                        autoComplete="nickname"
+                        placeholder={tr("例如：小栗", "For example: Lizi")}
+                        onChange={(event) => setNickname(event.target.value)}
+                        onBlur={() => setNickname((current) => current.trim())}
+                      />
+                      <small>
+                        {nickname.trim()
+                          ? tr(
+                              `首页将显示“${greeting(language)}，${nickname.trim()}”`,
+                              `Home will show “${greeting(language)}, ${nickname.trim()}”`,
+                            )
+                          : tr("未填写时只显示问候语", "Leave blank to show only the greeting")}
+                      </small>
+                    </label>
+                  </>
+                ) : (
+                  <div className="settings-option-copy">
+                    <span className="settings-option-icon" aria-hidden="true">称</span>
+                    <div>
+                      <strong>{tr("账号昵称", "Nickname")}</strong>
+                      <small>
+                        {tr("登录后可以设置自己的昵称", "Sign in to set a personal nickname")}
+                      </small>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              <section className="settings-panel">
                 <div className="settings-option-copy">
                   <span className="settings-option-icon" aria-hidden="true">文</span>
                   <div>
@@ -1730,7 +1792,12 @@ export function CheckInApp() {
                     {new Date().getHours() >= 6 && new Date().getHours() < 18 ? "☀️" : "🌙"}
                   </span>
                 </div>
-                <h1>{greeting(language)}</h1>
+                <h1>
+                  {greeting(language)}
+                  {account && nickname.trim()
+                    ? `${language === "zh" ? "，" : ", "}${nickname.trim()}`
+                    : ""}
+                </h1>
               </section>
 
               <section className={`today-card ${todayCardMilestone}`}>
