@@ -381,6 +381,8 @@ export function CheckInApp() {
   const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [draftProfileNickname, setDraftProfileNickname] = useState("");
   const [language, setLanguage] = useState<Language>("zh");
   const [theme, setTheme] = useState<Theme>("light");
   const [shellBalance, setShellBalance] = useState(0);
@@ -1374,9 +1376,33 @@ export function CheckInApp() {
     scrollScreenToTop('[data-tab="profile"]');
   }
 
+  function openProfileEditor() {
+    if (!account) {
+      setLoginError("");
+      setShowLogin(true);
+      return;
+    }
+    setDraftProfileNickname(nickname);
+    setShowProfileEditor(true);
+  }
+
+  function closeProfileEditor() {
+    closeSecondaryModal("profile-editor", () => setShowProfileEditor(false));
+  }
+
+  function saveProfile(event: FormEvent) {
+    event.preventDefault();
+    setNickname(draftProfileNickname.trim().slice(0, 16));
+    closeSecondaryModal("profile-editor", () => {
+      setShowProfileEditor(false);
+      showToast("个人信息已更新", "保存成功");
+    });
+  }
+
   function returnToToday() {
     setShowCalendar(false);
     setShowSettings(false);
+    setShowProfileEditor(false);
     setShowActionManager(false);
     setShowActionEditor(false);
     setShowAreaManager(false);
@@ -1749,48 +1775,6 @@ export function CheckInApp() {
                 </button>
                 <span className="overline">SETTINGS</span>
                 <h1>{tr("设置", "Settings")}</h1>
-              </section>
-
-              <section className="settings-panel">
-                {account ? (
-                  <>
-                    <div className="settings-option-copy">
-                      <span className="settings-option-icon" aria-hidden="true">称</span>
-                      <div>
-                        <strong>{tr("账号昵称", "Nickname")}</strong>
-                      </div>
-                    </div>
-                    <label className="settings-nickname-field">
-                      <span>{tr("昵称", "Nickname")}</span>
-                      <input
-                        value={nickname}
-                        maxLength={16}
-                        autoComplete="nickname"
-                        placeholder={tr("例如：小栗", "For example: Lizi")}
-                        onChange={(event) => setNickname(event.target.value)}
-                        onBlur={() => setNickname((current) => current.trim())}
-                      />
-                      {nickname.trim() && (
-                        <small>
-                          {tr(
-                            `首页将显示“${greeting(language)}，${nickname.trim()}”`,
-                            `Home will show “${greeting(language)}, ${nickname.trim()}”`,
-                          )}
-                        </small>
-                      )}
-                    </label>
-                  </>
-                ) : (
-                  <div className="settings-option-copy">
-                    <span className="settings-option-icon" aria-hidden="true">称</span>
-                    <div>
-                      <strong>{tr("账号昵称", "Nickname")}</strong>
-                      <small>
-                        {tr("登录后可以设置自己的昵称", "Sign in to set a personal nickname")}
-                      </small>
-                    </div>
-                  </div>
-                )}
               </section>
 
               <section className="settings-panel">
@@ -2247,7 +2231,18 @@ export function CheckInApp() {
               </section>
 
               <section className="account-strip" aria-label={tr("账号状态", "Account status")}>
-                <span aria-hidden="true">栗</span>
+                <button
+                  className="account-avatar-button"
+                  type="button"
+                  aria-label={
+                    account
+                      ? tr("编辑个人信息", "Edit profile")
+                      : tr("登录账号", "Sign in")
+                  }
+                  onClick={openProfileEditor}
+                >
+                  <span aria-hidden="true">栗</span>
+                </button>
                 <div>
                   <small>{tr("账号状态", "Account status")}</small>
                   <strong>
@@ -2529,6 +2524,60 @@ export function CheckInApp() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {showProfileEditor && account && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={closeProfileEditor}
+        >
+          <form
+            className={modalMotionClass(
+              "profile-editor",
+              "bottom-sheet profile-editor",
+            )}
+            style={modalMotionStyle("profile-editor")}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-editor-title"
+            onSubmit={saveProfile}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {modalDragHandle("profile-editor", () => setShowProfileEditor(false))}
+            <button
+              className="close-button"
+              type="button"
+              aria-label={tr("关闭个人信息", "Close profile")}
+              onClick={closeProfileEditor}
+            >
+              ×
+            </button>
+            <span className="overline">{tr("个人资料", "PROFILE")}</span>
+            <h2 id="profile-editor-title">{tr("编辑个人信息", "Edit profile")}</h2>
+            <div className="profile-editor-account">
+              <span aria-hidden="true">栗</span>
+              <div>
+                <small>{tr("账号", "Account")}</small>
+                <strong>{account.username}</strong>
+              </div>
+            </div>
+            <label>
+              {tr("昵称", "Nickname")}
+              <input
+                value={draftProfileNickname}
+                maxLength={16}
+                autoComplete="nickname"
+                placeholder={tr("例如：小栗", "For example: Lizi")}
+                onChange={(event) => setDraftProfileNickname(event.target.value)}
+                autoFocus
+              />
+            </label>
+            <button className="save-button" type="submit">
+              {tr("保存", "Save")}
+            </button>
+          </form>
         </div>
       )}
 
