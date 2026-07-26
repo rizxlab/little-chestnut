@@ -55,6 +55,7 @@ type ConfirmDialog =
   | { kind: "reset-data" };
 
 const STORAGE_KEY = "lizi-growth-v2";
+const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
 
 const DEFAULT_AREAS: Area[] = [
   { id: "health", name: "健康", icon: "💚", color: "#4f8069", isDefault: true },
@@ -130,6 +131,88 @@ function normalizedTagIds(value: { tagIds?: string[]; areaId?: string }) {
   return value.areaId ? [value.areaId] : [];
 }
 
+function sampleDate(daysAgo: number, hour: number, minute = 0) {
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  date.setHours(hour, minute, 0, 0);
+  return date.toISOString();
+}
+
+function buildSampleRecords(): GrowthRecord[] {
+  return [
+    {
+      id: "sample-history-water",
+      actionId: "water",
+      actionName: "喝一杯水",
+      icon: "💧",
+      tagIds: ["health", "body"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(2, 9, 20),
+    },
+    {
+      id: "sample-history-read",
+      actionId: "read",
+      actionName: "阅读一页",
+      icon: "📖",
+      tagIds: ["learn", "mind"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(4, 21, 10),
+    },
+    {
+      id: "sample-history-idea",
+      actionId: "idea",
+      actionName: "记录一个灵感",
+      icon: "💡",
+      tagIds: ["create", "mind"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(4, 15, 35),
+    },
+    {
+      id: "sample-history-stretch",
+      actionId: "stretch",
+      actionName: "拉伸 5 秒",
+      icon: "🙆",
+      tagIds: ["health", "body"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(7, 8, 45),
+    },
+    {
+      id: "sample-history-word",
+      actionId: "word",
+      actionName: "学一个单词",
+      icon: "🔤",
+      tagIds: ["learn"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(12, 12, 15),
+    },
+    {
+      id: "sample-history-sketch",
+      actionId: "sketch",
+      actionName: "画一个草图",
+      icon: "✏️",
+      tagIds: ["create", "mind"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(18, 18, 30),
+    },
+    {
+      id: "sample-history-last-month",
+      actionId: "water",
+      actionName: "喝一杯水",
+      icon: "💧",
+      tagIds: ["health", "body"],
+      value: 1,
+      source: "主动记录",
+      createdAt: sampleDate(31, 10, 5),
+    },
+  ];
+}
+
 export function CheckInApp() {
   const [tab, setTab] = useState<Tab>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
@@ -149,6 +232,11 @@ export function CheckInApp() {
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
   const [tabMotion, setTabMotion] = useState<"from-left" | "from-right">("from-right");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(
+    () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+  );
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => localDay(new Date()));
   const appScrollRef = useRef<HTMLDivElement | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -176,14 +264,23 @@ export function CheckInApp() {
           }),
         );
       }
-      if (Array.isArray(stored?.records)) {
-        setRecords(
-          stored.records.map((record: GrowthRecord) => ({
+      const storedRecords = Array.isArray(stored?.records)
+        ? stored.records.map((record: GrowthRecord) => ({
             ...record,
             tagIds: normalizedTagIds(record),
-          })),
-        );
-      }
+          }))
+        : [];
+      const existingRecordIds = new Set(
+        storedRecords.map((record: GrowthRecord) => record.id),
+      );
+      const shouldSeedHistory = localStorage.getItem(SAMPLE_HISTORY_KEY) !== "done";
+      setRecords([
+        ...storedRecords,
+        ...(shouldSeedHistory
+          ? buildSampleRecords().filter((record) => !existingRecordIds.has(record.id))
+          : []),
+      ]);
+      if (shouldSeedHistory) localStorage.setItem(SAMPLE_HISTORY_KEY, "done");
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -218,6 +315,34 @@ export function CheckInApp() {
       return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
     });
   }, [records]);
+  const calendarRecordCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    records.forEach((record) => {
+      const key = localDay(new Date(record.createdAt));
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [records]);
+  const selectedDayRecords = useMemo(
+    () =>
+      records.filter(
+        (record) => localDay(new Date(record.createdAt)) === selectedCalendarDay,
+      ),
+    [records, selectedCalendarDay],
+  );
+  const calendarCells = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstWeekday = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    return [
+      ...Array.from({ length: firstWeekday }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, index) => {
+        const date = new Date(year, month, index + 1);
+        return { date, key: localDay(date) };
+      }),
+    ];
+  }, [calendarMonth]);
 
   function tagsFor(value: { tagIds?: string[]; areaId?: string }) {
     return normalizedTagIds(value)
@@ -383,7 +508,33 @@ export function CheckInApp() {
     });
   }
 
+  function openCalendar() {
+    const now = new Date();
+    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedCalendarDay(localDay(now));
+    setShowCalendar(true);
+    window.requestAnimationFrame(() => {
+      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
+    });
+  }
+
+  function closeCalendar() {
+    setShowCalendar(false);
+    window.requestAnimationFrame(() => {
+      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
+    });
+  }
+
+  function shiftCalendarMonth(offset: number) {
+    setCalendarMonth((current) => {
+      const next = new Date(current.getFullYear(), current.getMonth() + offset, 1);
+      setSelectedCalendarDay(localDay(next));
+      return next;
+    });
+  }
+
   function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
+    if (showCalendar) return;
     if (event.touches.length !== 1) return;
     const target = event.target as HTMLElement;
     if (target.closest("input, select, textarea")) {
@@ -441,7 +592,14 @@ export function CheckInApp() {
     <main className="shell">
       <section className="app-frame">
         <header className="app-header">
-          <button className="wordmark" type="button" onClick={() => changeTab("today")}>
+          <button
+            className="wordmark"
+            type="button"
+            onClick={() => {
+              closeCalendar();
+              changeTab("today");
+            }}
+          >
             <span className="brand-seed" aria-hidden="true">栗</span>
             <strong>栗子小事</strong>
           </button>
@@ -456,15 +614,137 @@ export function CheckInApp() {
             touchStartRef.current = null;
           }}
         >
-          {tab === "today" && (
+          {showCalendar && (
+            <div className="screen calendar-screen">
+              <section className="calendar-heading">
+                <button className="calendar-back" type="button" onClick={closeCalendar}>
+                  <span aria-hidden="true">‹</span>
+                  返回今日
+                </button>
+                <span className="overline">CALENDAR</span>
+                <h1>日历记录</h1>
+                <p>回看过去发生的小事，每一次都算成长。</p>
+              </section>
+
+              <section className="calendar-card">
+                <div className="calendar-toolbar">
+                  <button
+                    type="button"
+                    aria-label="上一个月"
+                    onClick={() => shiftCalendarMonth(-1)}
+                  >
+                    ‹
+                  </button>
+                  <strong>
+                    {new Intl.DateTimeFormat("zh-CN", {
+                      year: "numeric",
+                      month: "long",
+                    }).format(calendarMonth)}
+                  </strong>
+                  <button
+                    type="button"
+                    aria-label="下一个月"
+                    disabled={
+                      calendarMonth.getFullYear() === new Date().getFullYear()
+                      && calendarMonth.getMonth() === new Date().getMonth()
+                    }
+                    onClick={() => shiftCalendarMonth(1)}
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="calendar-weekdays" aria-hidden="true">
+                  {["日", "一", "二", "三", "四", "五", "六"].map((day) => (
+                    <span key={day}>{day}</span>
+                  ))}
+                </div>
+                <div className="calendar-grid">
+                  {calendarCells.map((cell, index) =>
+                    cell ? (
+                      <button
+                        className={`${cell.key === selectedCalendarDay ? "selected" : ""} ${
+                          cell.key === localDay(new Date()) ? "today" : ""
+                        } ${calendarRecordCounts.has(cell.key) ? "has-records" : ""}`}
+                        type="button"
+                        key={cell.key}
+                        aria-label={`${new Intl.DateTimeFormat("zh-CN", {
+                          month: "long",
+                          day: "numeric",
+                        }).format(cell.date)}，${calendarRecordCounts.get(cell.key) || 0} 条记录`}
+                        onClick={() => setSelectedCalendarDay(cell.key)}
+                      >
+                        <span>{cell.date.getDate()}</span>
+                        {calendarRecordCounts.has(cell.key) && (
+                          <small>{calendarRecordCounts.get(cell.key)}</small>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="calendar-empty" key={`empty-${index}`} />
+                    ),
+                  )}
+                </div>
+              </section>
+
+              <section className="calendar-day-detail">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">当天记录</span>
+                    <h2>
+                      {new Intl.DateTimeFormat("zh-CN", {
+                        month: "long",
+                        day: "numeric",
+                        weekday: "short",
+                      }).format(new Date(`${selectedCalendarDay}T12:00:00`))}
+                    </h2>
+                  </div>
+                  <small>{selectedDayRecords.length} 件小事</small>
+                </div>
+                {selectedDayRecords.length ? (
+                  <div className="calendar-record-list">
+                    {selectedDayRecords.map((record) => (
+                      <article key={record.id}>
+                        <span className="record-icon">{record.icon}</span>
+                        <div>
+                          <strong>{record.actionName}</strong>
+                          <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
+                          <span className="action-tag-list">
+                            {tagsFor(record).map((tag) => (
+                              <i
+                                key={tag.id}
+                                style={{ color: tag.color, borderColor: `${tag.color}35` }}
+                              >
+                                {tag.name} +{record.value}
+                              </i>
+                            ))}
+                          </span>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state compact">
+                    <p>这一天还没有留下记录。</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {!showCalendar && tab === "today" && (
             <div className={`screen ${tabMotion}`}>
               <section className="welcome">
-                <div className="date-display" aria-label={new Intl.DateTimeFormat("zh-CN", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  weekday: "long",
-                }).format(new Date())}>
+                <button
+                  className="date-display"
+                  type="button"
+                  aria-label={`打开日历，${new Intl.DateTimeFormat("zh-CN", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long",
+                  }).format(new Date())}`}
+                  onClick={openCalendar}
+                >
                   <strong>
                     {new Intl.DateTimeFormat("zh-CN", { day: "2-digit" }).format(new Date())}
                   </strong>
@@ -479,7 +759,8 @@ export function CheckInApp() {
                       {new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(new Date())}
                     </small>
                   </span>
-                </div>
+                  <i className="date-display-chevron" aria-hidden="true">›</i>
+                </button>
                 <h1>{greeting()}，今天想留下什么？</h1>
                 <p>不用完成一整件大事，记录一个已经发生的小行动就很好。</p>
               </section>
@@ -588,7 +869,7 @@ export function CheckInApp() {
             </div>
           )}
 
-          {tab === "growth" && (
+          {!showCalendar && tab === "growth" && (
             <div className={`screen ${tabMotion}`}>
               <section className="page-heading">
                 <span className="overline">GROWTH OVERVIEW</span>
@@ -683,7 +964,7 @@ export function CheckInApp() {
             </div>
           )}
 
-          {tab === "profile" && (
+          {!showCalendar && tab === "profile" && (
             <div className={`screen ${tabMotion}`}>
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
@@ -780,7 +1061,7 @@ export function CheckInApp() {
           )}
         </div>
 
-        <nav className="bottom-nav" aria-label="主要导航">
+        {!showCalendar && <nav className="bottom-nav" aria-label="主要导航">
           {NAV_ITEMS.map((item) => (
             <button
               className={`${tab === item.id ? "active" : ""} ${
@@ -795,7 +1076,7 @@ export function CheckInApp() {
               {item.label}
             </button>
           ))}
-        </nav>
+        </nav>}
       </section>
 
       {toasts.length > 0 && (
