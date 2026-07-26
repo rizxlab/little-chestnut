@@ -46,13 +46,13 @@ button { -webkit-tap-highlight-color: transparent; }
   z-index: 70;
   top: max(42px, calc((100svh - 920px) / 2 + 18px));
   right: max(22px, calc((100vw - 500px) / 2 + 22px));
-  display: inline-flex;
+  display: grid;
+  width: 38px;
   height: 38px;
-  align-items: center;
-  gap: 6px;
+  place-items: center;
   border: 1px solid rgba(111, 59, 39, .12);
   border-radius: 14px;
-  padding: 0 12px 0 10px;
+  padding: 0;
   color: var(--chestnut);
   background: rgba(255, 250, 242, .94);
   box-shadow: 0 7px 20px rgba(82, 51, 33, .1);

@@ -760,7 +760,6 @@ export function CheckInApp() {
         onClick={returnToToday}
       >
         <span aria-hidden="true">⌂</span>
-        今日
       </button>
 
       <section className="app-frame">
