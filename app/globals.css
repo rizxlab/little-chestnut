@@ -17,11 +17,13 @@
 html {
   min-height: 100%;
   background: var(--cream);
+  touch-action: pan-x pan-y;
 }
 
 body {
   min-height: 100%;
   margin: 0;
+  touch-action: pan-x pan-y;
   color: var(--ink);
   background:
     radial-gradient(circle at 10% 8%, rgba(255, 255, 255, 0.96), transparent 28rem),
