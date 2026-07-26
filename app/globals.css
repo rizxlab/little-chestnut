@@ -664,13 +664,29 @@ button { -webkit-tap-highlight-color: transparent; }
     0 0 0 5px rgba(200, 144, 114, .13);
 }
 
-.toast {
+.toast-stack {
   position: fixed;
   z-index: 50;
   display: grid;
   width: min(calc(100% - 44px), 330px);
-  top: 32%;
+  top: 19%;
   left: 50%;
+  gap: 10px;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.toast-stack::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  background: rgba(52, 38, 30, .08);
+  content: "";
+  backdrop-filter: blur(2px);
+}
+.toast {
+  position: relative;
+  display: grid;
+  width: 100%;
   grid-template-columns: 54px minmax(0, 1fr) auto;
   gap: 13px;
   align-items: center;
@@ -679,12 +695,14 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 17px 19px;
   color: var(--ink);
   background: rgba(255, 253, 248, .97);
-  box-shadow:
-    0 26px 70px rgba(43, 29, 21, .24),
-    0 0 0 999px rgba(52, 38, 30, .08);
-  transform: translate(-50%, -50%);
+  box-shadow: 0 20px 55px rgba(43, 29, 21, .2);
+  pointer-events: auto;
   backdrop-filter: blur(16px);
   animation: toast-in 360ms cubic-bezier(.22, 1.45, .43, 1);
+}
+.toast.leaving {
+  pointer-events: none;
+  animation: toast-out 280ms ease forwards;
 }
 .toast-check {
   position: relative;
@@ -873,7 +891,10 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
 @keyframes toast-in {
-  from { opacity: 0; transform: translate(-50%, -40%) scale(.9); }
+  from { opacity: 0; transform: translateY(18px) scale(.92); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(-14px) scale(.96); }
 }
 @keyframes toast-ring {
   from { opacity: .9; transform: scale(.55); }

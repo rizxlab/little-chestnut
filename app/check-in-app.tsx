@@ -39,9 +39,11 @@ type BeforeInstallPromptEvent = Event & {
 };
 
 type ToastState = {
+  id: string;
   title: string;
   message: string;
   undoRecordId?: string;
+  leaving?: boolean;
 };
 
 type ConfirmDialog =
@@ -124,8 +126,8 @@ export function CheckInApp() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
-  const [toast, setToast] = useState<ToastState | null>(null);
-  const toastTimer = useRef<number | null>(null);
+  const [toasts, setToasts] = useState<ToastState[]>([]);
+  const toastTimers = useRef<number[]>([]);
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
@@ -160,7 +162,10 @@ export function CheckInApp() {
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handleInstall);
-    return () => window.removeEventListener("beforeinstallprompt", handleInstall);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleInstall);
+      toastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    };
   }, []);
 
   useEffect(() => {
@@ -202,12 +207,32 @@ export function CheckInApp() {
     title = "操作完成",
     undoRecordId?: string,
   ) {
-    if (toastTimer.current) window.clearTimeout(toastTimer.current);
-    setToast({ title, message, undoRecordId });
-    toastTimer.current = window.setTimeout(() => {
-      setToast(null);
-      toastTimer.current = null;
-    }, undoRecordId ? 4200 : 2200);
+    const id = `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const duration = undoRecordId ? 3600 : 2200;
+
+    setToasts((current) =>
+      [...current, { id, title, message, undoRecordId }].slice(-3),
+    );
+
+    const exitTimer = window.setTimeout(() => {
+      setToasts((current) =>
+        current.map((item) => (item.id === id ? { ...item, leaving: true } : item)),
+      );
+    }, duration);
+    const removeTimer = window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+    }, duration + 300);
+    toastTimers.current.push(exitTimer, removeTimer);
+  }
+
+  function dismissToast(id: string) {
+    setToasts((current) =>
+      current.map((item) => (item.id === id ? { ...item, leaving: true } : item)),
+    );
+    const removeTimer = window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+    }, 280);
+    toastTimers.current.push(removeTimer);
   }
 
   function recordAction(action: MicroAction, source: Source = "主动记录") {
@@ -682,22 +707,29 @@ export function CheckInApp() {
         </nav>
       </section>
 
-      {toast && (
-        <div className="toast" role="status">
-          <span className="toast-check" aria-hidden="true">✓</span>
-          <span className="toast-copy">
-            <strong>{toast.title}</strong>
-            <small>{toast.message}</small>
-          </span>
-          {toast.undoRecordId && (
-            <button
-              className="toast-undo"
-              type="button"
-              onClick={() => undoRecord(toast.undoRecordId!)}
-            >
-              撤销
-            </button>
-          )}
+      {toasts.length > 0 && (
+        <div className="toast-stack" aria-live="polite" aria-atomic="false">
+          {toasts.map((toast) => (
+            <div className={`toast ${toast.leaving ? "leaving" : ""}`} role="status" key={toast.id}>
+              <span className="toast-check" aria-hidden="true">✓</span>
+              <span className="toast-copy">
+                <strong>{toast.title}</strong>
+                <small>{toast.message}</small>
+              </span>
+              {toast.undoRecordId && (
+                <button
+                  className="toast-undo"
+                  type="button"
+                  onClick={() => {
+                    dismissToast(toast.id);
+                    undoRecord(toast.undoRecordId!);
+                  }}
+                >
+                  撤销
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       )}
 
