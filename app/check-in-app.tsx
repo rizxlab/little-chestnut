@@ -810,11 +810,7 @@ export function CheckInApp() {
       window.innerWidth - menuWidth - viewportPadding,
       Math.max(viewportPadding, rect.left + rect.width - menuWidth),
     );
-    const preferredTop = rect.bottom + 7;
-    const top =
-      preferredTop + menuHeight > window.innerHeight - viewportPadding
-        ? Math.max(viewportPadding, rect.top - menuHeight - 7)
-        : preferredTop;
+    const top = Math.max(viewportPadding, rect.top - menuHeight - 7);
 
     setRecordActionMenuPosition({ left, top });
     setRecordActionMenu(action);

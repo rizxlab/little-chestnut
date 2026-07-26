@@ -2395,6 +2395,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .record-action-popover {
   position: fixed;
   width: 132px;
+  transform-origin: bottom right;
   border: 1px solid rgba(111, 59, 39, .16);
   border-radius: 14px;
   padding: 5px;
@@ -2441,7 +2442,7 @@ button { -webkit-tap-highlight-color: transparent; }
 @keyframes context-pop {
   from {
     opacity: 0;
-    transform: translateY(-4px) scale(.96);
+    transform: translateY(4px) scale(.96);
   }
 }
 .timer-backdrop {
