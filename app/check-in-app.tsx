@@ -69,6 +69,10 @@ type RewardClaim = {
   createdAt: string;
 };
 
+type Account = {
+  username: string;
+};
+
 type ConfirmDialog =
   | { kind: "delete-action"; action: MicroAction }
   | { kind: "delete-reward"; reward: Reward }
@@ -265,6 +269,13 @@ function buildSampleRecords(): GrowthRecord[] {
 }
 
 export function CheckInApp() {
+  const [account, setAccount] = useState<Account | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [serverHydrated, setServerHydrated] = useState(false);
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginPending, setLoginPending] = useState(false);
   const [tab, setTab] = useState<Tab>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
@@ -314,90 +325,178 @@ export function CheckInApp() {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
 
-  useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      if (stored?.areas?.length) {
-        setAreas([
-          ...stored.areas,
-          ...DEFAULT_AREAS.filter(
-            (defaultArea) => !stored.areas.some((area: Area) => area.id === defaultArea.id),
-          ),
-        ]);
-      }
-      if (stored?.actions?.length) {
-        setActions(
-          stored.actions.map((action: MicroAction) => {
-            const defaultAction = DEFAULT_ACTIONS.find((item) => item.id === action.id);
+  function applyAccountData(value: unknown, username: string) {
+    const stored =
+      value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+    const storedAreas = Array.isArray(stored?.areas) ? (stored.areas as Area[]) : [];
+    setAreas(
+      storedAreas.length
+        ? [
+            ...storedAreas,
+            ...DEFAULT_AREAS.filter(
+              (defaultArea) =>
+                !storedAreas.some((area) => area.id === defaultArea.id),
+            ),
+          ]
+        : DEFAULT_AREAS,
+    );
+
+    const storedActions = Array.isArray(stored?.actions)
+      ? (stored.actions as MicroAction[])
+      : [];
+    setActions(
+      storedActions.length
+        ? storedActions.map((action) => {
+            const defaultAction = DEFAULT_ACTIONS.find(
+              (item) => item.id === action.id,
+            );
             return {
               ...action,
               tagIds: action.tagIds?.length
                 ? action.tagIds
                 : defaultAction?.tagIds || normalizedTagIds(action),
             };
-          }),
-        );
-      }
-      const storedRecords = Array.isArray(stored?.records)
-        ? stored.records.map((record: GrowthRecord) => ({
-            ...record,
-            tagIds: normalizedTagIds(record),
-          }))
-        : [];
-      const existingRecordIds = new Set(
-        storedRecords.map((record: GrowthRecord) => record.id),
+          })
+        : DEFAULT_ACTIONS,
+    );
+
+    const storedRecords = Array.isArray(stored?.records)
+      ? (stored.records as GrowthRecord[]).map((record) => ({
+          ...record,
+          tagIds: normalizedTagIds(record),
+        }))
+      : [];
+    const existingRecordIds = new Set(storedRecords.map((record) => record.id));
+    const sampleKey = `${SAMPLE_HISTORY_KEY}:${username}`;
+    const shouldSeedHistory = localStorage.getItem(sampleKey) !== "done";
+    const mergedRecords = [
+      ...storedRecords,
+      ...(shouldSeedHistory
+        ? buildSampleRecords().filter(
+            (record) => !existingRecordIds.has(record.id),
+          )
+        : []),
+    ];
+    setRecords(mergedRecords);
+    setShellBalance(
+      typeof stored?.shellBalance === "number"
+        ? Math.max(0, stored.shellBalance)
+        : mergedRecords.length,
+    );
+    setShellsEarned(
+      typeof stored?.shellsEarned === "number"
+        ? Math.max(0, stored.shellsEarned)
+        : mergedRecords.length,
+    );
+    setRewards(
+      Array.isArray(stored?.rewards)
+        ? (stored.rewards as Reward[])
+        : DEFAULT_REWARDS,
+    );
+    setRewardClaims(
+      Array.isArray(stored?.rewardClaims)
+        ? (stored.rewardClaims as RewardClaim[])
+        : [],
+    );
+    if (shouldSeedHistory) localStorage.setItem(sampleKey, "done");
+  }
+
+  async function hydrateAccount(nextAccount: Account) {
+    setReady(false);
+    setServerHydrated(false);
+    const response = await fetch("/api/account-data", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (response.status === 401) throw new Error("登录状态已失效");
+    if (!response.ok) throw new Error("账号数据暂时无法读取");
+    const result = (await response.json()) as { data?: unknown };
+
+    let fallback: unknown = null;
+    try {
+      fallback = JSON.parse(
+        localStorage.getItem(`${STORAGE_KEY}:${nextAccount.username}`)
+          || (nextAccount.username === "123456"
+            ? localStorage.getItem(STORAGE_KEY)
+            : "")
+          || "null",
       );
-      const shouldSeedHistory = localStorage.getItem(SAMPLE_HISTORY_KEY) !== "done";
-      const mergedRecords = [
-        ...storedRecords,
-        ...(shouldSeedHistory
-          ? buildSampleRecords().filter((record) => !existingRecordIds.has(record.id))
-          : []),
-      ];
-      setRecords(mergedRecords);
-      setShellBalance(
-        typeof stored?.shellBalance === "number"
-          ? Math.max(0, stored.shellBalance)
-          : mergedRecords.length,
-      );
-      setShellsEarned(
-        typeof stored?.shellsEarned === "number"
-          ? Math.max(0, stored.shellsEarned)
-          : mergedRecords.length,
-      );
-      if (Array.isArray(stored?.rewards)) setRewards(stored.rewards);
-      setRewardClaims(Array.isArray(stored?.rewardClaims) ? stored.rewardClaims : []);
-      if (shouldSeedHistory) localStorage.setItem(SAMPLE_HISTORY_KEY, "done");
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
+      fallback = null;
     }
+
+    applyAccountData(result.data ?? fallback, nextAccount.username);
+    setAccount(nextAccount);
     setReady(true);
+    setServerHydrated(true);
+  }
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const response = await fetch("/api/auth/session", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const result = (await response.json()) as { account: Account };
+          await hydrateAccount(result.account);
+        }
+      } catch {
+        setAccount(null);
+      } finally {
+        if (active) setAuthReady(true);
+      }
+    })();
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js");
     }
 
     return () => {
+      active = false;
       toastTimers.current.forEach((timer) => window.clearTimeout(timer));
       if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
     };
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !account || !serverHydrated) return;
+    const data = {
+      areas,
+      actions,
+      records,
+      shellBalance,
+      shellsEarned,
+      rewards,
+      rewardClaims,
+    };
     localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        areas,
-        actions,
-        records,
-        shellBalance,
-        shellsEarned,
-        rewards,
-        rewardClaims,
-      }),
+      `${STORAGE_KEY}:${account.username}`,
+      JSON.stringify(data),
     );
-  }, [areas, actions, records, rewardClaims, rewards, shellBalance, shellsEarned, ready]);
+    const timer = window.setTimeout(() => {
+      void fetch("/api/account-data", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+    }, 320);
+    return () => window.clearTimeout(timer);
+  }, [
+    account,
+    areas,
+    actions,
+    records,
+    rewardClaims,
+    rewards,
+    serverHydrated,
+    shellBalance,
+    shellsEarned,
+    ready,
+  ]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -464,6 +563,67 @@ export function CheckInApp() {
         .filter((record) => normalizedTagIds(record).includes(area.id))
         .reduce((sum, record) => sum + record.value, 0),
     }));
+  }
+
+  async function handleLogin(event: FormEvent) {
+    event.preventDefault();
+    if (!loginUsername.trim() || !loginPassword) return;
+    setLoginPending(true);
+    setLoginError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loginUsername.trim(),
+          password: loginPassword,
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as {
+        account?: Account;
+        error?: string;
+      } | null;
+      if (!response.ok || !result?.account) {
+        throw new Error(result?.error || "暂时无法登录");
+      }
+      await hydrateAccount(result.account);
+      setLoginPassword("");
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "暂时无法登录");
+    } finally {
+      setLoginPending(false);
+    }
+  }
+
+  async function logout() {
+    if (account && serverHydrated) {
+      await fetch("/api/account-data", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          areas,
+          actions,
+          records,
+          shellBalance,
+          shellsEarned,
+          rewards,
+          rewardClaims,
+        }),
+      }).catch(() => null);
+    }
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+    }).catch(() => null);
+    setServerHydrated(false);
+    setReady(false);
+    setAccount(null);
+    setTab("today");
+    setShowCalendar(false);
+    setToasts([]);
+    setLoginPassword("");
   }
 
   function showToast(
@@ -936,6 +1096,67 @@ export function CheckInApp() {
     setConfirmDialog(null);
   }
 
+  if (!authReady) {
+    return (
+      <main className="account-gate">
+        <div className="account-loading" role="status">
+          <span aria-hidden="true">栗</span>
+          <p>正在打开栗子小事…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!account) {
+    return (
+      <main className="account-gate">
+        <form className="login-card" onSubmit={handleLogin}>
+          <div className="login-brand">
+            <span aria-hidden="true">栗</span>
+            <div>
+              <strong>栗子小事</strong>
+              <small>登录后，继续积累自己的小事</small>
+            </div>
+          </div>
+          <div className="login-heading">
+            <span className="overline">WELCOME BACK</span>
+            <h1>欢迎回来</h1>
+          </div>
+          <label>
+            账号
+            <input
+              value={loginUsername}
+              onChange={(event) => setLoginUsername(event.target.value)}
+              autoComplete="username"
+              inputMode="numeric"
+              placeholder="请输入账号"
+              autoFocus
+            />
+          </label>
+          <label>
+            密码
+            <input
+              type="password"
+              value={loginPassword}
+              onChange={(event) => setLoginPassword(event.target.value)}
+              autoComplete="current-password"
+              placeholder="请输入密码"
+            />
+          </label>
+          {loginError && <p className="login-error" role="alert">{loginError}</p>}
+          <button
+            className="login-button"
+            type="submit"
+            disabled={loginPending || !loginUsername.trim() || !loginPassword}
+          >
+            {loginPending ? "正在登录…" : "进入我的栗子"}
+          </button>
+          <small className="login-note">账号数据将独立保存并同步。</small>
+        </form>
+      </main>
+    );
+  }
+
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
   const allTotals = totalsFor(records);
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
@@ -1369,6 +1590,15 @@ export function CheckInApp() {
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
                 <p>在这里整理微行动与成长标签，记录请回到“今日”页面。</p>
+              </section>
+
+              <section className="account-strip" aria-label="当前账号">
+                <span aria-hidden="true">栗</span>
+                <div>
+                  <small>当前账号</small>
+                  <strong>{account.username}</strong>
+                </div>
+                <button type="button" onClick={logout}>退出登录</button>
               </section>
 
               <section className="shell-bank" aria-labelledby="shell-bank-title">
