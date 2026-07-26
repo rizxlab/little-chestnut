@@ -2662,7 +2662,11 @@ export function CheckInApp() {
       )}
 
       {pendingReward && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setPendingReward(null)}>
+        <div
+          className="modal-backdrop reward-backdrop"
+          role="presentation"
+          onClick={() => setPendingReward(null)}
+        >
           <section
             className="bottom-sheet reward-sheet"
             role="dialog"
