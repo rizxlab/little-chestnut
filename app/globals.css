@@ -191,13 +191,18 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 38px;
   height: 38px;
   place-items: center;
-  border: 1px solid rgba(111, 59, 39, .12);
+  border: 1px solid rgba(255, 255, 255, .68);
   border-radius: 14px;
   padding: 0;
   color: var(--chestnut);
-  background: rgba(255, 250, 242, .94);
-  box-shadow: 0 7px 20px rgba(82, 51, 33, .1);
-  backdrop-filter: blur(15px);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .58), rgba(255, 248, 238, .25));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .82),
+    inset 0 -1px 0 rgba(111, 59, 39, .06),
+    0 9px 24px rgba(53, 38, 29, .14);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -209,16 +214,20 @@ button { -webkit-tap-highlight-color: transparent; }
   height: 21px;
   place-items: center;
   border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, .28);
   color: #fff9ef;
-  background: var(--chestnut);
+  background: rgba(111, 59, 39, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
   font-family: Georgia, serif;
   font-size: 15px;
   line-height: 1;
 }
 .global-home-button:active {
   transform: scale(.95);
-  background: #fff6e8;
-  box-shadow: 0 3px 12px rgba(82, 51, 33, .1);
+  background: rgba(255, 250, 242, .48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .72),
+    0 3px 12px rgba(53, 38, 29, .12);
 }
 
 .app-frame {
@@ -2931,6 +2940,24 @@ html[data-theme="dark"] .dialog-button.secondary {
   border-color: var(--line);
   color: #e4a27d;
   background: #252930;
+}
+html[data-theme="dark"] .global-home-button {
+  border-color: rgba(255, 255, 255, .18);
+  color: #f2f4f7;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .16), rgba(38, 43, 51, .26));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .2),
+    inset 0 -1px 0 rgba(0, 0, 0, .12),
+    0 9px 24px rgba(0, 0, 0, .28);
+}
+html[data-theme="dark"] .global-home-button span {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(212, 148, 114, .78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+html[data-theme="dark"] .global-home-button:active {
+  background: rgba(46, 51, 60, .5);
 }
 html[data-theme="dark"] .quick-action,
 html[data-theme="dark"] .settings-panel,
