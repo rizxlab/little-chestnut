@@ -1155,6 +1155,12 @@ export function CheckInApp() {
     });
   }
 
+  function returnCalendarToToday() {
+    const today = new Date();
+    setCalendarMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedCalendarDay(localDay(today));
+  }
+
   function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
     if (showCalendar || showSettings) return;
     if (event.touches.length !== 1) return;
@@ -1400,14 +1406,27 @@ export function CheckInApp() {
           {showCalendar && (
             <div className="screen calendar-screen">
               <section className="calendar-heading">
-                <button
-                  className="calendar-back"
-                  type="button"
-                  aria-label="返回今日"
-                  onClick={closeCalendar}
-                >
-                  <span aria-hidden="true">‹</span>
-                </button>
+                <div className="calendar-heading-actions">
+                  <button
+                    className="calendar-back"
+                    type="button"
+                    aria-label="返回今日页面"
+                    onClick={closeCalendar}
+                  >
+                    <span aria-hidden="true">‹</span>
+                  </button>
+                  <button
+                    className="calendar-today-button"
+                    type="button"
+                    aria-label="回到今天"
+                    title="回到今天"
+                    onClick={returnCalendarToToday}
+                  >
+                    <span className="calendar-today-icon" aria-hidden="true">
+                      <i />
+                    </span>
+                  </button>
+                </div>
                 <span className="overline">CALENDAR</span>
                 <h1>日历记录</h1>
                 <p>回看过去发生的小事，每一次都算成长。</p>
