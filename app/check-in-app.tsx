@@ -12,6 +12,8 @@ import {
 
 type Tab = "today" | "growth" | "profile";
 type Source = "主动记录" | "随机行动";
+type Language = "zh" | "en";
+type Theme = "light" | "dark";
 
 type Area = {
   id: string;
@@ -154,8 +156,15 @@ function startOfWeek() {
   return date;
 }
 
-function greeting() {
+function greeting(language: Language) {
   const hour = new Date().getHours();
+  if (language === "en") {
+    if (hour < 6) return "Good night";
+    if (hour < 11) return "Good morning";
+    if (hour < 14) return "Good afternoon";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  }
   if (hour < 6) return "夜深了";
   if (hour < 11) return "早上好";
   if (hour < 14) return "中午好";
@@ -302,6 +311,9 @@ export function CheckInApp() {
   const [dragOffset, setDragOffset] = useState(0);
   const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [language, setLanguage] = useState<Language>("zh");
+  const [theme, setTheme] = useState<Theme>("light");
   const [shellBalance, setShellBalance] = useState(0);
   const [shellsEarned, setShellsEarned] = useState(0);
   const [bankDropKey, setBankDropKey] = useState(0);
@@ -399,6 +411,12 @@ export function CheckInApp() {
         ? (stored.rewardClaims as RewardClaim[])
         : [],
     );
+    const preferences =
+      stored?.preferences && typeof stored.preferences === "object"
+        ? (stored.preferences as { language?: Language; theme?: Theme })
+        : null;
+    setLanguage(preferences?.language === "en" ? "en" : "zh");
+    setTheme(preferences?.theme === "dark" ? "dark" : "light");
     if (shouldSeedHistory) localStorage.setItem(sampleKey, "done");
   }
 
@@ -472,6 +490,7 @@ export function CheckInApp() {
       shellsEarned,
       rewards,
       rewardClaims,
+      preferences: { language, theme },
     };
     localStorage.setItem(
       `${STORAGE_KEY}:${account.username}`,
@@ -493,11 +512,18 @@ export function CheckInApp() {
     records,
     rewardClaims,
     rewards,
+    language,
     serverHydrated,
     shellBalance,
     shellsEarned,
+    theme,
     ready,
   ]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.lang = language === "en" ? "en" : "zh-CN";
+  }, [language, theme]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -611,6 +637,7 @@ export function CheckInApp() {
           shellsEarned,
           rewards,
           rewardClaims,
+          preferences: { language, theme },
         }),
       }).catch(() => null);
     }
@@ -623,6 +650,7 @@ export function CheckInApp() {
     setAccount(null);
     setTab("today");
     setShowCalendar(false);
+    setShowSettings(false);
     setShowRewardManager(false);
     setShowRewardEditor(false);
     setToasts([]);
@@ -979,8 +1007,19 @@ export function CheckInApp() {
     scrollScreenToTop(`[data-tab="${tab}"]`);
   }
 
+  function openSettings() {
+    setShowSettings(true);
+    scrollScreenToTop(".settings-screen");
+  }
+
+  function closeSettings() {
+    setShowSettings(false);
+    scrollScreenToTop('[data-tab="profile"]');
+  }
+
   function returnToToday() {
     setShowCalendar(false);
+    setShowSettings(false);
     setShowActionEditor(false);
     setShowAreaEditor(false);
     setShowRewardManager(false);
@@ -1001,7 +1040,7 @@ export function CheckInApp() {
   }
 
   function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
-    if (showCalendar) return;
+    if (showCalendar || showSettings) return;
     if (event.touches.length !== 1) return;
     const target = event.target as HTMLElement;
     if (target.closest("input, select, textarea")) {
@@ -1097,6 +1136,8 @@ export function CheckInApp() {
       setShellsEarned(0);
       setRewardClaims([]);
       setPendingReward(null);
+      setLanguage("zh");
+      setTheme("light");
       changeTab("today");
       showToast("已恢复为新的开始");
     }
@@ -1164,6 +1205,8 @@ export function CheckInApp() {
     );
   }
 
+  const tr = (zh: string, en: string) => (language === "zh" ? zh : en);
+  const locale = language === "zh" ? "zh-CN" : "en-US";
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
   const allTotals = totalsFor(records);
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
@@ -1186,7 +1229,7 @@ export function CheckInApp() {
       <button
         className="global-home-button"
         type="button"
-        aria-label="回到主页今日"
+        aria-label={tr("回到主页今日", "Return to Today")}
         onClick={returnToToday}
       >
         <span aria-hidden="true">⌂</span>
@@ -1199,6 +1242,7 @@ export function CheckInApp() {
             type="button"
             onClick={() => {
               closeCalendar();
+              setShowSettings(false);
               changeTab("today");
             }}
           >
@@ -1336,7 +1380,90 @@ export function CheckInApp() {
             </div>
           )}
 
-          {!showCalendar && (
+          {showSettings && (
+            <div className="screen settings-screen">
+              <section className="settings-page-heading">
+                <button
+                  className="settings-back"
+                  type="button"
+                  aria-label={tr("返回我的页面", "Back to profile")}
+                  onClick={closeSettings}
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <span className="overline">SETTINGS</span>
+                <h1>{tr("设置", "Settings")}</h1>
+                <p>{tr("调整栗子小事的显示方式。", "Personalize how Lizi looks and feels.")}</p>
+              </section>
+
+              <section className="settings-panel">
+                <div className="settings-option-copy">
+                  <span className="settings-option-icon" aria-hidden="true">文</span>
+                  <div>
+                    <strong>{tr("界面语言", "Language")}</strong>
+                    <small>{tr("切换主要界面的显示语言", "Choose the primary interface language")}</small>
+                  </div>
+                </div>
+                <div className="settings-segmented" role="group" aria-label={tr("界面语言", "Language")}>
+                  <button
+                    className={language === "zh" ? "selected" : ""}
+                    type="button"
+                    aria-pressed={language === "zh"}
+                    onClick={() => setLanguage("zh")}
+                  >
+                    简体中文
+                  </button>
+                  <button
+                    className={language === "en" ? "selected" : ""}
+                    type="button"
+                    aria-pressed={language === "en"}
+                    onClick={() => setLanguage("en")}
+                  >
+                    English
+                  </button>
+                </div>
+              </section>
+
+              <section className="settings-panel">
+                <div className="settings-option-copy">
+                  <span className="settings-option-icon" aria-hidden="true">◐</span>
+                  <div>
+                    <strong>{tr("外观模式", "Appearance")}</strong>
+                    <small>{tr("选择舒适的明暗显示效果", "Choose a comfortable display mode")}</small>
+                  </div>
+                </div>
+                <div className="theme-choice-grid" role="group" aria-label={tr("外观模式", "Appearance")}>
+                  <button
+                    className={theme === "light" ? "selected" : ""}
+                    type="button"
+                    aria-pressed={theme === "light"}
+                    onClick={() => setTheme("light")}
+                  >
+                    <span aria-hidden="true">☀</span>
+                    <strong>{tr("日间", "Light")}</strong>
+                    <small>{tr("温暖明亮", "Warm and bright")}</small>
+                  </button>
+                  <button
+                    className={theme === "dark" ? "selected" : ""}
+                    type="button"
+                    aria-pressed={theme === "dark"}
+                    onClick={() => setTheme("dark")}
+                  >
+                    <span aria-hidden="true">☾</span>
+                    <strong>{tr("夜间", "Dark")}</strong>
+                    <small>{tr("柔和低亮", "Soft and dim")}</small>
+                  </button>
+                </div>
+              </section>
+
+              <div className="settings-sync-note">
+                <span aria-hidden="true">✓</span>
+                <p>{tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.")}</p>
+              </div>
+            </div>
+          )}
+
+          {!showCalendar && !showSettings && (
             <div className="tab-viewport">
               <div
                 className={`tab-track ${isDraggingTabs ? "dragging" : ""}`}
@@ -1349,7 +1476,7 @@ export function CheckInApp() {
                 <button
                   className="date-display"
                   type="button"
-                  aria-label={`打开日历，${new Intl.DateTimeFormat("zh-CN", {
+                  aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -1358,29 +1485,29 @@ export function CheckInApp() {
                   onClick={openCalendar}
                 >
                   <strong>
-                    {new Intl.DateTimeFormat("zh-CN", { day: "2-digit" }).format(new Date())}
+                    {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
                   </strong>
                   <span>
                     <b>
-                      {new Intl.DateTimeFormat("zh-CN", {
+                      {new Intl.DateTimeFormat(locale, {
                         year: "numeric",
                         month: "long",
                       }).format(new Date())}
                     </b>
                     <small>
-                      {new Intl.DateTimeFormat("zh-CN", { weekday: "long" }).format(new Date())}
+                      {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
                     </small>
                   </span>
                   <i className="date-display-chevron" aria-hidden="true">›</i>
                 </button>
-                <h1>{greeting()}</h1>
+                <h1>{greeting(language)}</h1>
               </section>
 
               <section className="today-card">
                 <div className="today-card-copy">
-                  <span>今日成长</span>
+                  <span>{tr("今日成长", "TODAY")}</span>
                   <strong>{todayRecords.length}</strong>
-                  <small>次微小行动</small>
+                  <small>{tr("次微小行动", "small actions")}</small>
                 </div>
                 <div className="today-orbit">
                   {orbitRippleKey > 0 && (
@@ -1393,7 +1520,7 @@ export function CheckInApp() {
                   <button
                     className="orbit-core"
                     type="button"
-                    aria-label="点击栗子，播放涟漪"
+                    aria-label={tr("点击栗子，播放涟漪", "Tap the chestnut for a ripple")}
                     onClick={() => setOrbitRippleKey((current) => current + 1)}
                   >
                     🌰
@@ -1410,14 +1537,14 @@ export function CheckInApp() {
                       </span>
                     ))
                   ) : (
-                    <span className="quiet">今天的成长从第一颗栗子开始</span>
+                    <span className="quiet">{tr("今天的成长从第一颗栗子开始", "Today starts with one small action")}</span>
                   )}
                 </div>
               </section>
 
               <section className="content-section">
                 <div className="section-title-row simple-title-row">
-                  <h2>记录一件小事</h2>
+                  <h2>{tr("记录一件小事", "Record a small thing")}</h2>
                 </div>
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
@@ -1472,24 +1599,24 @@ export function CheckInApp() {
             <div className="screen tab-screen" data-tab="growth" aria-hidden={tab !== "growth"}>
               <section className="page-heading">
                 <span className="overline">GROWTH OVERVIEW</span>
-                <h1>成长正在发生</h1>
+                <h1>{tr("成长正在发生", "Growth in progress")}</h1>
               </section>
 
               <div className="stat-grid">
                 <article>
-                  <span>全部记录</span>
+                  <span>{tr("全部记录", "All records")}</span>
                   <strong>{records.length}</strong>
-                  <small>次成长</small>
+                  <small>{tr("次成长", "moments")}</small>
                 </article>
                 <article>
-                  <span>本周</span>
+                  <span>{tr("本周", "This week")}</span>
                   <strong>{weekRecords.length}</strong>
-                  <small>次行动</small>
+                  <small>{tr("次行动", "actions")}</small>
                 </article>
                 <article>
-                  <span>本月</span>
+                  <span>{tr("本月", "This month")}</span>
                   <strong>{monthRecords.length}</strong>
-                  <small>次行动</small>
+                  <small>{tr("次行动", "actions")}</small>
                 </article>
               </div>
 
@@ -1554,17 +1681,28 @@ export function CheckInApp() {
             <div className="screen tab-screen" data-tab="profile" aria-hidden={tab !== "profile"}>
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
-                <h1>我的栗子</h1>
-                <p>在这里整理微行动与成长标签，记录请回到“今日”页面。</p>
+                <div className="profile-heading-row">
+                  <h1>{tr("我的栗子", "My Chestnuts")}</h1>
+                  <button
+                    className="settings-entry-button"
+                    type="button"
+                    aria-label={tr("打开设置", "Open settings")}
+                    onClick={openSettings}
+                  >
+                    <span aria-hidden="true">⚙</span>
+                    {tr("设置", "Settings")}
+                  </button>
+                </div>
+                <p>{tr("在这里整理微行动与成长标签，记录请回到“今日”页面。", "Manage your actions, tags, rewards, and account here.")}</p>
               </section>
 
-              <section className="account-strip" aria-label="当前账号">
+              <section className="account-strip" aria-label={tr("当前账号", "Current account")}>
                 <span aria-hidden="true">栗</span>
                 <div>
-                  <small>当前账号</small>
+                  <small>{tr("当前账号", "Current account")}</small>
                   <strong>{account.username}</strong>
                 </div>
-                <button type="button" onClick={logout}>退出登录</button>
+                <button type="button" onClick={logout}>{tr("退出登录", "Sign out")}</button>
               </section>
 
               <section className="shell-bank" aria-labelledby="shell-bank-title">
@@ -1783,7 +1921,7 @@ export function CheckInApp() {
           )}
         </div>
 
-        {!showCalendar && <nav className="bottom-nav" aria-label="主要导航">
+        {!showCalendar && !showSettings && <nav className="bottom-nav" aria-label={tr("主要导航", "Main navigation")}>
           {NAV_ITEMS.map((item) => (
             <button
               className={`${tab === item.id ? "active" : ""} ${
@@ -1795,7 +1933,13 @@ export function CheckInApp() {
               aria-current={tab === item.id ? "page" : undefined}
             >
               <span aria-hidden="true">{item.icon}</span>
-              {item.label}
+              {language === "zh"
+                ? item.label
+                : item.id === "today"
+                  ? "Today"
+                  : item.id === "growth"
+                    ? "Growth"
+                    : "Me"}
             </button>
           ))}
         </nav>}
