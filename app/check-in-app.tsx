@@ -1044,12 +1044,7 @@ export function CheckInApp() {
               </section>
 
               <section className="content-section recent-section">
-                <div className="section-title-row">
-                  <div>
-                    <span className="overline">最近成长</span>
-                    <h2>已经发生的，都算数</h2>
-                  </div>
-                </div>
+                <div className="recent-divider" aria-hidden="true" />
                 {records.length ? (
                   <div className="record-list">
                     {records.slice(0, 5).map((record) => {

@@ -493,7 +493,12 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
 }
 
-.record-list { border-top: 1px solid var(--line); }
+.recent-divider {
+  height: 1px;
+  margin-bottom: 6px;
+  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+}
+.record-list { border-top: 0; }
 .record-row {
   display: grid;
   grid-template-columns: 38px 1fr auto;
