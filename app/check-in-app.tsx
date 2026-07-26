@@ -267,6 +267,10 @@ export function CheckInApp() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
+  const [lastCheckedAction, setLastCheckedAction] = useState<{
+    id: string;
+    token: number;
+  } | null>(null);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const toastTimers = useRef<number[]>([]);
   const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
@@ -481,6 +485,7 @@ export function CheckInApp() {
       createdAt: new Date().toISOString(),
     };
     setRecords((current) => [record, ...current]);
+    setLastCheckedAction({ id: action.id, token: Date.now() });
     setShellBalance((current) => current + 1);
     setShellsEarned((current) => current + 1);
     showToast(
@@ -977,11 +982,16 @@ export function CheckInApp() {
                   {actions.slice(0, 6).map((action) => {
                     const actionTags = tagsFor(action);
                     const primaryTag = actionTags[0] || areas[0];
+                    const todayCount = todayRecords.filter(
+                      (record) => record.actionId === action.id,
+                    ).length;
+                    const justChecked = lastCheckedAction?.id === action.id;
                     return (
                       <button
-                        className="quick-action"
+                        className={`quick-action ${todayCount ? "completed" : ""}`}
                         type="button"
                         key={action.id}
+                        aria-label={`记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`}
                         onClick={() => recordAction(action)}
                       >
                         <span className="action-icon" style={{ background: `${primaryTag.color}18` }}>
@@ -998,7 +1008,20 @@ export function CheckInApp() {
                             </small>
                           ))}
                         </span>
-                        <i aria-hidden="true">＋</i>
+                        <span
+                          className={`check-control ${todayCount ? "checked" : ""} ${
+                            justChecked ? "just-checked" : ""
+                          }`}
+                          key={
+                            justChecked
+                              ? `${action.id}-${lastCheckedAction.token}`
+                              : `${action.id}-idle`
+                          }
+                          aria-hidden="true"
+                        >
+                          <i>✓</i>
+                          {todayCount > 1 && <small>×{todayCount}</small>}
+                        </span>
                       </button>
                     );
                   })}

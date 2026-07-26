@@ -391,6 +391,10 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .quick-action:active { transform: scale(.975); }
 .quick-action:hover { border-color: #d8c7b5; box-shadow: 0 9px 24px rgba(71,46,30,.07); }
+.quick-action.completed {
+  border-color: rgba(111, 59, 39, .2);
+  background: #fffaf2;
+}
 .action-icon {
   display: grid;
   width: 42px;
@@ -408,13 +412,59 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap;
 }
 .quick-action > .action-tag-list { grid-column: 1 / 3; align-self: end; padding-right: 20px; }
-.quick-action > i {
+.check-control {
   position: absolute;
   right: 12px;
   bottom: 12px;
-  color: #b7aa9d;
-  font-size: 17px;
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1.5px solid #c9bbae;
+  border-radius: 50%;
+  color: transparent;
+  background: #fffdf9;
+  box-shadow: inset 0 0 0 3px #fffdf9;
+  transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+.check-control > i {
+  font-size: 14px;
   font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(.45) rotate(-12deg);
+  transition: opacity 170ms ease, transform 220ms cubic-bezier(.2, 1.45, .4, 1);
+}
+.check-control.checked {
+  border-color: var(--chestnut);
+  color: #fffaf0;
+  background: var(--chestnut);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.13), 0 5px 13px rgba(111, 59, 39, .18);
+}
+.check-control.checked > i {
+  opacity: 1;
+  transform: scale(1) rotate(0);
+}
+.check-control.just-checked {
+  animation: check-bounce 420ms cubic-bezier(.2, 1.4, .4, 1);
+}
+.check-control small {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  min-width: 19px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid var(--paper);
+  border-radius: 99px;
+  padding: 0 4px;
+  color: var(--chestnut);
+  background: #f4ddc2;
+  font-family: Georgia, serif;
+  font-size: 8px;
+  font-weight: 700;
 }
 
 .record-list { border-top: 1px solid var(--line); }
@@ -1413,6 +1463,11 @@ button { -webkit-tap-highlight-color: transparent; }
   to { opacity: 0; transform: scale(1.45); }
 }
 @keyframes sheet-up { from { opacity: 0; transform: translateY(24px); } }
+@keyframes check-bounce {
+  0% { transform: scale(.72); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
 
 @media (max-width: 550px) {
   .shell { display: block; padding: 0; }
