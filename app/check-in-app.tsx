@@ -1758,12 +1758,6 @@ export function CheckInApp() {
                       <span className="settings-option-icon" aria-hidden="true">称</span>
                       <div>
                         <strong>{tr("账号昵称", "Nickname")}</strong>
-                        <small>
-                          {tr(
-                            "用于首页问候，只保存在当前账号中",
-                            "Shown in the home greeting and saved to this account",
-                          )}
-                        </small>
                       </div>
                     </div>
                     <label className="settings-nickname-field">
@@ -1776,14 +1770,14 @@ export function CheckInApp() {
                         onChange={(event) => setNickname(event.target.value)}
                         onBlur={() => setNickname((current) => current.trim())}
                       />
-                      <small>
-                        {nickname.trim()
-                          ? tr(
-                              `首页将显示“${greeting(language)}，${nickname.trim()}”`,
-                              `Home will show “${greeting(language)}, ${nickname.trim()}”`,
-                            )
-                          : tr("未填写时只显示问候语", "Leave blank to show only the greeting")}
-                      </small>
+                      {nickname.trim() && (
+                        <small>
+                          {tr(
+                            `首页将显示“${greeting(language)}，${nickname.trim()}”`,
+                            `Home will show “${greeting(language)}, ${nickname.trim()}”`,
+                          )}
+                        </small>
+                      )}
                     </label>
                   </>
                 ) : (
@@ -1804,7 +1798,6 @@ export function CheckInApp() {
                   <span className="settings-option-icon" aria-hidden="true">文</span>
                   <div>
                     <strong>{tr("界面语言", "Language")}</strong>
-                    <small>{tr("切换主要界面的显示语言", "Choose the primary interface language")}</small>
                   </div>
                 </div>
                 <div className="settings-segmented" role="group" aria-label={tr("界面语言", "Language")}>
@@ -1832,7 +1825,6 @@ export function CheckInApp() {
                   <span className="settings-option-icon" aria-hidden="true">◐</span>
                   <div>
                     <strong>{tr("外观模式", "Appearance")}</strong>
-                    <small>{tr("选择舒适的明暗显示效果", "Choose a comfortable display mode")}</small>
                   </div>
                 </div>
                 <div className="theme-choice-grid" role="group" aria-label={tr("外观模式", "Appearance")}>
