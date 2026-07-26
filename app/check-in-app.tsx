@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-type Tab = "today" | "actions" | "growth" | "settings";
+type Tab = "today" | "growth" | "profile";
 type Source = "主动记录" | "随机行动";
 
 type Area = {
@@ -65,9 +65,8 @@ const DEFAULT_ACTIONS: MicroAction[] = [
 
 const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
   { id: "today", label: "今日", icon: "◉" },
-  { id: "actions", label: "微行动", icon: "✦" },
   { id: "growth", label: "成长", icon: "⌁" },
-  { id: "settings", label: "设置", icon: "○" },
+  { id: "profile", label: "我的", icon: "○" },
 ];
 
 function localDay(date: Date) {
@@ -393,7 +392,7 @@ export function CheckInApp() {
                     <span className="overline">快速记录</span>
                     <h2>点一下，3 秒完成</h2>
                   </div>
-                  <button type="button" onClick={() => setTab("actions")}>管理</button>
+                  <button type="button" onClick={() => setTab("profile")}>管理</button>
                 </div>
                 <div className="quick-grid">
                   {actions.slice(0, 6).map((action) => {
@@ -447,57 +446,6 @@ export function CheckInApp() {
                   </div>
                 )}
               </section>
-            </div>
-          )}
-
-          {tab === "actions" && (
-            <div className="screen">
-              <section className="page-heading">
-                <span className="overline">ACTION LIBRARY</span>
-                <h1>我的微行动</h1>
-                <p>把想做的事拆到足够小，小到随时都可以开始。</p>
-              </section>
-
-              <button className="primary-add" type="button" onClick={() => openActionEditor()}>
-                <span>＋</span>
-                创建一个微行动
-              </button>
-
-              <div className="action-library">
-                {areas.map((area) => {
-                  const areaActions = actions.filter((action) => action.areaId === area.id);
-                  if (!areaActions.length) return null;
-                  return (
-                    <section className="area-group" key={area.id}>
-                      <div className="area-group-title">
-                        <span>{area.icon}</span>
-                        <strong>{area.name}</strong>
-                        <small>{areaActions.length} 个行动</small>
-                      </div>
-                      {areaActions.map((action) => (
-                        <article className="library-row" key={action.id}>
-                          <button
-                            className="library-record"
-                            type="button"
-                            onClick={() => recordAction(action)}
-                          >
-                            <span>{action.icon}</span>
-                            <div>
-                              <strong>{action.name}</strong>
-                              <small>完成后 {area.name} +{action.value}</small>
-                            </div>
-                            <i>＋</i>
-                          </button>
-                          <div className="row-actions">
-                            <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
-                            <button type="button" onClick={() => deleteAction(action)}>删除</button>
-                          </div>
-                        </article>
-                      ))}
-                    </section>
-                  );
-                })}
-              </div>
             </div>
           )}
 
@@ -589,12 +537,58 @@ export function CheckInApp() {
             </div>
           )}
 
-          {tab === "settings" && (
+          {tab === "profile" && (
             <div className="screen">
               <section className="page-heading">
-                <span className="overline">SETTINGS</span>
-                <h1>让它更像你</h1>
-                <p>管理成长方向，也可以把栗子打卡留在手机桌面。</p>
+                <span className="overline">MY SPACE</span>
+                <h1>我的栗子</h1>
+                <p>管理微行动、成长方向，也可以把栗子打卡留在手机桌面。</p>
+              </section>
+
+              <section className="settings-block profile-actions">
+                <div className="settings-heading">
+                  <div>
+                    <span className="overline">微行动</span>
+                    <h2>我的微行动</h2>
+                  </div>
+                  <button type="button" onClick={() => openActionEditor()}>＋ 新建</button>
+                </div>
+
+                <div className="action-library profile-library">
+                  {areas.map((area) => {
+                    const areaActions = actions.filter((action) => action.areaId === area.id);
+                    if (!areaActions.length) return null;
+                    return (
+                      <section className="area-group" key={area.id}>
+                        <div className="area-group-title">
+                          <span>{area.icon}</span>
+                          <strong>{area.name}</strong>
+                          <small>{areaActions.length} 个行动</small>
+                        </div>
+                        {areaActions.map((action) => (
+                          <article className="library-row" key={action.id}>
+                            <button
+                              className="library-record"
+                              type="button"
+                              onClick={() => recordAction(action)}
+                            >
+                              <span>{action.icon}</span>
+                              <div>
+                                <strong>{action.name}</strong>
+                                <small>完成后 {area.name} +{action.value}</small>
+                              </div>
+                              <i>＋</i>
+                            </button>
+                            <div className="row-actions">
+                              <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
+                              <button type="button" onClick={() => deleteAction(action)}>删除</button>
+                            </div>
+                          </article>
+                        ))}
+                      </section>
+                    );
+                  })}
+                </div>
               </section>
 
               <section className="settings-card install-card">
