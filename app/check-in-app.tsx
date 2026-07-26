@@ -3132,7 +3132,9 @@ export function CheckInApp() {
           <section
             className={modalMotionClass(
               "timer",
-              `bottom-sheet timer-sheet ${timerPhase === "success" ? "timer-succeeded" : ""}`,
+              `bottom-sheet timer-sheet timer-phase-${timerPhase} ${
+                timerPhase === "success" ? "timer-succeeded" : ""
+              }`,
             )}
             style={modalMotionStyle("timer")}
             role="dialog"
@@ -3167,17 +3169,19 @@ export function CheckInApp() {
                 background:
                   timerPhase === "success"
                     ? "conic-gradient(#6f9466 360deg, rgba(111, 148, 102, .12) 0deg)"
-                    : `conic-gradient(var(--chestnut) ${
-                        timerPhase === "preparing"
-                          ? (timerSecondsLeft / 3) * 360
-                          : (
+                    : timerPhase === "preparing"
+                      ? `conic-gradient(#8993aa ${
+                          (timerSecondsLeft / 3) * 360
+                        }deg, rgba(137, 147, 170, .14) 0deg)`
+                      : `conic-gradient(var(--chestnut) ${
+                          (
                               timerSecondsLeft
                               / Math.max(
                                 1,
                                 (timerAction.timerSeconds || 1) * timerMultiplier,
                               )
                             ) * 360
-                      }deg, rgba(111, 59, 39, .1) 0deg)`,
+                        }deg, rgba(111, 59, 39, .1) 0deg)`,
               }}
             >
               {timerPhase === "success" && (
@@ -3191,7 +3195,7 @@ export function CheckInApp() {
                 ) : (
                   <>
                     <span aria-hidden="true">
-                      {timerPhase === "preparing" ? "●" : timerAction.icon}
+                      {timerPhase === "preparing" ? tr("预备", "READY") : timerAction.icon}
                     </span>
                     <strong>{timerSecondsLeft}</strong>
                     <small>{tr("秒", "sec")}</small>
@@ -3200,7 +3204,11 @@ export function CheckInApp() {
               </div>
             </div>
             <h2 id="timer-title">
-              {timerPhase === "success" ? tr("打卡成功", "Check-in complete") : timerAction.name}
+              {timerPhase === "success"
+                ? tr("打卡成功", "Check-in complete")
+                : timerPhase === "preparing"
+                  ? tr("准备开始", "Get ready")
+                  : timerAction.name}
             </h2>
             <p id="timer-description" aria-live="polite">
               {timerPhase === "success"

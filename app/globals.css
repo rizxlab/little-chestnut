@@ -2592,6 +2592,20 @@ button { -webkit-tap-highlight-color: transparent; }
   backdrop-filter: blur(28px) saturate(148%);
   text-align: center;
   animation: secondary-modal-slide-in 300ms cubic-bezier(.2, .82, .24, 1);
+  transition: border-color 240ms ease, background 240ms ease, box-shadow 240ms ease;
+}
+.timer-backdrop .timer-sheet.timer-phase-preparing {
+  border-color: rgba(224, 229, 240, .86);
+  background:
+    linear-gradient(145deg, rgba(248, 250, 255, .76), rgba(232, 237, 247, .5)),
+    rgba(246, 248, 252, .48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .86),
+    0 24px 65px rgba(57, 65, 84, .2);
+}
+.timer-sheet.timer-phase-preparing > .overline {
+  color: #68738a;
+  letter-spacing: .18em;
 }
 .timer-sheet > .overline { display: block; margin-bottom: 18px; }
 .timer-clock {
@@ -2620,9 +2634,39 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .timer-clock span { font-size: 24px; line-height: 1; }
 .timer-clock.preparing span {
-  color: #cb8b68;
-  font-size: 13px;
+  color: #68738a;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .16em;
   animation: ready-pulse 900ms ease-in-out infinite;
+}
+.timer-clock.preparing {
+  width: 146px;
+  height: 146px;
+  box-shadow:
+    0 14px 34px rgba(91, 103, 130, .18),
+    0 0 0 7px rgba(137, 147, 170, .07);
+  animation: ready-clock-breathe 900ms ease-in-out infinite;
+}
+.timer-clock.preparing > div {
+  width: 124px;
+  height: 124px;
+  grid-template-rows: 25px 1fr 18px;
+  border-color: rgba(117, 129, 153, .16);
+  padding: 15px 0 12px;
+  background:
+    radial-gradient(circle at 50% 16%, rgba(170, 184, 211, .24), transparent 42px),
+    rgba(250, 251, 255, .86);
+  box-shadow:
+    inset 0 0 0 5px rgba(255, 255, 255, .48),
+    inset 0 -12px 26px rgba(119, 132, 159, .05);
+}
+.timer-clock.preparing strong {
+  color: #5f6b83;
+  font-size: 46px;
+}
+.timer-clock.preparing small {
+  color: #7d879b;
 }
 .timer-clock strong {
   color: var(--chestnut);
@@ -2793,6 +2837,14 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 @keyframes ready-pulse {
   50% { opacity: .42; transform: scale(.72); }
+}
+@keyframes ready-clock-breathe {
+  50% {
+    transform: scale(.965);
+    box-shadow:
+      0 10px 28px rgba(91, 103, 130, .13),
+      0 0 0 11px rgba(137, 147, 170, .05);
+  }
 }
 @keyframes timer-success-pop {
   from { opacity: .35; transform: scale(.78) rotate(-5deg); }
@@ -3077,6 +3129,24 @@ html[data-theme="dark"] .timer-backdrop .timer-sheet {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .1),
     0 24px 65px rgba(0, 0, 0, .43);
+}
+html[data-theme="dark"] .timer-backdrop .timer-sheet.timer-phase-preparing {
+  border-color: rgba(171, 183, 207, .2);
+  background:
+    linear-gradient(145deg, rgba(56, 63, 78, .76), rgba(27, 31, 39, .64)),
+    rgba(29, 34, 43, .58);
+}
+html[data-theme="dark"] .timer-clock.preparing > div {
+  border-color: rgba(171, 183, 207, .16);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(129, 145, 177, .18), transparent 42px),
+    #171b23;
+}
+html[data-theme="dark"] .timer-clock.preparing strong { color: #c5cee0; }
+html[data-theme="dark"] .timer-clock.preparing span,
+html[data-theme="dark"] .timer-clock.preparing small,
+html[data-theme="dark"] .timer-sheet.timer-phase-preparing > .overline {
+  color: #aab5ca;
 }
 html[data-theme="dark"] .timer-clock.success > div {
   border-color: rgba(133, 175, 124, .2);
