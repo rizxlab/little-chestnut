@@ -267,6 +267,7 @@ export function CheckInApp() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
+  const [orbitRippleKey, setOrbitRippleKey] = useState(0);
   const [lastCheckedAction, setLastCheckedAction] = useState<{
     id: string;
     token: number;
@@ -954,11 +955,25 @@ export function CheckInApp() {
                   <strong>{todayRecords.length}</strong>
                   <small>次微小行动</small>
                 </div>
-                <div className="today-orbit" aria-hidden="true">
-                  <span className="orbit-core">🌰</span>
-                  <i />
-                  <i />
-                  <i />
+                <div className="today-orbit">
+                  {orbitRippleKey > 0 && (
+                    <span className="orbit-ripple" key={orbitRippleKey} aria-hidden="true">
+                      <b />
+                      <b />
+                      <b />
+                    </span>
+                  )}
+                  <button
+                    className="orbit-core"
+                    type="button"
+                    aria-label="点击栗子，播放涟漪"
+                    onClick={() => setOrbitRippleKey((current) => current + 1)}
+                  >
+                    🌰
+                  </button>
+                  <i aria-hidden="true" />
+                  <i aria-hidden="true" />
+                  <i aria-hidden="true" />
                 </div>
                 <div className="today-domains">
                   {todayTotals.length ? (
