@@ -249,6 +249,18 @@ button { -webkit-tap-highlight-color: transparent; }
   font-family: STKaiti, KaiTi, serif;
   font-size: 20px;
 }
+.wordmark-copy {
+  display: grid;
+  gap: 1px;
+}
+.wordmark-copy small {
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  line-height: 1;
+}
 
 .app-scroll {
   min-height: 0;

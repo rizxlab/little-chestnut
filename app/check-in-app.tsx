@@ -1313,7 +1313,10 @@ export function CheckInApp() {
             }}
           >
             <span className="brand-seed" aria-hidden="true">栗</span>
-            <strong>栗子小事</strong>
+            <span className="wordmark-copy">
+              <strong>栗子小事</strong>
+              <small>Little Chestnut</small>
+            </span>
           </button>
         </header>
 
