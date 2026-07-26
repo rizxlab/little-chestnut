@@ -882,6 +882,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .empty-state.compact { min-height: 88px; }
 
 .page-heading { padding: 8px 2px 24px; }
+.growth-page-heading .date-display {
+  display: grid;
+  width: fit-content;
+  margin-bottom: 18px;
+}
 .profile-page-heading { padding-bottom: 16px; }
 .profile-heading-row {
   display: flex;

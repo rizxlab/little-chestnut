@@ -1791,7 +1791,34 @@ export function CheckInApp() {
             </div>
 
             <div className="screen tab-screen" data-tab="growth" aria-hidden={tab !== "growth"}>
-              <section className="page-heading">
+              <section className="page-heading growth-page-heading">
+                <button
+                  className="date-display"
+                  type="button"
+                  aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long",
+                  }).format(new Date())}`}
+                  onClick={openCalendar}
+                >
+                  <strong>
+                    {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
+                  </strong>
+                  <span>
+                    <b>
+                      {new Intl.DateTimeFormat(locale, {
+                        year: "numeric",
+                        month: "long",
+                      }).format(new Date())}
+                    </b>
+                    <small>
+                      {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
+                    </small>
+                  </span>
+                  <i className="date-display-chevron" aria-hidden="true">›</i>
+                </button>
                 <span className="overline">GROWTH OVERVIEW</span>
                 <h1>{tr("成长正在发生", "Growth in progress")}</h1>
               </section>
