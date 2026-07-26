@@ -48,6 +48,7 @@ type ToastState = {
   title: string;
   message: string;
   undoRecordId?: string;
+  undone?: boolean;
   leaving?: boolean;
 };
 
@@ -473,9 +474,9 @@ export function CheckInApp() {
     const id = `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const duration = undoRecordId ? 3600 : 2200;
 
-    setToasts((current) =>
-      [...current, { id, title, message, undoRecordId }].slice(-3),
-    );
+    toastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    toastTimers.current = [];
+    setToasts([{ id, title, message, undoRecordId }]);
 
     const exitTimer = window.setTimeout(() => {
       setToasts((current) =>
@@ -488,14 +489,36 @@ export function CheckInApp() {
     toastTimers.current.push(exitTimer, removeTimer);
   }
 
-  function dismissToast(id: string) {
+  function markToastUndone(toastId: string, recordId: string) {
+    toastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    toastTimers.current = [];
+    undoRecord(recordId, false);
     setToasts((current) =>
-      current.map((item) => (item.id === id ? { ...item, leaving: true } : item)),
+      current.map((item) =>
+        item.id === toastId
+          ? {
+              ...item,
+              title: "已撤销",
+              message: "这次成长记录已移除",
+              undoRecordId: undefined,
+              undone: true,
+              leaving: false,
+            }
+          : item,
+      ),
     );
+
+    const exitTimer = window.setTimeout(() => {
+      setToasts((current) =>
+        current.map((item) =>
+          item.id === toastId ? { ...item, leaving: true } : item,
+        ),
+      );
+    }, 1700);
     const removeTimer = window.setTimeout(() => {
-      setToasts((current) => current.filter((item) => item.id !== id));
-    }, 280);
-    toastTimers.current.push(removeTimer);
+      setToasts((current) => current.filter((item) => item.id !== toastId));
+    }, 1980);
+    toastTimers.current.push(exitTimer, removeTimer);
   }
 
   function recordAction(action: MicroAction, source: Source = "主动记录") {
@@ -524,11 +547,11 @@ export function CheckInApp() {
     );
   }
 
-  function undoRecord(recordId: string) {
+  function undoRecord(recordId: string, showFeedback = true) {
     setRecords((current) => current.filter((record) => record.id !== recordId));
     setShellBalance((current) => Math.max(0, current - 1));
     setShellsEarned((current) => Math.max(0, current - 1));
-    showToast("刚刚的成长记录已移除", "已撤销");
+    if (showFeedback) showToast("刚刚的成长记录已移除", "已撤销");
   }
 
   function clearLongPressTimer() {
@@ -1593,7 +1616,12 @@ export function CheckInApp() {
         <div className="toast-stack" aria-live="polite" aria-atomic="false">
           {toasts.map((toast) => (
             <div className={`toast ${toast.leaving ? "leaving" : ""}`} role="status" key={toast.id}>
-              <span className="toast-check" aria-hidden="true">✓</span>
+              <span
+                className={`toast-check ${toast.undone ? "undone" : ""}`}
+                aria-hidden="true"
+              >
+                {toast.undone ? "↶" : "✓"}
+              </span>
               <span className="toast-copy">
                 <strong>{toast.title}</strong>
                 <small>{toast.message}</small>
@@ -1602,10 +1630,7 @@ export function CheckInApp() {
                 <button
                   className="toast-undo"
                   type="button"
-                  onClick={() => {
-                    dismissToast(toast.id);
-                    undoRecord(toast.undoRecordId!);
-                  }}
+                  onClick={() => markToastUndone(toast.id, toast.undoRecordId!)}
                 >
                   撤销
                 </button>
