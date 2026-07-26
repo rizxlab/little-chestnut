@@ -70,6 +70,7 @@ type RewardClaim = {
 
 type ConfirmDialog =
   | { kind: "delete-action"; action: MicroAction }
+  | { kind: "delete-reward"; reward: Reward }
   | { kind: "reset-data" };
 
 const STORAGE_KEY = "lizi-growth-v2";
@@ -99,7 +100,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
   { id: "profile", label: "我的", icon: "○" },
 ];
 
-const REWARDS: Reward[] = [
+const DEFAULT_REWARDS: Reward[] = [
   {
     id: "favorite-drink",
     name: "喜欢的饮品",
@@ -293,7 +294,14 @@ export function CheckInApp() {
   const [shellsEarned, setShellsEarned] = useState(0);
   const [bankDropKey, setBankDropKey] = useState(0);
   const [rewardClaims, setRewardClaims] = useState<RewardClaim[]>([]);
+  const [rewards, setRewards] = useState<Reward[]>(DEFAULT_REWARDS);
   const [pendingReward, setPendingReward] = useState<Reward | null>(null);
+  const [editingReward, setEditingReward] = useState<Reward | null>(null);
+  const [showRewardEditor, setShowRewardEditor] = useState(false);
+  const [draftRewardName, setDraftRewardName] = useState("");
+  const [draftRewardDescription, setDraftRewardDescription] = useState("");
+  const [draftRewardIcon, setDraftRewardIcon] = useState("🎁");
+  const [draftRewardCost, setDraftRewardCost] = useState(10);
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
@@ -356,6 +364,7 @@ export function CheckInApp() {
           ? Math.max(0, stored.shellsEarned)
           : mergedRecords.length,
       );
+      if (Array.isArray(stored?.rewards)) setRewards(stored.rewards);
       setRewardClaims(Array.isArray(stored?.rewardClaims) ? stored.rewardClaims : []);
       if (shouldSeedHistory) localStorage.setItem(SAMPLE_HISTORY_KEY, "done");
     } catch {
@@ -383,10 +392,11 @@ export function CheckInApp() {
         records,
         shellBalance,
         shellsEarned,
+        rewards,
         rewardClaims,
       }),
     );
-  }, [areas, actions, records, rewardClaims, shellBalance, shellsEarned, ready]);
+  }, [areas, actions, records, rewardClaims, rewards, shellBalance, shellsEarned, ready]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -634,6 +644,47 @@ export function CheckInApp() {
     setPendingReward(null);
   }
 
+  function openRewardEditor(reward?: Reward) {
+    setEditingReward(reward || null);
+    setDraftRewardName(reward?.name || "");
+    setDraftRewardDescription(reward?.description || "");
+    setDraftRewardIcon(reward?.icon || "🎁");
+    setDraftRewardCost(reward?.cost || 10);
+    setShowRewardEditor(true);
+  }
+
+  function saveReward(event: FormEvent) {
+    event.preventDefault();
+    if (!draftRewardName.trim()) return;
+    const rewardValues = {
+      name: draftRewardName.trim(),
+      description: draftRewardDescription.trim(),
+      icon: draftRewardIcon.trim() || "🎁",
+      cost: Math.max(1, Math.round(draftRewardCost || 1)),
+    };
+
+    if (editingReward) {
+      setRewards((current) =>
+        current.map((reward) =>
+          reward.id === editingReward.id ? { ...reward, ...rewardValues } : reward,
+        ),
+      );
+      showToast("奖励项目已更新");
+    } else {
+      setRewards((current) => [
+        ...current,
+        { id: `reward-${Date.now()}`, ...rewardValues },
+      ]);
+      showToast("新的奖励已加入");
+    }
+    setShowRewardEditor(false);
+  }
+
+  function deleteReward(reward: Reward) {
+    setShowRewardEditor(false);
+    setConfirmDialog({ kind: "delete-reward", reward });
+  }
+
   function openActionEditor(action?: MicroAction) {
     setEditingAction(action || null);
     setDraftName(action?.name || "");
@@ -744,6 +795,7 @@ export function CheckInApp() {
     setShowCalendar(false);
     setShowActionEditor(false);
     setShowAreaEditor(false);
+    setShowRewardEditor(false);
     setConfirmDialog(null);
     setPendingReward(null);
     setRecordActionMenu(null);
@@ -840,9 +892,16 @@ export function CheckInApp() {
         current.filter((item) => item.id !== confirmDialog.action.id),
       );
       showToast("微行动已删除");
+    } else if (confirmDialog.kind === "delete-reward") {
+      setRewards((current) =>
+        current.filter((item) => item.id !== confirmDialog.reward.id),
+      );
+      if (pendingReward?.id === confirmDialog.reward.id) setPendingReward(null);
+      showToast("奖励项目已删除");
     } else {
       setAreas(DEFAULT_AREAS);
       setActions(DEFAULT_ACTIONS);
+      setRewards(DEFAULT_REWARDS);
       setRecords([]);
       setShellBalance(0);
       setShellsEarned(0);
@@ -857,10 +916,14 @@ export function CheckInApp() {
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
   const allTotals = totalsFor(records);
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
-  const nextReward = REWARDS.find((reward) => reward.cost > shellBalance);
+  const nextReward = [...rewards]
+    .filter((reward) => reward.cost > shellBalance)
+    .sort((first, second) => first.cost - second.cost)[0];
   const shellProgress = nextReward
     ? Math.min(100, (shellBalance / nextReward.cost) * 100)
-    : 100;
+    : rewards.length
+      ? 100
+      : 0;
   const actionMenuTodayCount = recordActionMenu
     ? todayRecords.filter((record) => record.actionId === recordActionMenu.id).length
     : 0;
@@ -1322,14 +1385,22 @@ export function CheckInApp() {
                   <span>
                     {nextReward
                       ? `距离“${nextReward.name}”还差 ${nextReward.cost - shellBalance} 枚`
-                      : "所有奖励档位都已解锁"}
+                      : rewards.length
+                        ? "所有奖励档位都已解锁"
+                        : "添加一个想送给自己的奖励"}
                   </span>
                   <small>累计获得 {shellsEarned} 枚</small>
                 </div>
                 <span
                   className="shell-progress-track"
                   role="progressbar"
-                  aria-label={nextReward ? `下一档奖励进度：${Math.round(shellProgress)}%` : "全部奖励已解锁"}
+                  aria-label={
+                    nextReward
+                      ? `下一档奖励进度：${Math.round(shellProgress)}%`
+                      : rewards.length
+                        ? "全部奖励已解锁"
+                        : "尚未设置奖励"
+                  }
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={Math.round(shellProgress)}
@@ -1339,35 +1410,56 @@ export function CheckInApp() {
               </section>
 
               <section className="reward-section">
-                <div className="section-title-row">
+                <div className="section-title-row reward-section-heading">
                   <div>
                     <span className="overline">给自己的奖励</span>
                     <h2>把积累换成一点开心</h2>
                   </div>
-                  <small>{rewardClaims.length} 次兑换</small>
+                  <button type="button" onClick={() => openRewardEditor()}>＋ 新建</button>
                 </div>
 
-                <div className="reward-grid">
-                  {REWARDS.map((reward) => {
+                {rewards.length ? (
+                  <div className="reward-grid">
+                  {rewards.map((reward) => {
                     const available = shellBalance >= reward.cost;
                     return (
                       <article className={available ? "available" : ""} key={reward.id}>
                         <span className="reward-icon" aria-hidden="true">{reward.icon}</span>
                         <div>
                           <strong>{reward.name}</strong>
-                          <p>{reward.description}</p>
+                          {reward.description && <p>{reward.description}</p>}
                         </div>
-                        <button
-                          type="button"
-                          className={available ? "ready" : ""}
-                          onClick={() => requestReward(reward)}
-                        >
-                          {available ? `${reward.cost} 栗壳 · 兑换` : `还差 ${reward.cost - shellBalance}`}
-                        </button>
+                        <div className="reward-card-controls">
+                          <button
+                            className="reward-edit-button"
+                            type="button"
+                            onClick={() => openRewardEditor(reward)}
+                          >
+                            编辑
+                          </button>
+                          <button
+                            type="button"
+                            className={`reward-redeem-button ${available ? "ready" : ""}`}
+                            onClick={() => requestReward(reward)}
+                          >
+                            {available ? `${reward.cost} 栗壳 · 兑换` : `还差 ${reward.cost - shellBalance}`}
+                          </button>
+                        </div>
                       </article>
                     );
                   })}
-                </div>
+                  </div>
+                ) : (
+                  <button
+                    className="reward-empty"
+                    type="button"
+                    onClick={() => openRewardEditor()}
+                  >
+                    <span aria-hidden="true">＋</span>
+                    <strong>添加第一个奖励</strong>
+                    <small>写下你想用栗壳换取的小开心</small>
+                  </button>
+                )}
 
                 {rewardClaims.length > 0 && (
                   <details className="reward-history">
@@ -1644,6 +1736,81 @@ export function CheckInApp() {
         </div>
       )}
 
+      {showRewardEditor && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowRewardEditor(false)}>
+          <form
+            className="bottom-sheet reward-editor"
+            onSubmit={saveReward}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowRewardEditor(false)}
+            >
+              ×
+            </button>
+            <span className="overline">{editingReward ? "编辑奖励" : "新的奖励"}</span>
+            <h2>{editingReward ? "调整这份小期待" : "想把栗壳换成什么？"}</h2>
+            <div className="reward-form-row">
+              <label>
+                图标
+                <input
+                  value={draftRewardIcon}
+                  onChange={(event) => setDraftRewardIcon(event.target.value)}
+                  maxLength={4}
+                />
+              </label>
+              <label>
+                奖励名称
+                <input
+                  value={draftRewardName}
+                  onChange={(event) => setDraftRewardName(event.target.value)}
+                  placeholder="例如：看一场电影"
+                  autoFocus
+                />
+              </label>
+            </div>
+            <label>
+              简短说明
+              <input
+                value={draftRewardDescription}
+                onChange={(event) => setDraftRewardDescription(event.target.value)}
+                placeholder="例如：留一个晚上给喜欢的故事"
+                maxLength={48}
+              />
+            </label>
+            <label>
+              所需栗壳
+              <input
+                type="number"
+                min="1"
+                max="9999"
+                value={draftRewardCost}
+                onChange={(event) => setDraftRewardCost(Number(event.target.value))}
+              />
+            </label>
+            <button
+              className="save-button"
+              type="submit"
+              disabled={!draftRewardName.trim() || draftRewardCost < 1}
+            >
+              {editingReward ? "保存奖励" : "加入奖励清单"}
+            </button>
+            {editingReward && (
+              <button
+                className="delete-reward-button"
+                type="button"
+                onClick={() => deleteReward(editingReward)}
+              >
+                删除这个奖励
+              </button>
+            )}
+          </form>
+        </div>
+      )}
+
       {recordActionMenu && (
         <div className="modal-backdrop" role="presentation" onClick={() => setRecordActionMenu(null)}>
           <section
@@ -1748,7 +1915,9 @@ export function CheckInApp() {
         <div className="modal-backdrop" role="presentation" onClick={() => setConfirmDialog(null)}>
           <section
             className={`bottom-sheet confirm-sheet ${
-              confirmDialog.kind === "reset-data" ? "danger-sheet" : ""
+              confirmDialog.kind === "reset-data" || confirmDialog.kind === "delete-reward"
+                ? "danger-sheet"
+                : ""
             }`}
             role="alertdialog"
             aria-modal="true"
@@ -1760,15 +1929,25 @@ export function CheckInApp() {
               {confirmDialog.kind === "reset-data" ? "↺" : "−"}
             </span>
             <span className="overline">
-              {confirmDialog.kind === "reset-data" ? "谨慎操作" : "整理微行动"}
+              {confirmDialog.kind === "reset-data"
+                ? "谨慎操作"
+                : confirmDialog.kind === "delete-reward"
+                  ? "整理奖励"
+                  : "整理微行动"}
             </span>
             <h2 id="confirm-title">
-              {confirmDialog.kind === "reset-data" ? "要重新开始吗？" : "删除这个微行动？"}
+              {confirmDialog.kind === "reset-data"
+                ? "要重新开始吗？"
+                : confirmDialog.kind === "delete-reward"
+                  ? "删除这个奖励？"
+                  : "删除这个微行动？"}
             </h2>
             <p id="confirm-description">
               {confirmDialog.kind === "reset-data"
-                ? "所有成长记录会被清空，微行动和成长标签将恢复默认状态。此操作无法撤销。"
-                : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
+                ? "所有成长记录会被清空，微行动、成长标签和奖励清单将恢复默认状态。此操作无法撤销。"
+                : confirmDialog.kind === "delete-reward"
+                  ? `“${confirmDialog.reward.name}”将从奖励清单中移除，过去的兑换记录仍会保留。`
+                  : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
             </p>
             <div className="dialog-actions">
               <button

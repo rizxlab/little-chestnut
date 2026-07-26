@@ -1085,7 +1085,16 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 
 .reward-section { padding-top: 26px; }
-.reward-section .section-title-row > small { color: var(--muted); font-size: 9px; }
+.reward-section-heading > button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: var(--chestnut);
+  background: #fffaf2;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
 .reward-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1123,24 +1132,53 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 8px;
   line-height: 1.5;
 }
-.reward-grid button {
+.reward-card-controls {
   grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 7px;
+}
+.reward-card-controls button {
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 8px;
-  color: #9a8d80;
-  background: #f6f0e7;
   font-size: 9px;
   font-weight: 700;
   cursor: pointer;
 }
-.reward-grid button.ready {
+.reward-edit-button {
+  color: var(--chestnut);
+  background: #fffaf2;
+}
+.reward-redeem-button {
+  color: #9a8d80;
+  background: #f6f0e7;
+}
+.reward-redeem-button.ready {
   border-color: transparent;
   color: #fffaf0;
   background: var(--chestnut);
   box-shadow: 0 6px 15px rgba(111, 59, 39, .16);
 }
-.reward-grid button:active { transform: scale(.97); }
+.reward-card-controls button:active,
+.reward-section-heading > button:active,
+.reward-empty:active { transform: scale(.97); }
+.reward-empty {
+  display: grid;
+  width: 100%;
+  min-height: 126px;
+  place-items: center;
+  gap: 4px;
+  border: 1px dashed #d9c8b6;
+  border-radius: 19px;
+  padding: 20px;
+  color: var(--chestnut);
+  background: rgba(255, 253, 248, .58);
+  cursor: pointer;
+}
+.reward-empty span { font-family: Georgia, serif; font-size: 25px; }
+.reward-empty strong { font-size: 11px; }
+.reward-empty small { color: var(--muted); font-size: 8px; }
 .reward-history {
   margin-top: 11px;
   border: 1px solid var(--line);
@@ -1429,19 +1467,19 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 25px;
   cursor: pointer;
 }
-.action-editor h2, .area-editor h2, .confirm-sheet h2, .reward-sheet h2 {
+.action-editor h2, .area-editor h2, .reward-editor h2, .confirm-sheet h2, .reward-sheet h2 {
   margin: 6px 28px 20px 0;
   font-family: STKaiti, KaiTi, serif;
   font-size: 23px;
 }
-.action-editor label, .area-editor label {
+.action-editor label, .area-editor label, .reward-editor label {
   display: grid;
   gap: 7px;
   margin-top: 13px;
   color: var(--muted);
   font-size: 10px;
 }
-.action-editor input, .action-editor select, .area-editor input {
+.action-editor input, .action-editor select, .area-editor input, .reward-editor input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -1451,11 +1489,21 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fffdf9;
   font-size: 12px;
 }
-.action-editor input:focus, .action-editor select:focus, .area-editor input:focus {
+.action-editor input:focus, .action-editor select:focus, .area-editor input:focus, .reward-editor input:focus {
   border-color: #b99882;
 }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .area-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
+.reward-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
+.delete-reward-button {
+  width: 100%;
+  border: 0;
+  padding: 13px 8px 3px;
+  color: #985a50;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
 .tag-fieldset {
   display: grid;
   gap: 8px;
