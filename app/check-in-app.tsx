@@ -1767,7 +1767,7 @@ export function CheckInApp() {
             </div>
 
             <div className="screen tab-screen" data-tab="profile" aria-hidden={tab !== "profile"}>
-              <section className="page-heading">
+              <section className="page-heading profile-page-heading">
                 <span className="overline">MY SPACE</span>
                 <div className="profile-heading-row">
                   <h1>{tr("我的栗子", "My Chestnuts")}</h1>
@@ -1781,7 +1781,6 @@ export function CheckInApp() {
                     {tr("设置", "Settings")}
                   </button>
                 </div>
-                <p>{tr("在这里整理微行动与成长标签，记录请回到“今日”页面。", "Manage your actions, tags, rewards, and account here.")}</p>
               </section>
 
               <section className="account-strip" aria-label={tr("当前账号", "Current account")}>
@@ -1822,7 +1821,6 @@ export function CheckInApp() {
                       <strong>{shellBalance}</strong>
                       <small>枚栗壳</small>
                     </h2>
-                    <p>每完成一件小事，就存下一枚。</p>
                   </div>
                 </div>
 
