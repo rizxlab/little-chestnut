@@ -309,6 +309,7 @@ export function CheckInApp() {
   const [rewards, setRewards] = useState<Reward[]>(DEFAULT_REWARDS);
   const [pendingReward, setPendingReward] = useState<Reward | null>(null);
   const [editingReward, setEditingReward] = useState<Reward | null>(null);
+  const [showRewardManager, setShowRewardManager] = useState(false);
   const [showRewardEditor, setShowRewardEditor] = useState(false);
   const [draftRewardName, setDraftRewardName] = useState("");
   const [draftRewardDescription, setDraftRewardDescription] = useState("");
@@ -622,6 +623,8 @@ export function CheckInApp() {
     setAccount(null);
     setTab("today");
     setShowCalendar(false);
+    setShowRewardManager(false);
+    setShowRewardEditor(false);
     setToasts([]);
     setLoginPassword("");
   }
@@ -828,6 +831,7 @@ export function CheckInApp() {
   }
 
   function openRewardEditor(reward?: Reward) {
+    setShowRewardManager(false);
     setEditingReward(reward || null);
     setDraftRewardName(reward?.name || "");
     setDraftRewardDescription(reward?.description || "");
@@ -861,6 +865,7 @@ export function CheckInApp() {
       showToast("新的奖励已加入");
     }
     setShowRewardEditor(false);
+    setShowRewardManager(true);
   }
 
   function deleteReward(reward: Reward) {
@@ -978,6 +983,7 @@ export function CheckInApp() {
     setShowCalendar(false);
     setShowActionEditor(false);
     setShowAreaEditor(false);
+    setShowRewardManager(false);
     setShowRewardEditor(false);
     setConfirmDialog(null);
     setPendingReward(null);
@@ -1081,6 +1087,7 @@ export function CheckInApp() {
       );
       if (pendingReward?.id === confirmDialog.reward.id) setPendingReward(null);
       showToast("奖励项目已删除");
+      setShowRewardManager(true);
     } else {
       setAreas(DEFAULT_AREAS);
       setActions(DEFAULT_ACTIONS);
@@ -1629,7 +1636,7 @@ export function CheckInApp() {
                     <span className="overline">给自己的奖励</span>
                     <h2>把积累换成一点开心</h2>
                   </div>
-                  <button type="button" onClick={() => openRewardEditor()}>＋ 新建</button>
+                  <button type="button" onClick={() => setShowRewardManager(true)}>奖励管理</button>
                 </div>
 
                 {rewards.length ? (
@@ -1644,13 +1651,6 @@ export function CheckInApp() {
                           {reward.description && <p>{reward.description}</p>}
                         </div>
                         <div className="reward-card-controls">
-                          <button
-                            className="reward-edit-button"
-                            type="button"
-                            onClick={() => openRewardEditor(reward)}
-                          >
-                            编辑
-                          </button>
                           <button
                             type="button"
                             className={`reward-redeem-button ${available ? "ready" : ""}`}
@@ -1667,7 +1667,7 @@ export function CheckInApp() {
                   <button
                     className="reward-empty"
                     type="button"
-                    onClick={() => openRewardEditor()}
+                    onClick={() => setShowRewardManager(true)}
                   >
                     <span aria-hidden="true">＋</span>
                     <strong>添加第一个奖励</strong>
@@ -2024,6 +2024,57 @@ export function CheckInApp() {
               </button>
             )}
           </form>
+        </div>
+      )}
+
+      {showRewardManager && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowRewardManager(false)}>
+          <section
+            className="bottom-sheet reward-manager"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reward-manager-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowRewardManager(false)}
+            >
+              ×
+            </button>
+            <span className="overline">给自己的奖励</span>
+            <h2 id="reward-manager-title">奖励管理</h2>
+            <button
+              className="reward-manager-create"
+              type="button"
+              onClick={() => openRewardEditor()}
+            >
+              <span aria-hidden="true">＋</span>
+              <div>
+                <strong>新建奖励</strong>
+                <small>添加一个新的栗壳目标</small>
+              </div>
+            </button>
+            <div className="reward-manager-list">
+              {rewards.map((reward) => (
+                <button
+                  type="button"
+                  key={reward.id}
+                  aria-label={`修改${reward.name}`}
+                  onClick={() => openRewardEditor(reward)}
+                >
+                  <span aria-hidden="true">{reward.icon}</span>
+                  <div>
+                    <strong>{reward.name}</strong>
+                    <small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small>
+                  </div>
+                  <i aria-hidden="true">›</i>
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
       )}
 
