@@ -800,6 +800,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .stat-grid strong { margin: 4px 0 1px; font-family: Georgia, serif; font-size: 27px; font-weight: 400; }
 
 .growth-section { padding-top: 27px; }
+.growth-divider {
+  height: 1px;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
+}
 .growth-areas { display: grid; gap: 9px; }
 .growth-area {
   display: grid;

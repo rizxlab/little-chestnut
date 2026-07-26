@@ -1213,12 +1213,7 @@ export function CheckInApp() {
               </div>
 
               <section className="content-section growth-section">
-                <div className="section-title-row">
-                  <div>
-                    <span className="overline">成长标签</span>
-                    <h2>你的行动正在滋养什么</h2>
-                  </div>
-                </div>
+                <div className="growth-divider" aria-hidden="true" />
                 <div className="growth-areas">
                   {allTotals.map((area) => (
                     <article className="growth-area" key={area.id}>
@@ -1243,12 +1238,7 @@ export function CheckInApp() {
               </section>
 
               <section className="content-section timeline-section">
-                <div className="section-title-row">
-                  <div>
-                    <span className="overline">成长时间轴</span>
-                    <h2>每一颗栗子都有来处</h2>
-                  </div>
-                </div>
+                <div className="growth-divider" aria-hidden="true" />
                 {records.length ? (
                   <div className="timeline">
                     {records.slice(0, 12).map((record) => {
