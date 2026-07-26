@@ -2028,8 +2028,10 @@ export function CheckInApp() {
                 </div>
                 <h1>
                   {greeting(language)}
-                  {account && nickname.trim()
-                    ? `${language === "zh" ? "，" : ", "}${nickname.trim()}`
+                  {account
+                    ? `${language === "zh" ? "，" : ", "}${
+                        nickname.trim() || account.username
+                      }`
                     : ""}
                 </h1>
               </section>
