@@ -1,60 +1,137 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+
+type Tab = "today" | "actions" | "growth" | "settings";
+type Source = "主动记录" | "随机行动";
+
+type Area = {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  isDefault?: boolean;
+};
+
+type MicroAction = {
+  id: string;
+  name: string;
+  icon: string;
+  areaId: string;
+  value: number;
+  repeatable: boolean;
+};
+
+type GrowthRecord = {
+  id: string;
+  actionId: string;
+  actionName: string;
+  icon: string;
+  areaId: string;
+  value: number;
+  source: Source;
+  createdAt: string;
+};
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const STORAGE_KEY = "lizi-checkins-v1";
+const STORAGE_KEY = "lizi-growth-v2";
 
-function dayKey(date = new Date()) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+const DEFAULT_AREAS: Area[] = [
+  { id: "body", name: "身体", icon: "🌱", color: "#667957", isDefault: true },
+  { id: "learn", name: "学习", icon: "📚", color: "#56748a", isDefault: true },
+  { id: "create", name: "创造", icon: "🎨", color: "#8a6478", isDefault: true },
+  { id: "mind", name: "精神", icon: "🧘", color: "#8d7650", isDefault: true },
+  { id: "life", name: "生活", icon: "🏠", color: "#9a684f", isDefault: true },
+];
+
+const DEFAULT_ACTIONS: MicroAction[] = [
+  { id: "water", name: "喝一杯水", icon: "💧", areaId: "body", value: 1, repeatable: true },
+  { id: "stretch", name: "拉伸 5 秒", icon: "🙆", areaId: "body", value: 1, repeatable: true },
+  { id: "read", name: "阅读一页", icon: "📖", areaId: "learn", value: 1, repeatable: true },
+  { id: "word", name: "学一个单词", icon: "🔤", areaId: "learn", value: 1, repeatable: true },
+  { id: "sketch", name: "画一个草图", icon: "✏️", areaId: "create", value: 1, repeatable: true },
+  { id: "idea", name: "记录一个灵感", icon: "💡", areaId: "create", value: 1, repeatable: true },
+];
+
+const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
+  { id: "today", label: "今日", icon: "◉" },
+  { id: "actions", label: "微行动", icon: "✦" },
+  { id: "growth", label: "成长", icon: "⌁" },
+  { id: "settings", label: "设置", icon: "○" },
+];
+
+function localDay(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
 }
 
-function buildWeek() {
-  const today = new Date();
-  const weekday = today.getDay() || 7;
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - weekday + 1 + index);
-    return date;
-  });
+function isToday(date: Date) {
+  return localDay(date) === localDay(new Date());
 }
 
-function calculateStreak(checkIns: string[]) {
-  let streak = 0;
-  const cursor = new Date();
-  if (!checkIns.includes(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1);
+function startOfWeek() {
+  const date = new Date();
+  const day = date.getDay() || 7;
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() - day + 1);
+  return date;
+}
 
-  while (checkIns.includes(dayKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
+function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 6) return "夜深了";
+  if (hour < 11) return "早上好";
+  if (hour < 14) return "中午好";
+  if (hour < 18) return "下午好";
+  return "晚上好";
+}
+
+function formatRecordDate(value: string) {
+  const date = new Date(value);
+  if (isToday(date)) {
+    return new Intl.DateTimeFormat("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(date);
   }
-  return streak;
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
 }
 
 export function CheckInApp() {
-  const [checkIns, setCheckIns] = useState<string[]>([]);
+  const [tab, setTab] = useState<Tab>("today");
+  const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
+  const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
+  const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
+  const [toast, setToast] = useState("");
   const [installPrompt, setInstallPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
-  const [justChecked, setJustChecked] = useState(false);
-
-  const today = dayKey();
-  const checkedToday = checkIns.includes(today);
-  const week = useMemo(buildWeek, []);
-  const streak = calculateStreak(checkIns);
+  const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
+  const [showActionEditor, setShowActionEditor] = useState(false);
+  const [draftName, setDraftName] = useState("");
+  const [draftIcon, setDraftIcon] = useState("🌱");
+  const [draftArea, setDraftArea] = useState("body");
+  const [draftValue, setDraftValue] = useState(1);
 
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-      if (Array.isArray(stored)) setCheckIns(stored);
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (stored?.areas?.length) setAreas(stored.areas);
+      if (stored?.actions?.length) setActions(stored.actions);
+      if (Array.isArray(stored?.records)) setRecords(stored.records);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -69,20 +146,128 @@ export function CheckInApp() {
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handleInstall);
-    return () =>
-      window.removeEventListener("beforeinstallprompt", handleInstall);
+    return () => window.removeEventListener("beforeinstallprompt", handleInstall);
   }, []);
 
-  function toggleToday() {
-    const next = checkedToday
-      ? checkIns.filter((date) => date !== today)
-      : [...checkIns, today];
-    setCheckIns(next);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    if (!checkedToday) {
-      setJustChecked(true);
-      window.setTimeout(() => setJustChecked(false), 900);
+  useEffect(() => {
+    if (!ready) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ areas, actions, records }));
+  }, [areas, actions, records, ready]);
+
+  const todayRecords = useMemo(
+    () => records.filter((record) => isToday(new Date(record.createdAt))),
+    [records],
+  );
+  const weekRecords = useMemo(() => {
+    const start = startOfWeek().getTime();
+    return records.filter((record) => new Date(record.createdAt).getTime() >= start);
+  }, [records]);
+  const monthRecords = useMemo(() => {
+    const now = new Date();
+    return records.filter((record) => {
+      const date = new Date(record.createdAt);
+      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    });
+  }, [records]);
+
+  function areaFor(id: string) {
+    return areas.find((area) => area.id === id) || areas[0];
+  }
+
+  function totalsFor(source: GrowthRecord[]) {
+    return areas.map((area) => ({
+      ...area,
+      total: source
+        .filter((record) => record.areaId === area.id)
+        .reduce((sum, record) => sum + record.value, 0),
+    }));
+  }
+
+  function showToast(message: string) {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 1700);
+  }
+
+  function recordAction(action: MicroAction, source: Source = "主动记录") {
+    const area = areaFor(action.areaId);
+    const record: GrowthRecord = {
+      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      actionId: action.id,
+      actionName: action.name,
+      icon: action.icon,
+      areaId: action.areaId,
+      value: action.value,
+      source,
+      createdAt: new Date().toISOString(),
+    };
+    setRecords((current) => [record, ...current]);
+    showToast(`${action.icon} 已记录 · ${area.name} +${action.value}`);
+  }
+
+  function openActionEditor(action?: MicroAction) {
+    setEditingAction(action || null);
+    setDraftName(action?.name || "");
+    setDraftIcon(action?.icon || "🌱");
+    setDraftArea(action?.areaId || areas[0]?.id || "body");
+    setDraftValue(action?.value || 1);
+    setShowActionEditor(true);
+  }
+
+  function saveAction(event: FormEvent) {
+    event.preventDefault();
+    if (!draftName.trim()) return;
+
+    if (editingAction) {
+      setActions((current) =>
+        current.map((action) =>
+          action.id === editingAction.id
+            ? {
+                ...action,
+                name: draftName.trim(),
+                icon: draftIcon.trim() || "🌱",
+                areaId: draftArea,
+                value: Math.max(1, draftValue),
+              }
+            : action,
+        ),
+      );
+      showToast("微行动已更新");
+    } else {
+      setActions((current) => [
+        ...current,
+        {
+          id: `action-${Date.now()}`,
+          name: draftName.trim(),
+          icon: draftIcon.trim() || "🌱",
+          areaId: draftArea,
+          value: Math.max(1, draftValue),
+          repeatable: true,
+        },
+      ]);
+      showToast("新的微行动已加入");
     }
+    setShowActionEditor(false);
+  }
+
+  function deleteAction(action: MicroAction) {
+    if (!window.confirm(`删除“${action.name}”？已有成长记录会保留。`)) return;
+    setActions((current) => current.filter((item) => item.id !== action.id));
+    showToast("微行动已删除");
+  }
+
+  function addArea() {
+    const name = window.prompt("给新的成长领域起个名字");
+    if (!name?.trim()) return;
+    const icon = window.prompt("选择一个图标", "🌿")?.trim() || "🌿";
+    const palette = ["#6b7f72", "#9b6a62", "#78698f", "#527d86"];
+    const area: Area = {
+      id: `area-${Date.now()}`,
+      name: name.trim(),
+      icon,
+      color: palette[areas.length % palette.length],
+    };
+    setAreas((current) => [...current, area]);
+    showToast("成长领域已创建");
   }
 
   async function install() {
@@ -95,113 +280,419 @@ export function CheckInApp() {
     setShowInstallHelp(true);
   }
 
+  function resetData() {
+    if (!window.confirm("清空所有成长记录，并恢复默认微行动？此操作无法撤销。")) return;
+    setAreas(DEFAULT_AREAS);
+    setActions(DEFAULT_ACTIONS);
+    setRecords([]);
+    setTab("today");
+    showToast("已恢复为新的开始");
+  }
+
+  const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
+  const allTotals = totalsFor(records);
+  const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
+
   return (
     <main className="shell">
-      <div className="ambient ambient-one" />
-      <div className="ambient ambient-two" />
-
-      <section className="app-card">
-        <header className="topbar">
-          <div className="brand">
-            <span className="brand-mark" aria-hidden="true">
-              栗
-            </span>
-            <div>
+      <section className="app-frame">
+        <header className="app-header">
+          <button className="wordmark" type="button" onClick={() => setTab("today")}>
+            <span className="brand-seed" aria-hidden="true">栗</span>
+            <span>
               <strong>栗子打卡</strong>
-              <span>把小事，慢慢做成大事</span>
-            </div>
-          </div>
-          <button className="install-button" type="button" onClick={install}>
-            <span aria-hidden="true">↓</span>
-            安装
+              <small>微小行动 · 长期成长</small>
+            </span>
+          </button>
+          <button className="install-link" type="button" onClick={install}>
+            安装到桌面
           </button>
         </header>
 
-        <div className="date-row">
-          <span>
-            {new Intl.DateTimeFormat("zh-CN", {
-              month: "long",
-              day: "numeric",
-              weekday: "long",
-            }).format(new Date())}
-          </span>
-          <span className="local-pill">
-            <i /> 已保存在本机
-          </span>
+        <div className="app-scroll">
+          {tab === "today" && (
+            <div className="screen">
+              <section className="welcome">
+                <span className="date-label">
+                  {new Intl.DateTimeFormat("zh-CN", {
+                    month: "long",
+                    day: "numeric",
+                    weekday: "long",
+                  }).format(new Date())}
+                </span>
+                <h1>{greeting()}，今天想留下什么？</h1>
+                <p>不用完成一整件大事，记录一个已经发生的小行动就很好。</p>
+              </section>
+
+              <section className="today-card">
+                <div className="today-card-copy">
+                  <span>今日成长</span>
+                  <strong>{todayRecords.length}</strong>
+                  <small>次微小行动</small>
+                </div>
+                <div className="today-orbit" aria-hidden="true">
+                  <span className="orbit-core">🌰</span>
+                  <i />
+                  <i />
+                  <i />
+                </div>
+                <div className="today-domains">
+                  {todayTotals.length ? (
+                    todayTotals.map((area) => (
+                      <span key={area.id}>
+                        {area.icon} {area.name} +{area.total}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="quiet">今天的成长从第一颗栗子开始</span>
+                  )}
+                </div>
+              </section>
+
+              <section className="content-section">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">快速记录</span>
+                    <h2>点一下，3 秒完成</h2>
+                  </div>
+                  <button type="button" onClick={() => setTab("actions")}>管理</button>
+                </div>
+                <div className="quick-grid">
+                  {actions.slice(0, 6).map((action) => {
+                    const area = areaFor(action.areaId);
+                    return (
+                      <button
+                        className="quick-action"
+                        type="button"
+                        key={action.id}
+                        onClick={() => recordAction(action)}
+                      >
+                        <span className="action-icon" style={{ background: `${area.color}18` }}>
+                          {action.icon}
+                        </span>
+                        <strong>{action.name}</strong>
+                        <small style={{ color: area.color }}>{area.name} +{action.value}</small>
+                        <i aria-hidden="true">＋</i>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section className="content-section recent-section">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">最近成长</span>
+                    <h2>已经发生的，都算数</h2>
+                  </div>
+                </div>
+                {records.length ? (
+                  <div className="record-list">
+                    {records.slice(0, 5).map((record) => {
+                      const area = areaFor(record.areaId);
+                      return (
+                        <article className="record-row" key={record.id}>
+                          <span className="record-icon">{record.icon}</span>
+                          <div>
+                            <strong>{record.actionName}</strong>
+                            <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
+                          </div>
+                          <span style={{ color: area.color }}>{area.name} +{record.value}</span>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <span>◌</span>
+                    <p>完成一个微行动后，它会安静地留在这里。</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {tab === "actions" && (
+            <div className="screen">
+              <section className="page-heading">
+                <span className="overline">ACTION LIBRARY</span>
+                <h1>我的微行动</h1>
+                <p>把想做的事拆到足够小，小到随时都可以开始。</p>
+              </section>
+
+              <button className="primary-add" type="button" onClick={() => openActionEditor()}>
+                <span>＋</span>
+                创建一个微行动
+              </button>
+
+              <div className="action-library">
+                {areas.map((area) => {
+                  const areaActions = actions.filter((action) => action.areaId === area.id);
+                  if (!areaActions.length) return null;
+                  return (
+                    <section className="area-group" key={area.id}>
+                      <div className="area-group-title">
+                        <span>{area.icon}</span>
+                        <strong>{area.name}</strong>
+                        <small>{areaActions.length} 个行动</small>
+                      </div>
+                      {areaActions.map((action) => (
+                        <article className="library-row" key={action.id}>
+                          <button
+                            className="library-record"
+                            type="button"
+                            onClick={() => recordAction(action)}
+                          >
+                            <span>{action.icon}</span>
+                            <div>
+                              <strong>{action.name}</strong>
+                              <small>完成后 {area.name} +{action.value}</small>
+                            </div>
+                            <i>＋</i>
+                          </button>
+                          <div className="row-actions">
+                            <button type="button" onClick={() => openActionEditor(action)}>编辑</button>
+                            <button type="button" onClick={() => deleteAction(action)}>删除</button>
+                          </div>
+                        </article>
+                      ))}
+                    </section>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {tab === "growth" && (
+            <div className="screen">
+              <section className="page-heading">
+                <span className="overline">GROWTH OVERVIEW</span>
+                <h1>成长正在发生</h1>
+                <p>不看完成率，只看你真实留下的积累。</p>
+              </section>
+
+              <div className="stat-grid">
+                <article>
+                  <span>全部记录</span>
+                  <strong>{records.length}</strong>
+                  <small>次成长</small>
+                </article>
+                <article>
+                  <span>本周</span>
+                  <strong>{weekRecords.length}</strong>
+                  <small>次行动</small>
+                </article>
+                <article>
+                  <span>本月</span>
+                  <strong>{monthRecords.length}</strong>
+                  <small>次行动</small>
+                </article>
+              </div>
+
+              <section className="content-section growth-section">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">成长领域</span>
+                    <h2>你在把时间放在哪里</h2>
+                  </div>
+                </div>
+                <div className="growth-areas">
+                  {allTotals.map((area) => (
+                    <article className="growth-area" key={area.id}>
+                      <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
+                        {area.icon}
+                      </span>
+                      <div>
+                        <strong>{area.name}</strong>
+                        <span className="progress-track">
+                          <i
+                            style={{
+                              width: `${Math.max(area.total ? 12 : 0, (area.total / maxAreaTotal) * 100)}%`,
+                              background: area.color,
+                            }}
+                          />
+                        </span>
+                      </div>
+                      <strong className="area-total">{area.total}</strong>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="content-section timeline-section">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">成长时间轴</span>
+                    <h2>每一颗栗子都有来处</h2>
+                  </div>
+                </div>
+                {records.length ? (
+                  <div className="timeline">
+                    {records.slice(0, 12).map((record) => {
+                      const area = areaFor(record.areaId);
+                      return (
+                        <article key={record.id}>
+                          <i style={{ background: area.color }} />
+                          <div>
+                            <small>{formatRecordDate(record.createdAt)}</small>
+                            <strong>{record.icon} {record.actionName}</strong>
+                            <span style={{ color: area.color }}>{area.name} +{record.value}</span>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="empty-state compact">
+                    <p>你的长期成长轨迹，会从这里慢慢展开。</p>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {tab === "settings" && (
+            <div className="screen">
+              <section className="page-heading">
+                <span className="overline">SETTINGS</span>
+                <h1>让它更像你</h1>
+                <p>管理成长方向，也可以把栗子打卡留在手机桌面。</p>
+              </section>
+
+              <section className="settings-card install-card">
+                <div>
+                  <span className="settings-icon">↓</span>
+                  <div>
+                    <strong>安装栗子打卡</strong>
+                    <small>像普通 App 一样从桌面打开</small>
+                  </div>
+                </div>
+                <button type="button" onClick={install}>安装</button>
+              </section>
+
+              <section className="settings-block">
+                <div className="settings-heading">
+                  <div>
+                    <span className="overline">成长领域</span>
+                    <h2>我关注的方向</h2>
+                  </div>
+                  <button type="button" onClick={addArea}>＋ 添加</button>
+                </div>
+                <div className="area-chip-list">
+                  {areas.map((area) => (
+                    <span key={area.id} style={{ borderColor: `${area.color}55` }}>
+                      {area.icon} {area.name}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="settings-block philosophy">
+                <span className="overline">关于产品</span>
+                <blockquote>
+                  “成长不是由几个重大事件组成，而是由无数微小行动累积而成。”
+                </blockquote>
+                <ul>
+                  <li>记录成长，而不是记录失败</li>
+                  <li>默认展示已经做到的事情</li>
+                  <li>数据服务于回顾，而不是竞争</li>
+                </ul>
+              </section>
+
+              <section className="settings-block data-settings">
+                <div>
+                  <strong>设备本地数据</strong>
+                  <small>当前共有 {records.length} 条成长记录</small>
+                </div>
+                <button type="button" onClick={resetData}>清空并重置</button>
+              </section>
+            </div>
+          )}
         </div>
 
-        <section className="hero-panel">
-          <div className="streak-copy">
-            <span className="eyebrow">连续坚持</span>
-            <div className="streak-number">
-              <strong>{ready ? streak : "—"}</strong>
-              <span>天</span>
-            </div>
-            <p>{checkedToday ? "今天也稳稳接住了自己。" : "今天，也为自己留下一颗栗子吧。"}</p>
-          </div>
-
-          <button
-            className={`check-button ${checkedToday ? "is-checked" : ""} ${
-              justChecked ? "pop" : ""
-            }`}
-            type="button"
-            onClick={toggleToday}
-            aria-pressed={checkedToday}
-          >
-            <span className="check-ring">
-              <span aria-hidden="true">{checkedToday ? "✓" : "＋"}</span>
-            </span>
-            <strong>{checkedToday ? "今日已打卡" : "今日打卡"}</strong>
-            <small>{checkedToday ? "点按可以撤销" : "点按留下今天的记录"}</small>
-          </button>
-        </section>
-
-        <section className="week-section">
-          <div className="section-heading">
-            <div>
-              <span className="eyebrow">本周足迹</span>
-              <h2>每一次都算数</h2>
-            </div>
-            <span className="week-count">
-              {week.filter((date) => checkIns.includes(dayKey(date))).length}/7
-            </span>
-          </div>
-
-          <div className="week-grid">
-            {week.map((date, index) => {
-              const key = dayKey(date);
-              const done = checkIns.includes(key);
-              const isToday = key === today;
-              return (
-                <div
-                  className={`day ${done ? "done" : ""} ${
-                    isToday ? "today" : ""
-                  }`}
-                  key={key}
-                >
-                  <span>{"一二三四五六日"[index]}</span>
-                  <strong>{date.getDate()}</strong>
-                  <i>{done ? "✓" : ""}</i>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        <footer className="quote">
-          <span aria-hidden="true">“</span>
-          <p>不用一下子走很远，今天向前一点点就很好。</p>
-        </footer>
+        <nav className="bottom-nav" aria-label="主要导航">
+          {NAV_ITEMS.map((item) => (
+            <button
+              className={tab === item.id ? "active" : ""}
+              type="button"
+              key={item.id}
+              onClick={() => setTab(item.id)}
+              aria-current={tab === item.id ? "page" : undefined}
+            >
+              <span aria-hidden="true">{item.icon}</span>
+              {item.label}
+            </button>
+          ))}
+        </nav>
       </section>
 
+      {toast && <div className="toast" role="status">{toast}</div>}
+
+      {showActionEditor && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowActionEditor(false)}>
+          <form
+            className="bottom-sheet action-editor"
+            onSubmit={saveAction}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowActionEditor(false)}
+            >
+              ×
+            </button>
+            <span className="overline">{editingAction ? "编辑微行动" : "新的微行动"}</span>
+            <h2>{editingAction ? "把行动调整得更顺手" : "从一件足够小的事开始"}</h2>
+            <label>
+              行动名称
+              <input
+                value={draftName}
+                onChange={(event) => setDraftName(event.target.value)}
+                placeholder="例如：阅读一页"
+                autoFocus
+              />
+            </label>
+            <div className="form-row">
+              <label>
+                图标
+                <input
+                  value={draftIcon}
+                  onChange={(event) => setDraftIcon(event.target.value)}
+                  maxLength={4}
+                />
+              </label>
+              <label>
+                成长值
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={draftValue}
+                  onChange={(event) => setDraftValue(Number(event.target.value))}
+                />
+              </label>
+            </div>
+            <label>
+              成长领域
+              <select value={draftArea} onChange={(event) => setDraftArea(event.target.value)}>
+                {areas.map((area) => (
+                  <option value={area.id} key={area.id}>{area.icon} {area.name}</option>
+                ))}
+              </select>
+            </label>
+            <button className="save-button" type="submit">
+              {editingAction ? "保存修改" : "加入我的微行动"}
+            </button>
+          </form>
+        </div>
+      )}
+
       {showInstallHelp && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={() => setShowInstallHelp(false)}
-        >
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowInstallHelp(false)}>
           <section
-            className="install-sheet"
+            className="bottom-sheet install-sheet"
             role="dialog"
             aria-modal="true"
             aria-labelledby="install-title"
@@ -215,9 +706,7 @@ export function CheckInApp() {
             >
               ×
             </button>
-            <span className="sheet-icon" aria-hidden="true">
-              栗
-            </span>
+            <span className="brand-seed sheet-seed" aria-hidden="true">栗</span>
             <h2 id="install-title">添加到手机桌面</h2>
             <div className="instruction">
               <span>iPhone</span>
@@ -227,11 +716,7 @@ export function CheckInApp() {
               <span>Android</span>
               <p>用 Chrome 打开，点右上角菜单，再选“安装应用”。</p>
             </div>
-            <button
-              className="got-it"
-              type="button"
-              onClick={() => setShowInstallHelp(false)}
-            >
+            <button className="save-button" type="button" onClick={() => setShowInstallHelp(false)}>
               我知道了
             </button>
           </section>
