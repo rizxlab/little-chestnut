@@ -12,6 +12,7 @@ import {
 } from "react";
 
 type Tab = "today" | "growth" | "profile";
+type GrowthPeriod = "today" | "week" | "month";
 type Source = "主动记录" | "随机行动";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -377,6 +378,7 @@ export function CheckInApp() {
   const [closingModal, setClosingModal] = useState<string | null>(null);
   const [modalDrag, setModalDrag] = useState<{ id: string; offset: number } | null>(null);
   const [tab, setTab] = useState<Tab>("today");
+  const [growthPeriod, setGrowthPeriod] = useState<GrowthPeriod>("today");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
@@ -1406,6 +1408,7 @@ export function CheckInApp() {
   function changeTab(nextTab: Tab) {
     setDragOffset(0);
     setIsDraggingTabs(false);
+    if (nextTab === "growth") setGrowthPeriod("today");
     if (nextTab === tab) return;
     setTab(nextTab);
     scrollScreenToTop(`[data-tab="${nextTab}"]`);
@@ -1639,6 +1642,38 @@ export function CheckInApp() {
   const maxWeekAreaTotal = Math.max(1, ...weekProgressTotals.map((area) => area.total));
   const maxMonthAreaTotal = Math.max(1, ...monthProgressTotals.map((area) => area.total));
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
+  const growthPeriodOptions: {
+    id: GrowthPeriod;
+    label: string;
+    count: number;
+    totals: ReturnType<typeof totalsFor>;
+    maxTotal: number;
+  }[] = [
+    {
+      id: "today",
+      label: tr("今日", "Today"),
+      count: todayRecords.length,
+      totals: todayProgressTotals,
+      maxTotal: maxTodayAreaTotal,
+    },
+    {
+      id: "week",
+      label: tr("本周", "This week"),
+      count: weekRecords.length,
+      totals: weekProgressTotals,
+      maxTotal: maxWeekAreaTotal,
+    },
+    {
+      id: "month",
+      label: tr("本月", "This month"),
+      count: monthRecords.length,
+      totals: monthProgressTotals,
+      maxTotal: maxMonthAreaTotal,
+    },
+  ];
+  const activeGrowthPeriod =
+    growthPeriodOptions.find((period) => period.id === growthPeriod)
+    || growthPeriodOptions[0];
   const nextReward = [...rewards]
     .filter((reward) => reward.cost > shellBalance)
     .sort((first, second) => first.cost - second.cost)[0];
@@ -2122,42 +2157,42 @@ export function CheckInApp() {
 
               <section className="content-section growth-section">
                 <div className="growth-divider" aria-hidden="true" />
-                <div className="growth-progress-group today-progress-group">
-                  <div className="growth-progress-heading">
-                    <h2>{tr("今日进度", "Today's progress")}</h2>
-                    <small>{todayRecords.length} {tr("件小事", "actions")}</small>
-                  </div>
-                  <div className="growth-areas">
-                    {todayProgressTotals.map((area) => (
-                      <article className="growth-area" key={`today-${area.id}`}>
-                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
-                          {area.icon}
-                        </span>
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span className="progress-track">
-                            <i
-                              style={{
-                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxTodayAreaTotal) * 100)}%`,
-                                background: area.color,
-                              }}
-                            />
-                          </span>
-                        </div>
-                        <strong className="area-total">{area.total}</strong>
-                      </article>
-                    ))}
-                  </div>
+                <div
+                  className="growth-period-tabs"
+                  role="tablist"
+                  aria-label={tr("选择进度周期", "Choose progress period")}
+                >
+                  {growthPeriodOptions.map((period) => (
+                    <button
+                      className={growthPeriod === period.id ? "active" : ""}
+                      type="button"
+                      role="tab"
+                      aria-selected={growthPeriod === period.id}
+                      aria-controls="growth-period-panel"
+                      id={`growth-period-${period.id}`}
+                      key={period.id}
+                      onClick={() => setGrowthPeriod(period.id)}
+                    >
+                      <span>{period.label}</span>
+                      <small>{period.count}</small>
+                    </button>
+                  ))}
                 </div>
 
-                <div className="growth-progress-group week-progress-group">
+                <div
+                  className={`growth-progress-group period-progress-group ${growthPeriod}-progress-group`}
+                  id="growth-period-panel"
+                  role="tabpanel"
+                  aria-labelledby={`growth-period-${growthPeriod}`}
+                  key={growthPeriod}
+                >
                   <div className="growth-progress-heading">
-                    <h2>{tr("本周进度", "This week's progress")}</h2>
-                    <small>{weekRecords.length} {tr("件小事", "actions")}</small>
+                    <h2>{activeGrowthPeriod.label}{tr("进度", " progress")}</h2>
+                    <small>{activeGrowthPeriod.count} {tr("件小事", "actions")}</small>
                   </div>
                   <div className="growth-areas">
-                    {weekProgressTotals.map((area) => (
-                      <article className="growth-area" key={`week-${area.id}`}>
+                    {activeGrowthPeriod.totals.map((area) => (
+                      <article className="growth-area" key={`${growthPeriod}-${area.id}`}>
                         <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
                           {area.icon}
                         </span>
@@ -2166,35 +2201,10 @@ export function CheckInApp() {
                           <span className="progress-track">
                             <i
                               style={{
-                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxWeekAreaTotal) * 100)}%`,
-                                background: area.color,
-                              }}
-                            />
-                          </span>
-                        </div>
-                        <strong className="area-total">{area.total}</strong>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="growth-progress-group month-progress-group">
-                  <div className="growth-progress-heading">
-                    <h2>{tr("本月进度", "This month's progress")}</h2>
-                    <small>{monthRecords.length} {tr("件小事", "actions")}</small>
-                  </div>
-                  <div className="growth-areas">
-                    {monthProgressTotals.map((area) => (
-                      <article className="growth-area" key={`month-${area.id}`}>
-                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
-                          {area.icon}
-                        </span>
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span className="progress-track">
-                            <i
-                              style={{
-                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxMonthAreaTotal) * 100)}%`,
+                                width: `${Math.max(
+                                  area.total ? 12 : 0,
+                                  (area.total / activeGrowthPeriod.maxTotal) * 100,
+                                )}%`,
                                 background: area.color,
                               }}
                             />

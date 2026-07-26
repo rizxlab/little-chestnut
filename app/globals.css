@@ -1429,7 +1429,66 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-bottom: 16px;
   background: linear-gradient(90deg, transparent, var(--line) 12%, var(--line) 88%, transparent);
 }
+.growth-period-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 4px;
+  background: rgba(237, 225, 210, .58);
+}
+.growth-period-tabs button {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 12px;
+  padding: 9px 7px;
+  color: var(--muted);
+  background: transparent;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+.growth-period-tabs button small {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 99px;
+  padding: 0 5px;
+  color: inherit;
+  background: rgba(111, 59, 39, .07);
+  font-family: Georgia, serif;
+  font-size: 9px;
+  font-weight: 400;
+}
+.growth-period-tabs button.active {
+  color: var(--chestnut);
+  background: rgba(255, 253, 248, .94);
+  box-shadow: 0 5px 14px rgba(82, 51, 33, .09);
+}
+.growth-period-tabs button.active small {
+  color: #fff9ed;
+  background: var(--chestnut);
+}
+.growth-period-tabs button:active { transform: scale(.97); }
 .growth-progress-group { display: grid; gap: 11px; }
+.period-progress-group { animation: period-panel-in 220ms ease both; }
+@keyframes period-panel-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .growth-progress-group + .growth-progress-group {
   margin-top: 27px;
   border-top: 1px solid var(--line);
@@ -3074,6 +3133,22 @@ html[data-theme="dark"] .today-progress-group .growth-area {
 }
 html[data-theme="dark"] .week-progress-group .growth-progress-heading h2 { color: #a8bd9c; }
 html[data-theme="dark"] .month-progress-group .growth-progress-heading h2 { color: #b8a9cf; }
+html[data-theme="dark"] .growth-period-tabs {
+  border-color: var(--line);
+  background: rgba(17, 20, 25, .64);
+}
+html[data-theme="dark"] .growth-period-tabs button.active {
+  color: #f1d3bd;
+  background: rgba(48, 53, 62, .94);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .2);
+}
+html[data-theme="dark"] .growth-period-tabs button small {
+  background: rgba(255, 255, 255, .07);
+}
+html[data-theme="dark"] .growth-period-tabs button.active small {
+  color: #1b1e24;
+  background: #d79a79;
+}
 html[data-theme="dark"] .reward-manager-edit {
   border-color: var(--line);
   color: var(--ink);
