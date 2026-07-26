@@ -504,10 +504,11 @@ export function CheckInApp() {
     setLastCheckedAction({ id: action.id, token: Date.now() });
     setShellBalance((current) => current + 1);
     setShellsEarned((current) => current + 1);
+    const growthChanges = actionTags.map(
+      (tag) => `${tag.name} +${action.value}`,
+    );
     showToast(
-      `${action.icon} ${action.name} · ${actionTags
-        .map((tag) => `${tag.name} +${action.value}`)
-        .join(" · ")} · 栗壳 +1`,
+      [...growthChanges, "栗壳 +1"].join(" · "),
       "成长已记录",
       record.id,
     );
