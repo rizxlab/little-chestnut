@@ -85,6 +85,52 @@ type ConfirmDialog =
 const STORAGE_KEY = "lizi-growth-v2";
 const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
 const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
+const ACTION_ICON_OPTIONS = [
+  "🌱", "💧", "🧘", "💪", "🏃", "🚶", "📖", "✏️", "📝", "🎨",
+  "🎧", "🧹", "☀️", "🌙", "🍎", "🥗", "☕", "🫁", "🧠", "🛏️",
+];
+const AREA_ICON_OPTIONS = [
+  "🌿", "💚", "🌱", "📚", "🎨", "🧘", "🤝", "☀️", "🌙", "💼",
+  "🏡", "🎯", "💡", "🌸", "🫶", "✨", "🧠", "💪",
+];
+const REWARD_ICON_OPTIONS = [
+  "🎁", "🍵", "☕", "🎧", "🍰", "🧁", "🌙", "🎬", "📚", "🎮",
+  "🛁", "🌸", "🍜", "🛍️", "🎵", "🌿", "✈️", "🍽️", "🧸", "🎟️",
+];
+
+function IconPicker({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (icon: string) => void;
+}) {
+  const visibleOptions = options.includes(value) ? options : [value, ...options];
+  return (
+    <fieldset className="icon-picker">
+      <legend>{label}</legend>
+      <div>
+        {visibleOptions.map((icon) => (
+          <button
+            className={value === icon ? "selected" : ""}
+            type="button"
+            key={icon}
+            aria-label={`选择图标 ${icon}`}
+            aria-pressed={value === icon}
+            onClick={() => onChange(icon)}
+          >
+            {icon}
+            {value === icon && <span aria-hidden="true">✓</span>}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
 const DEFAULT_AREAS: Area[] = [
   { id: "health", name: "健康", icon: "💚", color: "#4f8069", isDefault: true },
@@ -2384,26 +2430,22 @@ export function CheckInApp() {
                 autoFocus
               />
             </label>
-            <div className="form-row">
-              <label>
-                图标
-                <input
-                  value={draftIcon}
-                  onChange={(event) => setDraftIcon(event.target.value)}
-                  maxLength={4}
-                />
-              </label>
-              <label>
-                成长值
-                <input
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={draftValue}
-                  onChange={(event) => setDraftValue(Number(event.target.value))}
-                />
-              </label>
-            </div>
+            <label>
+              成长值
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={draftValue}
+                onChange={(event) => setDraftValue(Number(event.target.value))}
+              />
+            </label>
+            <IconPicker
+              label="选择图标"
+              value={draftIcon}
+              options={ACTION_ICON_OPTIONS}
+              onChange={setDraftIcon}
+            />
             <div className="timer-editor-setting">
               <button
                 className={draftUsesTimer ? "enabled" : ""}
@@ -2547,25 +2589,21 @@ export function CheckInApp() {
                 ? "修改后，所有关联微行动和历史记录会同步显示新名称。"
                 : "创建一个标签，再把它贴到一个或多个微行动上。"}
             </p>
-            <div className="area-form-row">
-              <label>
-                图标
-                <input
-                  value={draftAreaIcon}
-                  onChange={(event) => setDraftAreaIcon(event.target.value)}
-                  maxLength={4}
-                />
-              </label>
-              <label>
-                标签名称
-                <input
-                  value={draftAreaName}
-                  onChange={(event) => setDraftAreaName(event.target.value)}
-                  placeholder="例如：关系"
-                  autoFocus
-                />
-              </label>
-            </div>
+            <label>
+              标签名称
+              <input
+                value={draftAreaName}
+                onChange={(event) => setDraftAreaName(event.target.value)}
+                placeholder="例如：关系"
+                autoFocus
+              />
+            </label>
+            <IconPicker
+              label="选择图标"
+              value={draftAreaIcon}
+              options={AREA_ICON_OPTIONS}
+              onChange={setDraftAreaIcon}
+            />
             <fieldset className="area-color-fieldset">
               <legend>标签颜色</legend>
               <div>
@@ -2617,25 +2655,21 @@ export function CheckInApp() {
             </button>
             <span className="overline">{editingReward ? "编辑奖励" : "新的奖励"}</span>
             <h2>{editingReward ? "调整这份小期待" : "想把栗壳换成什么？"}</h2>
-            <div className="reward-form-row">
-              <label>
-                图标
-                <input
-                  value={draftRewardIcon}
-                  onChange={(event) => setDraftRewardIcon(event.target.value)}
-                  maxLength={4}
-                />
-              </label>
-              <label>
-                奖励名称
-                <input
-                  value={draftRewardName}
-                  onChange={(event) => setDraftRewardName(event.target.value)}
-                  placeholder="例如：看一场电影"
-                  autoFocus
-                />
-              </label>
-            </div>
+            <label>
+              奖励名称
+              <input
+                value={draftRewardName}
+                onChange={(event) => setDraftRewardName(event.target.value)}
+                placeholder="例如：看一场电影"
+                autoFocus
+              />
+            </label>
+            <IconPicker
+              label="选择图标"
+              value={draftRewardIcon}
+              options={REWARD_ICON_OPTIONS}
+              onChange={setDraftRewardIcon}
+            />
             <label>
               简短说明
               <input

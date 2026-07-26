@@ -2078,6 +2078,56 @@ button { -webkit-tap-highlight-color: transparent; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .area-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
 .reward-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
+.icon-picker {
+  border: 0;
+  margin: 17px 0 0;
+  padding: 0;
+}
+.icon-picker legend {
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.icon-picker > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  gap: 8px;
+}
+.icon-picker button {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  height: 43px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 0;
+  background: #fffdf9;
+  box-shadow: 0 4px 11px rgba(57, 39, 29, .04);
+  font-size: 19px;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+}
+.icon-picker button:active { transform: scale(.92); }
+.icon-picker button.selected {
+  border-color: rgba(111, 59, 39, .5);
+  background: #f7eadb;
+  box-shadow: 0 0 0 2px rgba(111, 59, 39, .08);
+}
+.icon-picker button span {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--chestnut);
+  font-size: 7px;
+  font-weight: 800;
+}
 .action-editor {
   min-height: min(680px, calc(100dvh - 56px));
   max-height: calc(100dvh - 56px);
@@ -2863,6 +2913,14 @@ html[data-theme="dark"] .timer-editor-setting > button {
   border-color: var(--line);
   color: var(--ink);
   background: #1e1916;
+}
+html[data-theme="dark"] .icon-picker button {
+  border-color: var(--line);
+  background: rgba(34, 27, 23, .74);
+}
+html[data-theme="dark"] .icon-picker button.selected {
+  border-color: rgba(225, 173, 140, .45);
+  background: #493329;
 }
 html[data-theme="dark"] .timer-editor-setting > button.enabled {
   border-color: rgba(225, 173, 140, .36);
