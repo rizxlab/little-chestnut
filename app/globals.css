@@ -728,19 +728,19 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 25px;
   cursor: pointer;
 }
-.action-editor h2, .install-sheet h2 {
+.action-editor h2, .area-editor h2, .install-sheet h2, .confirm-sheet h2 {
   margin: 6px 28px 20px 0;
   font-family: STKaiti, KaiTi, serif;
   font-size: 23px;
 }
-.action-editor label {
+.action-editor label, .area-editor label {
   display: grid;
   gap: 7px;
   margin-top: 13px;
   color: var(--muted);
   font-size: 10px;
 }
-.action-editor input, .action-editor select {
+.action-editor input, .action-editor select, .area-editor input {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 13px;
@@ -750,8 +750,17 @@ button { -webkit-tap-highlight-color: transparent; }
   background: #fffdf9;
   font-size: 12px;
 }
-.action-editor input:focus, .action-editor select:focus { border-color: #b99882; }
+.action-editor input:focus, .action-editor select:focus, .area-editor input:focus {
+  border-color: #b99882;
+}
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.area-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
+.sheet-description {
+  margin: -8px 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
 .save-button {
   width: 100%;
   margin-top: 21px;
@@ -762,6 +771,54 @@ button { -webkit-tap-highlight-color: transparent; }
   background: var(--chestnut);
   cursor: pointer;
 }
+.confirm-sheet { text-align: center; }
+.dialog-symbol {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 15px;
+  place-items: center;
+  border-radius: 18px;
+  color: #fffaf0;
+  background: var(--chestnut);
+  box-shadow: 0 10px 26px rgba(111, 59, 39, .2);
+  font-family: Georgia, serif;
+  font-size: 25px;
+}
+.danger-sheet .dialog-symbol { background: #9f6256; }
+.confirm-sheet h2 { margin: 6px 0 10px; }
+.confirm-sheet p {
+  max-width: 360px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 22px;
+}
+.dialog-button {
+  border: 0;
+  border-radius: 15px;
+  padding: 13px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dialog-button.secondary {
+  border: 1px solid var(--line);
+  color: var(--chestnut);
+  background: #fffaf2;
+}
+.dialog-button.danger {
+  color: #fffaf0;
+  background: #9f6256;
+  box-shadow: 0 8px 20px rgba(159, 98, 86, .18);
+}
+.dialog-button:active { transform: scale(.97); }
 .sheet-seed { width: 50px; height: 50px; }
 .instruction {
   display: grid;

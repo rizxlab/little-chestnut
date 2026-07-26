@@ -44,6 +44,10 @@ type ToastState = {
   undoRecordId?: string;
 };
 
+type ConfirmDialog =
+  | { kind: "delete-action"; action: MicroAction }
+  | { kind: "reset-data" };
+
 const STORAGE_KEY = "lizi-growth-v2";
 
 const DEFAULT_AREAS: Area[] = [
@@ -127,10 +131,14 @@ export function CheckInApp() {
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
   const [showActionEditor, setShowActionEditor] = useState(false);
+  const [showAreaEditor, setShowAreaEditor] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftIcon, setDraftIcon] = useState("🌱");
   const [draftArea, setDraftArea] = useState("body");
   const [draftValue, setDraftValue] = useState(1);
+  const [draftAreaName, setDraftAreaName] = useState("");
+  const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
 
   useEffect(() => {
     try {
@@ -273,23 +281,27 @@ export function CheckInApp() {
   }
 
   function deleteAction(action: MicroAction) {
-    if (!window.confirm(`删除“${action.name}”？已有成长记录会保留。`)) return;
-    setActions((current) => current.filter((item) => item.id !== action.id));
-    showToast("微行动已删除");
+    setConfirmDialog({ kind: "delete-action", action });
   }
 
   function addArea() {
-    const name = window.prompt("给新的成长领域起个名字");
-    if (!name?.trim()) return;
-    const icon = window.prompt("选择一个图标", "🌿")?.trim() || "🌿";
+    setDraftAreaName("");
+    setDraftAreaIcon("🌿");
+    setShowAreaEditor(true);
+  }
+
+  function saveArea(event: FormEvent) {
+    event.preventDefault();
+    if (!draftAreaName.trim()) return;
     const palette = ["#6b7f72", "#9b6a62", "#78698f", "#527d86"];
     const area: Area = {
       id: `area-${Date.now()}`,
-      name: name.trim(),
-      icon,
+      name: draftAreaName.trim(),
+      icon: draftAreaIcon.trim() || "🌿",
       color: palette[areas.length % palette.length],
     };
     setAreas((current) => [...current, area]);
+    setShowAreaEditor(false);
     showToast("成长领域已创建");
   }
 
@@ -304,12 +316,25 @@ export function CheckInApp() {
   }
 
   function resetData() {
-    if (!window.confirm("清空所有成长记录，并恢复默认微行动？此操作无法撤销。")) return;
-    setAreas(DEFAULT_AREAS);
-    setActions(DEFAULT_ACTIONS);
-    setRecords([]);
-    setTab("today");
-    showToast("已恢复为新的开始");
+    setConfirmDialog({ kind: "reset-data" });
+  }
+
+  function confirmAction() {
+    if (!confirmDialog) return;
+
+    if (confirmDialog.kind === "delete-action") {
+      setActions((current) =>
+        current.filter((item) => item.id !== confirmDialog.action.id),
+      );
+      showToast("微行动已删除");
+    } else {
+      setAreas(DEFAULT_AREAS);
+      setActions(DEFAULT_ACTIONS);
+      setRecords([]);
+      setTab("today");
+      showToast("已恢复为新的开始");
+    }
+    setConfirmDialog(null);
   }
 
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
@@ -726,6 +751,94 @@ export function CheckInApp() {
               {editingAction ? "保存修改" : "加入我的微行动"}
             </button>
           </form>
+        </div>
+      )}
+
+      {showAreaEditor && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowAreaEditor(false)}>
+          <form
+            className="bottom-sheet area-editor"
+            onSubmit={saveArea}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowAreaEditor(false)}
+            >
+              ×
+            </button>
+            <span className="overline">新的成长领域</span>
+            <h2>你还想关注什么？</h2>
+            <p className="sheet-description">给新的成长方向一个简单、容易辨认的名字。</p>
+            <div className="area-form-row">
+              <label>
+                图标
+                <input
+                  value={draftAreaIcon}
+                  onChange={(event) => setDraftAreaIcon(event.target.value)}
+                  maxLength={4}
+                />
+              </label>
+              <label>
+                领域名称
+                <input
+                  value={draftAreaName}
+                  onChange={(event) => setDraftAreaName(event.target.value)}
+                  placeholder="例如：关系"
+                  autoFocus
+                />
+              </label>
+            </div>
+            <button className="save-button" type="submit">添加成长领域</button>
+          </form>
+        </div>
+      )}
+
+      {confirmDialog && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setConfirmDialog(null)}>
+          <section
+            className={`bottom-sheet confirm-sheet ${
+              confirmDialog.kind === "reset-data" ? "danger-sheet" : ""
+            }`}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="confirm-title"
+            aria-describedby="confirm-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="dialog-symbol" aria-hidden="true">
+              {confirmDialog.kind === "reset-data" ? "↺" : "−"}
+            </span>
+            <span className="overline">
+              {confirmDialog.kind === "reset-data" ? "谨慎操作" : "整理微行动"}
+            </span>
+            <h2 id="confirm-title">
+              {confirmDialog.kind === "reset-data" ? "要重新开始吗？" : "删除这个微行动？"}
+            </h2>
+            <p id="confirm-description">
+              {confirmDialog.kind === "reset-data"
+                ? "所有成长记录会被清空，微行动和成长领域将恢复默认状态。此操作无法撤销。"
+                : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
+            </p>
+            <div className="dialog-actions">
+              <button
+                className="dialog-button secondary"
+                type="button"
+                onClick={() => setConfirmDialog(null)}
+              >
+                先保留
+              </button>
+              <button
+                className="dialog-button danger"
+                type="button"
+                onClick={confirmAction}
+              >
+                {confirmDialog.kind === "reset-data" ? "清空并重置" : "确认删除"}
+              </button>
+            </div>
+          </section>
         </div>
       )}
 
