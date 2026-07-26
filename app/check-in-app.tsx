@@ -1147,6 +1147,8 @@ export function CheckInApp() {
   }
 
   function deleteAction(action: MicroAction) {
+    setShowActionEditor(false);
+    setShowActionManager(true);
     setConfirmDialog({ kind: "delete-action", action });
   }
 
@@ -2285,7 +2287,7 @@ export function CheckInApp() {
                     <span className="overline">行动管理</span>
                     <h2>我的微行动</h2>
                   </div>
-                  <button type="button" onClick={() => setShowActionManager(true)}>＋ 新建</button>
+                  <button type="button" onClick={() => setShowActionManager(true)}>编辑</button>
                 </div>
 
                 <div className="tag-action-grid">
@@ -2306,9 +2308,6 @@ export function CheckInApp() {
                               </small>
                             ))}
                           </span>
-                        </div>
-                        <div className="row-actions single-action">
-                          <button type="button" onClick={() => deleteAction(action)}>删除</button>
                         </div>
                       </article>
                     );
@@ -2578,6 +2577,15 @@ export function CheckInApp() {
             >
               {editingAction ? "保存修改" : "加入我的微行动"}
             </button>
+            {editingAction && (
+              <button
+                className="delete-action-button"
+                type="button"
+                onClick={() => deleteAction(editingAction)}
+              >
+                删除这个微行动
+              </button>
+            )}
           </form>
         </div>
       )}

@@ -2372,6 +2372,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .reward-manager-edit:active,
 .action-manager-create:active,
 .action-manager-list > button:active { transform: scale(.98); }
+.delete-action-button,
 .delete-reward-button,
 .delete-area-button {
   width: 100%;
