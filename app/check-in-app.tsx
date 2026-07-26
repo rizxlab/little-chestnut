@@ -1472,33 +1472,47 @@ export function CheckInApp() {
               >
             <div className="screen tab-screen" data-tab="today" aria-hidden={tab !== "today"}>
               <section className="welcome">
-                <button
-                  className="date-display"
-                  type="button"
-                  aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    weekday: "long",
-                  }).format(new Date())}`}
-                  onClick={openCalendar}
-                >
-                  <strong>
-                    {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
-                  </strong>
-                  <span>
-                    <b>
-                      {new Intl.DateTimeFormat(locale, {
-                        year: "numeric",
-                        month: "long",
-                      }).format(new Date())}
-                    </b>
-                    <small>
-                      {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
-                    </small>
+                <div className="welcome-meta">
+                  <button
+                    className="date-display"
+                    type="button"
+                    aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      weekday: "long",
+                    }).format(new Date())}`}
+                    onClick={openCalendar}
+                  >
+                    <strong>
+                      {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
+                    </strong>
+                    <span>
+                      <b>
+                        {new Intl.DateTimeFormat(locale, {
+                          year: "numeric",
+                          month: "long",
+                        }).format(new Date())}
+                      </b>
+                      <small>
+                        {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
+                      </small>
+                    </span>
+                    <i className="date-display-chevron" aria-hidden="true">›</i>
+                  </button>
+                  <span
+                    className={`day-phase-icon ${
+                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "day" : "night"
+                    }`}
+                    role="img"
+                    aria-label={tr(
+                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "白天" : "夜晚",
+                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "Daytime" : "Night",
+                    )}
+                  >
+                    {new Date().getHours() >= 6 && new Date().getHours() < 18 ? "☀️" : "🌙"}
                   </span>
-                  <i className="date-display-chevron" aria-hidden="true">›</i>
-                </button>
+                </div>
                 <h1>{greeting(language)}</h1>
               </section>
 

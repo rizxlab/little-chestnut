@@ -297,12 +297,17 @@ button { -webkit-tap-highlight-color: transparent; }
 .screen.from-left { animation: page-from-left 260ms ease; }
 
 .welcome { padding: 2px 2px 20px; }
+.welcome-meta {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin-bottom: 15px;
+}
 .date-display {
   display: inline-grid;
   grid-template-columns: auto 1fr auto;
   gap: 10px;
   align-items: center;
-  margin-bottom: 15px;
   border: 1px solid var(--line);
   border-radius: 17px;
   padding: 8px 13px 8px 10px;
@@ -344,6 +349,31 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 20px;
   font-style: normal;
 }
+.day-phase-icon {
+  position: relative;
+  display: grid;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 253, 248, .78);
+  box-shadow: 0 7px 20px rgba(71, 46, 30, .05);
+  font-size: 17px;
+}
+.day-phase-icon::before {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  content: "";
+  opacity: .38;
+  filter: blur(8px);
+}
+.day-phase-icon.day::before { background: #f0c56f; }
+.day-phase-icon.night::before { background: #8a87b5; }
 .overline {
   color: var(--chestnut);
   font-size: 10px;
@@ -2110,6 +2140,7 @@ html[data-theme="dark"] .quick-action,
 html[data-theme="dark"] .settings-panel,
 html[data-theme="dark"] .settings-block,
 html[data-theme="dark"] .account-strip,
+html[data-theme="dark"] .day-phase-icon,
 html[data-theme="dark"] .calendar-card,
 html[data-theme="dark"] .reward-grid article,
 html[data-theme="dark"] .reward-history,
