@@ -254,7 +254,9 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .today-card {
   position: relative;
+  display: flex;
   min-height: 218px;
+  flex-direction: column;
   overflow: hidden;
   border-radius: 27px;
   padding: 25px;
@@ -316,14 +318,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .today-orbit i:nth-of-type(3) { left: 20px; bottom: 21px; background: #d4ad87; }
 
 .today-domains {
-  position: absolute;
+  position: relative;
   z-index: 2;
   display: flex;
-  right: 22px;
-  bottom: 20px;
-  left: 22px;
   flex-wrap: wrap;
   gap: 7px;
+  margin-top: auto;
+  padding-top: 34px;
 }
 .today-domains span {
   border: 1px solid rgba(255,255,255,.12);
