@@ -1158,34 +1158,41 @@ export function CheckInApp() {
 
               <section className="content-section recent-section">
                 <div className="recent-divider" aria-hidden="true" />
-                {records.length ? (
-                  <div className="record-list">
-                    {records.slice(0, 5).map((record) => {
-                      const recordTags = tagsFor(record);
-                      return (
-                        <article className="record-row" key={record.id}>
-                          <span className="record-icon">{record.icon}</span>
-                          <div>
-                            <strong>{record.actionName}</strong>
-                            <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
-                          </div>
-                          <span className="record-tag-list">
-                            {recordTags.map((tag) => (
-                              <small key={tag.id} style={{ color: tag.color }}>
-                                {tag.name} +{record.value}
-                              </small>
-                            ))}
-                          </span>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <span>◌</span>
-                    <p>完成一个微行动后，它会安静地留在这里。</p>
-                  </div>
-                )}
+                <details className="recent-records">
+                  <summary>
+                    <span>成长记录</span>
+                    <small>{records.length ? `近 ${Math.min(records.length, 5)} 条` : "暂无记录"}</small>
+                    <i aria-hidden="true">⌄</i>
+                  </summary>
+                  {records.length ? (
+                    <div className="record-list">
+                      {records.slice(0, 5).map((record) => {
+                        const recordTags = tagsFor(record);
+                        return (
+                          <article className="record-row" key={record.id}>
+                            <span className="record-icon">{record.icon}</span>
+                            <div>
+                              <strong>{record.actionName}</strong>
+                              <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
+                            </div>
+                            <span className="record-tag-list">
+                              {recordTags.map((tag) => (
+                                <small key={tag.id} style={{ color: tag.color }}>
+                                  {tag.name} +{record.value}
+                                </small>
+                              ))}
+                            </span>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <span>◌</span>
+                      <p>完成一个微行动后，它会安静地留在这里。</p>
+                    </div>
+                  )}
+                </details>
               </section>
             </div>
 
