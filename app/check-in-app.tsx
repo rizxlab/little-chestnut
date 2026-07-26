@@ -2445,7 +2445,6 @@ export function CheckInApp() {
                     <i aria-hidden="true">○</i>
                     <span>
                       <strong>关于栗子小事</strong>
-                      <small>产品理念与记录原则</small>
                     </span>
                   </span>
                   <span className="summary-chevron" aria-hidden="true">⌄</span>
