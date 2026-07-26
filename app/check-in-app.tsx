@@ -969,11 +969,8 @@ export function CheckInApp() {
               </section>
 
               <section className="content-section">
-                <div className="section-title-row">
-                  <div>
-                    <span className="overline">快速记录</span>
-                    <h2>点一下，3 秒完成</h2>
-                  </div>
+                <div className="section-title-row simple-title-row">
+                  <h2>记录一件小事</h2>
                   <button type="button" onClick={() => changeTab("profile")}>管理</button>
                 </div>
                 <div className="quick-grid">

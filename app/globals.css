@@ -348,6 +348,15 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 21px;
   font-weight: 600;
 }
+.section-title-row.simple-title-row {
+  align-items: center;
+  margin-bottom: 13px;
+}
+.section-title-row.simple-title-row h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.2;
+}
 .section-title-row > button, .settings-heading button {
   border: 0;
   padding: 5px 0;
