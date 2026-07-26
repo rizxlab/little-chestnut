@@ -1125,11 +1125,9 @@ button { -webkit-tap-highlight-color: transparent; }
 .calendar-heading-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 18px;
 }
-.calendar-back,
-.calendar-today-button {
+.calendar-back {
   display: grid;
   width: 40px;
   height: 40px;
@@ -1143,50 +1141,12 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: pointer;
   transition: transform 150ms ease, background 150ms ease;
 }
-.calendar-back:active,
-.calendar-today-button:active { transform: scale(.94); background: #f7ecdf; }
+.calendar-back:active { transform: scale(.94); background: #f7ecdf; }
 .calendar-back span {
   margin: -2px 0 0 -2px;
   font-family: Georgia, serif;
   font-size: 32px;
   line-height: 1;
-}
-.calendar-today-icon {
-  position: relative;
-  display: block;
-  width: 18px;
-  height: 17px;
-  border: 1.5px solid currentColor;
-  border-radius: 5px;
-}
-.calendar-today-icon::before {
-  position: absolute;
-  top: 3px;
-  left: 0;
-  width: 100%;
-  border-top: 1.5px solid currentColor;
-  content: "";
-  opacity: .62;
-}
-.calendar-today-icon::after {
-  position: absolute;
-  top: -3px;
-  left: 4px;
-  width: 7px;
-  height: 4px;
-  border-right: 1.5px solid currentColor;
-  border-left: 1.5px solid currentColor;
-  content: "";
-}
-.calendar-today-icon i {
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: currentColor;
-  transform: translateX(-50%);
 }
 .calendar-card {
   border: 1px solid var(--line);
@@ -3072,7 +3032,6 @@ html[data-theme="dark"] .global-home-button,
 html[data-theme="dark"] .settings-entry-button,
 html[data-theme="dark"] .settings-back,
 html[data-theme="dark"] .calendar-back,
-html[data-theme="dark"] .calendar-today-button,
 html[data-theme="dark"] .account-strip button,
 html[data-theme="dark"] .reward-section-heading > button,
 html[data-theme="dark"] .settings-heading button,
