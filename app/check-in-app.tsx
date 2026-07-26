@@ -347,10 +347,7 @@ export function CheckInApp() {
         <header className="app-header">
           <button className="wordmark" type="button" onClick={() => setTab("today")}>
             <span className="brand-seed" aria-hidden="true">栗</span>
-            <span>
-              <strong>栗子打卡</strong>
-              <small>微小行动 · 长期成长</small>
-            </span>
+            <strong>栗子打卡</strong>
           </button>
           <button className="install-link" type="button" onClick={install}>
             安装到桌面

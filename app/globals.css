@@ -89,13 +89,11 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 21px;
 }
 
-.wordmark > span:last-child { display: grid; gap: 1px; }
 .wordmark strong {
   letter-spacing: .08em;
   font-family: STKaiti, KaiTi, serif;
   font-size: 20px;
 }
-.wordmark small { color: var(--muted); font-size: 10px; }
 
 .install-link {
   border: 1px solid var(--line);
