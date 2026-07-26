@@ -1303,7 +1303,7 @@ export function CheckInApp() {
             : area,
         ),
       );
-      showToast("成长标签已更新");
+      showToast("成长领域已更新");
     } else {
       const area: Area = {
         id: `area-${Date.now()}`,
@@ -1312,7 +1312,7 @@ export function CheckInApp() {
         color: draftAreaColor,
       };
       setAreas((current) => [...current, area]);
-      showToast("成长标签已创建");
+      showToast("成长领域已创建");
     }
     setShowAreaEditor(false);
     setShowAreaManager(true);
@@ -1320,7 +1320,7 @@ export function CheckInApp() {
 
   function deleteArea(area: Area) {
     if (areas.length <= 1) {
-      showToast("至少保留一个成长标签", "暂时不能删除");
+      showToast("至少保留一个成长领域", "暂时不能删除");
       return;
     }
     const blockingAction = actions.find((action) => {
@@ -1328,7 +1328,7 @@ export function CheckInApp() {
       return tagIds.includes(area.id) && tagIds.length === 1;
     });
     if (blockingAction) {
-      showToast(`请先为“${blockingAction.name}”添加其他标签`, "暂时不能删除");
+      showToast(`请先为“${blockingAction.name}”添加其他成长领域`, "暂时不能删除");
       return;
     }
     closeSecondaryModal("area-editor", () => {
@@ -1533,7 +1533,7 @@ export function CheckInApp() {
           tagIds: normalizedTagIds(record).filter((tagId) => tagId !== areaId),
         })),
       );
-      showToast("成长标签已删除");
+      showToast("成长领域已删除");
       setShowAreaManager(true);
     } else if (confirmDialog.kind === "delete-reward") {
       setRewards((current) =>
@@ -2425,8 +2425,8 @@ export function CheckInApp() {
               <section className="settings-block">
                 <div className="settings-heading">
                   <div>
-                    <span className="overline">成长标签</span>
-                    <h2>我的标签</h2>
+                    <span className="overline">成长领域</span>
+                    <h2>成长领域</h2>
                   </div>
                   <button type="button" onClick={() => setShowAreaManager(true)}>编辑</button>
                 </div>
@@ -2722,7 +2722,7 @@ export function CheckInApp() {
               )}
             </div>
             <fieldset className="tag-fieldset">
-              <legend>成长标签 <small>可多选</small></legend>
+              <legend>成长领域 <small>可多选</small></legend>
               <div className="tag-picker">
                 {areas.map((area) => {
                   const selected = draftTags.includes(area.id);
@@ -2741,7 +2741,7 @@ export function CheckInApp() {
                   );
                 })}
               </div>
-              {!draftTags.length && <small className="field-hint">至少选择一个成长标签</small>}
+              {!draftTags.length && <small className="field-hint">至少选择一个成长领域</small>}
             </fieldset>
             <button
               className="save-button"
@@ -2786,8 +2786,8 @@ export function CheckInApp() {
             >
               ×
             </button>
-            <span className="overline">成长标签</span>
-            <h2 id="area-manager-title">标签管理</h2>
+            <span className="overline">成长领域</span>
+            <h2 id="area-manager-title">领域管理</h2>
             <button
               className="action-manager-create"
               type="button"
@@ -2795,7 +2795,7 @@ export function CheckInApp() {
             >
               <span aria-hidden="true">＋</span>
               <div>
-                <strong>新建标签</strong>
+                <strong>新建领域</strong>
                 <small>添加一个新的成长方向</small>
               </div>
             </button>
@@ -2849,15 +2849,15 @@ export function CheckInApp() {
             >
               ×
             </button>
-            <span className="overline">{editingArea ? "编辑成长标签" : "新的成长标签"}</span>
+            <span className="overline">{editingArea ? "编辑成长领域" : "新的成长领域"}</span>
             <h2>{editingArea ? "调整这个成长方向" : "你还想积累什么？"}</h2>
             <p className="sheet-description">
               {editingArea
                 ? "修改后，所有关联微行动和历史记录会同步显示新名称。"
-                : "创建一个标签，再把它贴到一个或多个微行动上。"}
+                : "创建一个成长领域，再关联到一个或多个微行动。"}
             </p>
             <label>
-              标签名称
+              领域名称
               <input
                 value={draftAreaName}
                 onChange={(event) => setDraftAreaName(event.target.value)}
@@ -2872,7 +2872,7 @@ export function CheckInApp() {
               onChange={setDraftAreaIcon}
             />
             <fieldset className="area-color-fieldset">
-              <legend>标签颜色</legend>
+              <legend>领域颜色</legend>
               <div>
                 {AREA_COLORS.map((color) => (
                   <button
@@ -2890,7 +2890,7 @@ export function CheckInApp() {
               </div>
             </fieldset>
             <button className="save-button" type="submit">
-              {editingArea ? "保存标签修改" : "添加成长标签"}
+              {editingArea ? "保存领域修改" : "添加成长领域"}
             </button>
             {editingArea && (
               <button
@@ -2898,7 +2898,7 @@ export function CheckInApp() {
                 type="button"
                 onClick={() => deleteArea(editingArea)}
               >
-                删除这个标签
+                删除这个领域
               </button>
             )}
           </form>
@@ -3404,7 +3404,7 @@ export function CheckInApp() {
                 : confirmDialog.kind === "delete-reward"
                   ? "整理奖励"
                   : confirmDialog.kind === "delete-area"
-                    ? "整理标签"
+                    ? "整理成长领域"
                     : "整理微行动"}
             </span>
             <h2 id="confirm-title">
@@ -3413,16 +3413,16 @@ export function CheckInApp() {
                 : confirmDialog.kind === "delete-reward"
                   ? "删除这个奖励？"
                   : confirmDialog.kind === "delete-area"
-                    ? "删除这个标签？"
+                    ? "删除这个成长领域？"
                     : "删除这个微行动？"}
             </h2>
             <p id="confirm-description">
               {confirmDialog.kind === "reset-data"
-                ? "所有成长记录会被清空，微行动、成长标签和奖励清单将恢复默认状态。此操作无法撤销。"
+                ? "所有成长记录会被清空，微行动、成长领域和奖励清单将恢复默认状态。此操作无法撤销。"
                 : confirmDialog.kind === "delete-reward"
                   ? `“${confirmDialog.reward.name}”将从奖励清单中移除，过去的兑换记录仍会保留。`
                   : confirmDialog.kind === "delete-area"
-                    ? `“${confirmDialog.area.name}”将从标签清单中移除，微行动和历史记录中的关联也会同步移除。`
+                    ? `“${confirmDialog.area.name}”将从成长领域清单中移除，微行动和历史记录中的关联也会同步移除。`
                     : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
             </p>
             <div className="dialog-actions">
