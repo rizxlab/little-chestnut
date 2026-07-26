@@ -1310,6 +1310,10 @@ export function CheckInApp() {
       gestureAxisRef.current =
         Math.abs(deltaX) > Math.abs(deltaY) * 1.08 ? "horizontal" : "vertical";
     }
+    if (gestureAxisRef.current === "vertical") {
+      if (recordActionMenu) setRecordActionMenu(null);
+      return;
+    }
     if (gestureAxisRef.current !== "horizontal") return;
 
     event.preventDefault();
@@ -1468,6 +1472,9 @@ export function CheckInApp() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={cancelTouchGesture}
+          onScrollCapture={() => {
+            if (recordActionMenu) setRecordActionMenu(null);
+          }}
         >
           {showCalendar && (
             <div className="screen calendar-screen">
