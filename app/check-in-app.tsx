@@ -1365,7 +1365,9 @@ export function CheckInApp() {
   const tr = (zh: string, en: string) => (language === "zh" ? zh : en);
   const locale = language === "zh" ? "zh-CN" : "en-US";
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
+  const todayProgressTotals = totalsFor(todayRecords);
   const allTotals = totalsFor(records);
+  const maxTodayAreaTotal = Math.max(1, ...todayProgressTotals.map((area) => area.total));
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
   const nextReward = [...rewards]
     .filter((reward) => reward.cost > shellBalance)
@@ -1859,26 +1861,60 @@ export function CheckInApp() {
 
               <section className="content-section growth-section">
                 <div className="growth-divider" aria-hidden="true" />
-                <div className="growth-areas">
-                  {allTotals.map((area) => (
-                    <article className="growth-area" key={area.id}>
-                      <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
-                        {area.icon}
-                      </span>
-                      <div>
-                        <strong>{area.name}</strong>
-                        <span className="progress-track">
-                          <i
-                            style={{
-                              width: `${Math.max(area.total ? 12 : 0, (area.total / maxAreaTotal) * 100)}%`,
-                              background: area.color,
-                            }}
-                          />
+                <div className="growth-progress-group today-progress-group">
+                  <div className="growth-progress-heading">
+                    <h2>{tr("今日进度", "Today's progress")}</h2>
+                    <small>{todayRecords.length} {tr("件小事", "actions")}</small>
+                  </div>
+                  <div className="growth-areas">
+                    {todayProgressTotals.map((area) => (
+                      <article className="growth-area" key={`today-${area.id}`}>
+                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
+                          {area.icon}
                         </span>
-                      </div>
-                      <strong className="area-total">{area.total}</strong>
-                    </article>
-                  ))}
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span className="progress-track">
+                            <i
+                              style={{
+                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxTodayAreaTotal) * 100)}%`,
+                                background: area.color,
+                              }}
+                            />
+                          </span>
+                        </div>
+                        <strong className="area-total">{area.total}</strong>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="growth-progress-group total-progress-group">
+                  <div className="growth-progress-heading">
+                    <h2>{tr("总进度", "Total progress")}</h2>
+                    <small>{records.length} {tr("次成长", "moments")}</small>
+                  </div>
+                  <div className="growth-areas">
+                    {allTotals.map((area) => (
+                      <article className="growth-area" key={`total-${area.id}`}>
+                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
+                          {area.icon}
+                        </span>
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span className="progress-track">
+                            <i
+                              style={{
+                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxAreaTotal) * 100)}%`,
+                                background: area.color,
+                              }}
+                            />
+                          </span>
+                        </div>
+                        <strong className="area-total">{area.total}</strong>
+                      </article>
+                    ))}
+                  </div>
                 </div>
               </section>
 
