@@ -78,6 +78,7 @@ type Account = {
 
 type ConfirmDialog =
   | { kind: "delete-action"; action: MicroAction }
+  | { kind: "delete-area"; area: Area }
   | { kind: "delete-reward"; reward: Reward }
   | { kind: "reset-data" };
 
@@ -92,6 +93,7 @@ const DEFAULT_AREAS: Area[] = [
   { id: "mind", name: "精神", icon: "🧘", color: "#8d7650", isDefault: true },
   { id: "life", name: "生活", icon: "🏠", color: "#9a684f", isDefault: true },
 ];
+const AREA_COLORS = ["#4f8069", "#9b6a62", "#78698f", "#527d86", "#8d7650", "#56748a"];
 
 const DEFAULT_ACTIONS: MicroAction[] = [
   { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["health", "body"], value: 1, repeatable: true },
@@ -317,8 +319,11 @@ export function CheckInApp() {
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
   const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running">("idle");
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+  const [editingArea, setEditingArea] = useState<Area | null>(null);
+  const [showAreaManager, setShowAreaManager] = useState(false);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
+  const [draftAreaColor, setDraftAreaColor] = useState(AREA_COLORS[0]);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -1031,25 +1036,68 @@ export function CheckInApp() {
     setConfirmDialog({ kind: "delete-action", action });
   }
 
-  function addArea() {
-    setDraftAreaName("");
-    setDraftAreaIcon("🌿");
+  function openAreaEditor(area?: Area) {
+    setShowAreaManager(false);
+    setEditingArea(area || null);
+    setDraftAreaName(area?.name || "");
+    setDraftAreaIcon(area?.icon || "🌿");
+    setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
     setShowAreaEditor(true);
+  }
+
+  function closeAreaEditor() {
+    setShowAreaEditor(false);
+    setShowAreaManager(true);
   }
 
   function saveArea(event: FormEvent) {
     event.preventDefault();
     if (!draftAreaName.trim()) return;
-    const palette = ["#6b7f72", "#9b6a62", "#78698f", "#527d86"];
-    const area: Area = {
-      id: `area-${Date.now()}`,
-      name: draftAreaName.trim(),
-      icon: draftAreaIcon.trim() || "🌿",
-      color: palette[areas.length % palette.length],
-    };
-    setAreas((current) => [...current, area]);
+
+    if (editingArea) {
+      setAreas((current) =>
+        current.map((area) =>
+          area.id === editingArea.id
+            ? {
+                ...area,
+                name: draftAreaName.trim(),
+                icon: draftAreaIcon.trim() || "🌿",
+                color: draftAreaColor,
+              }
+            : area,
+        ),
+      );
+      showToast("成长标签已更新");
+    } else {
+      const area: Area = {
+        id: `area-${Date.now()}`,
+        name: draftAreaName.trim(),
+        icon: draftAreaIcon.trim() || "🌿",
+        color: draftAreaColor,
+      };
+      setAreas((current) => [...current, area]);
+      showToast("成长标签已创建");
+    }
     setShowAreaEditor(false);
-    showToast("成长标签已创建");
+    setShowAreaManager(true);
+  }
+
+  function deleteArea(area: Area) {
+    if (areas.length <= 1) {
+      showToast("至少保留一个成长标签", "暂时不能删除");
+      return;
+    }
+    const blockingAction = actions.find((action) => {
+      const tagIds = normalizedTagIds(action);
+      return tagIds.includes(area.id) && tagIds.length === 1;
+    });
+    if (blockingAction) {
+      showToast(`请先为“${blockingAction.name}”添加其他标签`, "暂时不能删除");
+      return;
+    }
+    setShowAreaEditor(false);
+    setShowAreaManager(true);
+    setConfirmDialog({ kind: "delete-area", area });
   }
 
   function scrollScreenToTop(selector: string) {
@@ -1095,6 +1143,7 @@ export function CheckInApp() {
     setShowSettings(false);
     setShowActionManager(false);
     setShowActionEditor(false);
+    setShowAreaManager(false);
     setShowAreaEditor(false);
     setShowRewardManager(false);
     setShowRewardEditor(false);
@@ -1195,6 +1244,25 @@ export function CheckInApp() {
         current.filter((item) => item.id !== confirmDialog.action.id),
       );
       showToast("微行动已删除");
+    } else if (confirmDialog.kind === "delete-area") {
+      const areaId = confirmDialog.area.id;
+      setAreas((current) => current.filter((area) => area.id !== areaId));
+      setActions((current) =>
+        current.map((action) => ({
+          ...action,
+          areaId: action.areaId === areaId ? undefined : action.areaId,
+          tagIds: normalizedTagIds(action).filter((tagId) => tagId !== areaId),
+        })),
+      );
+      setRecords((current) =>
+        current.map((record) => ({
+          ...record,
+          areaId: record.areaId === areaId ? undefined : record.areaId,
+          tagIds: normalizedTagIds(record).filter((tagId) => tagId !== areaId),
+        })),
+      );
+      showToast("成长标签已删除");
+      setShowAreaManager(true);
     } else if (confirmDialog.kind === "delete-reward") {
       setRewards((current) =>
         current.filter((item) => item.id !== confirmDialog.reward.id),
@@ -1971,7 +2039,7 @@ export function CheckInApp() {
                     <span className="overline">成长标签</span>
                     <h2>我的标签</h2>
                   </div>
-                  <button type="button" onClick={addArea}>＋ 添加</button>
+                  <button type="button" onClick={() => setShowAreaManager(true)}>编辑</button>
                 </div>
                 <div className="area-chip-list">
                   {areas.map((area) => (
@@ -2235,8 +2303,67 @@ export function CheckInApp() {
         </div>
       )}
 
+      {showAreaManager && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShowAreaManager(false)}>
+          <section
+            className="bottom-sheet action-manager area-manager"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="area-manager-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setShowAreaManager(false)}
+            >
+              ×
+            </button>
+            <span className="overline">成长标签</span>
+            <h2 id="area-manager-title">标签管理</h2>
+            <button
+              className="action-manager-create"
+              type="button"
+              onClick={() => openAreaEditor()}
+            >
+              <span aria-hidden="true">＋</span>
+              <div>
+                <strong>新建标签</strong>
+                <small>添加一个新的成长方向</small>
+              </div>
+            </button>
+            <div className="action-manager-list">
+              {areas.map((area) => (
+                <button
+                  type="button"
+                  key={area.id}
+                  aria-label={`修改${area.name}`}
+                  onClick={() => openAreaEditor(area)}
+                >
+                  <span
+                    aria-hidden="true"
+                    style={{ color: area.color, background: `${area.color}18` }}
+                  >
+                    {area.icon}
+                  </span>
+                  <div>
+                    <strong>{area.name}</strong>
+                    <small>
+                      {actions.filter((action) => normalizedTagIds(action).includes(area.id)).length}
+                      {" "}个微行动使用
+                    </small>
+                  </div>
+                  <i aria-hidden="true">›</i>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+
       {showAreaEditor && (
-        <div className="modal-backdrop" role="presentation" onClick={() => setShowAreaEditor(false)}>
+        <div className="modal-backdrop" role="presentation" onClick={closeAreaEditor}>
           <form
             className="bottom-sheet area-editor"
             onSubmit={saveArea}
@@ -2246,13 +2373,17 @@ export function CheckInApp() {
               className="close-button"
               type="button"
               aria-label="关闭"
-              onClick={() => setShowAreaEditor(false)}
+              onClick={closeAreaEditor}
             >
               ×
             </button>
-            <span className="overline">新的成长标签</span>
-            <h2>你还想积累什么？</h2>
-            <p className="sheet-description">创建一个标签，再把它贴到一个或多个微行动上。</p>
+            <span className="overline">{editingArea ? "编辑成长标签" : "新的成长标签"}</span>
+            <h2>{editingArea ? "调整这个成长方向" : "你还想积累什么？"}</h2>
+            <p className="sheet-description">
+              {editingArea
+                ? "修改后，所有关联微行动和历史记录会同步显示新名称。"
+                : "创建一个标签，再把它贴到一个或多个微行动上。"}
+            </p>
             <div className="area-form-row">
               <label>
                 图标
@@ -2272,7 +2403,36 @@ export function CheckInApp() {
                 />
               </label>
             </div>
-            <button className="save-button" type="submit">添加成长标签</button>
+            <fieldset className="area-color-fieldset">
+              <legend>标签颜色</legend>
+              <div>
+                {AREA_COLORS.map((color) => (
+                  <button
+                    className={draftAreaColor === color ? "selected" : ""}
+                    type="button"
+                    key={color}
+                    aria-label={`选择颜色 ${color}`}
+                    aria-pressed={draftAreaColor === color}
+                    style={{ background: color }}
+                    onClick={() => setDraftAreaColor(color)}
+                  >
+                    {draftAreaColor === color && <span aria-hidden="true">✓</span>}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <button className="save-button" type="submit">
+              {editingArea ? "保存标签修改" : "添加成长标签"}
+            </button>
+            {editingArea && (
+              <button
+                className="delete-area-button"
+                type="button"
+                onClick={() => deleteArea(editingArea)}
+              >
+                删除这个标签
+              </button>
+            )}
           </form>
         </div>
       )}
@@ -2550,7 +2710,9 @@ export function CheckInApp() {
         <div className="modal-backdrop" role="presentation" onClick={() => setConfirmDialog(null)}>
           <section
             className={`bottom-sheet confirm-sheet ${
-              confirmDialog.kind === "reset-data" || confirmDialog.kind === "delete-reward"
+              confirmDialog.kind === "reset-data"
+              || confirmDialog.kind === "delete-reward"
+              || confirmDialog.kind === "delete-area"
                 ? "danger-sheet"
                 : ""
             }`}
@@ -2568,21 +2730,27 @@ export function CheckInApp() {
                 ? "谨慎操作"
                 : confirmDialog.kind === "delete-reward"
                   ? "整理奖励"
-                  : "整理微行动"}
+                  : confirmDialog.kind === "delete-area"
+                    ? "整理标签"
+                    : "整理微行动"}
             </span>
             <h2 id="confirm-title">
               {confirmDialog.kind === "reset-data"
                 ? "要重新开始吗？"
                 : confirmDialog.kind === "delete-reward"
                   ? "删除这个奖励？"
-                  : "删除这个微行动？"}
+                  : confirmDialog.kind === "delete-area"
+                    ? "删除这个标签？"
+                    : "删除这个微行动？"}
             </h2>
             <p id="confirm-description">
               {confirmDialog.kind === "reset-data"
                 ? "所有成长记录会被清空，微行动、成长标签和奖励清单将恢复默认状态。此操作无法撤销。"
                 : confirmDialog.kind === "delete-reward"
                   ? `“${confirmDialog.reward.name}”将从奖励清单中移除，过去的兑换记录仍会保留。`
-                  : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
+                  : confirmDialog.kind === "delete-area"
+                    ? `“${confirmDialog.area.name}”将从标签清单中移除，微行动和历史记录中的关联也会同步移除。`
+                    : `“${confirmDialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}
             </p>
             <div className="dialog-actions">
               <button

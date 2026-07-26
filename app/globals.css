@@ -1852,6 +1852,40 @@ button { -webkit-tap-highlight-color: transparent; }
   padding-bottom: max(28px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
+.area-editor {
+  max-height: calc(100dvh - 20px);
+  overflow-y: auto;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+.area-color-fieldset {
+  border: 0;
+  margin: 16px 0 0;
+  padding: 0;
+}
+.area-color-fieldset legend {
+  margin-bottom: 9px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.area-color-fieldset > div { display: flex; flex-wrap: wrap; gap: 9px; }
+.area-color-fieldset button {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 0;
+  color: #fff;
+  box-shadow: 0 4px 11px rgba(57, 39, 29, .09);
+  cursor: pointer;
+}
+.area-color-fieldset button.selected {
+  border-color: #fffdf9;
+  box-shadow: 0 0 0 2px var(--chestnut), 0 4px 11px rgba(57, 39, 29, .12);
+}
+.area-color-fieldset button span { font-size: 12px; font-weight: 800; }
 .timer-editor-setting { display: grid; gap: 2px; margin-top: 14px; }
 .timer-editor-setting > button {
   display: grid;
@@ -2003,7 +2037,8 @@ button { -webkit-tap-highlight-color: transparent; }
 .reward-manager-list > button:active,
 .action-manager-create:active,
 .action-manager-list > button:active { transform: scale(.98); }
-.delete-reward-button {
+.delete-reward-button,
+.delete-area-button {
   width: 100%;
   border: 0;
   padding: 13px 8px 3px;
