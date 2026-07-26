@@ -50,6 +50,23 @@ type ToastState = {
   leaving?: boolean;
 };
 
+type Reward = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  cost: number;
+};
+
+type RewardClaim = {
+  id: string;
+  rewardId: string;
+  rewardName: string;
+  icon: string;
+  cost: number;
+  createdAt: string;
+};
+
 type ConfirmDialog =
   | { kind: "delete-action"; action: MicroAction }
   | { kind: "reset-data" };
@@ -79,6 +96,37 @@ const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
   { id: "today", label: "今日", icon: "◉" },
   { id: "growth", label: "成长", icon: "⌁" },
   { id: "profile", label: "我的", icon: "○" },
+];
+
+const REWARDS: Reward[] = [
+  {
+    id: "favorite-drink",
+    name: "喜欢的饮品",
+    description: "认真喝一杯自己喜欢的东西",
+    icon: "🍵",
+    cost: 5,
+  },
+  {
+    id: "slow-half-hour",
+    name: "兴趣半小时",
+    description: "留半小时，只做真正想做的事",
+    icon: "🎧",
+    cost: 12,
+  },
+  {
+    id: "small-treat",
+    name: "一份小甜点",
+    description: "给今天的自己一点甜",
+    icon: "🍰",
+    cost: 25,
+  },
+  {
+    id: "rest-evening",
+    name: "完整休息一晚",
+    description: "今晚不赶进度，安心休息",
+    icon: "🌙",
+    cost: 50,
+  },
 ];
 
 function localDay(date: Date) {
@@ -233,6 +281,10 @@ export function CheckInApp() {
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
   const [tabMotion, setTabMotion] = useState<"from-left" | "from-right">("from-right");
   const [showCalendar, setShowCalendar] = useState(false);
+  const [shellBalance, setShellBalance] = useState(0);
+  const [shellsEarned, setShellsEarned] = useState(0);
+  const [rewardClaims, setRewardClaims] = useState<RewardClaim[]>([]);
+  const [pendingReward, setPendingReward] = useState<Reward | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
@@ -274,12 +326,24 @@ export function CheckInApp() {
         storedRecords.map((record: GrowthRecord) => record.id),
       );
       const shouldSeedHistory = localStorage.getItem(SAMPLE_HISTORY_KEY) !== "done";
-      setRecords([
+      const mergedRecords = [
         ...storedRecords,
         ...(shouldSeedHistory
           ? buildSampleRecords().filter((record) => !existingRecordIds.has(record.id))
           : []),
-      ]);
+      ];
+      setRecords(mergedRecords);
+      setShellBalance(
+        typeof stored?.shellBalance === "number"
+          ? Math.max(0, stored.shellBalance)
+          : mergedRecords.length,
+      );
+      setShellsEarned(
+        typeof stored?.shellsEarned === "number"
+          ? Math.max(0, stored.shellsEarned)
+          : mergedRecords.length,
+      );
+      setRewardClaims(Array.isArray(stored?.rewardClaims) ? stored.rewardClaims : []);
       if (shouldSeedHistory) localStorage.setItem(SAMPLE_HISTORY_KEY, "done");
     } catch {
       localStorage.removeItem(STORAGE_KEY);
@@ -297,8 +361,18 @@ export function CheckInApp() {
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ areas, actions, records }));
-  }, [areas, actions, records, ready]);
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        areas,
+        actions,
+        records,
+        shellBalance,
+        shellsEarned,
+        rewardClaims,
+      }),
+    );
+  }, [areas, actions, records, rewardClaims, shellBalance, shellsEarned, ready]);
 
   const todayRecords = useMemo(
     () => records.filter((record) => isToday(new Date(record.createdAt))),
@@ -405,10 +479,12 @@ export function CheckInApp() {
       createdAt: new Date().toISOString(),
     };
     setRecords((current) => [record, ...current]);
+    setShellBalance((current) => current + 1);
+    setShellsEarned((current) => current + 1);
     showToast(
       `${action.icon} ${action.name} · ${actionTags
         .map((tag) => `${tag.name} +${action.value}`)
-        .join(" · ")}`,
+        .join(" · ")} · 栗壳 +1`,
       "成长已记录",
       record.id,
     );
@@ -416,7 +492,33 @@ export function CheckInApp() {
 
   function undoRecord(recordId: string) {
     setRecords((current) => current.filter((record) => record.id !== recordId));
+    setShellBalance((current) => Math.max(0, current - 1));
+    setShellsEarned((current) => Math.max(0, current - 1));
     showToast("刚刚的成长记录已移除", "已撤销");
+  }
+
+  function requestReward(reward: Reward) {
+    if (shellBalance < reward.cost) {
+      showToast(`再积累 ${reward.cost - shellBalance} 枚栗壳就可以兑换`, "栗壳还不够");
+      return;
+    }
+    setPendingReward(reward);
+  }
+
+  function redeemReward() {
+    if (!pendingReward || shellBalance < pendingReward.cost) return;
+    const claim: RewardClaim = {
+      id: `reward-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      rewardId: pendingReward.id,
+      rewardName: pendingReward.name,
+      icon: pendingReward.icon,
+      cost: pendingReward.cost,
+      createdAt: new Date().toISOString(),
+    };
+    setShellBalance((current) => Math.max(0, current - pendingReward.cost));
+    setRewardClaims((current) => [claim, ...current]);
+    showToast(`${pendingReward.icon} ${pendingReward.name}，现在就去享受吧`, "奖励已兑换");
+    setPendingReward(null);
   }
 
   function openActionEditor(action?: MicroAction) {
@@ -530,6 +632,7 @@ export function CheckInApp() {
     setShowActionEditor(false);
     setShowAreaEditor(false);
     setConfirmDialog(null);
+    setPendingReward(null);
     changeTab("today");
     window.requestAnimationFrame(() => {
       if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
@@ -589,6 +692,10 @@ export function CheckInApp() {
       setAreas(DEFAULT_AREAS);
       setActions(DEFAULT_ACTIONS);
       setRecords([]);
+      setShellBalance(0);
+      setShellsEarned(0);
+      setRewardClaims([]);
+      setPendingReward(null);
       changeTab("today");
       showToast("已恢复为新的开始");
     }
@@ -598,6 +705,10 @@ export function CheckInApp() {
   const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
   const allTotals = totalsFor(records);
   const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
+  const nextReward = REWARDS.find((reward) => reward.cost > shellBalance);
+  const shellProgress = nextReward
+    ? Math.min(100, (shellBalance / nextReward.cost) * 100)
+    : 100;
 
   return (
     <main className="shell">
@@ -992,6 +1103,96 @@ export function CheckInApp() {
                 <p>在这里整理微行动与成长标签，记录请回到“今日”页面。</p>
               </section>
 
+              <section className="shell-bank" aria-labelledby="shell-bank-title">
+                <div className="shell-bank-top">
+                  <div className="shell-jar" aria-hidden="true">
+                    <span className="jar-lid" />
+                    <span className="jar-glass">
+                      <i>栗</i>
+                      <i>栗</i>
+                      <i>栗</i>
+                    </span>
+                  </div>
+                  <div className="shell-balance">
+                    <span className="overline">栗壳储蓄罐</span>
+                    <h2 id="shell-bank-title">
+                      <strong>{shellBalance}</strong>
+                      <small>枚栗壳</small>
+                    </h2>
+                    <p>每完成一件小事，就存下一枚。</p>
+                  </div>
+                </div>
+
+                <div className="shell-progress-copy">
+                  <span>
+                    {nextReward
+                      ? `距离“${nextReward.name}”还差 ${nextReward.cost - shellBalance} 枚`
+                      : "所有奖励档位都已解锁"}
+                  </span>
+                  <small>累计获得 {shellsEarned} 枚</small>
+                </div>
+                <span
+                  className="shell-progress-track"
+                  role="progressbar"
+                  aria-label={nextReward ? `下一档奖励进度：${Math.round(shellProgress)}%` : "全部奖励已解锁"}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(shellProgress)}
+                >
+                  <i style={{ width: `${shellProgress}%` }} />
+                </span>
+              </section>
+
+              <section className="reward-section">
+                <div className="section-title-row">
+                  <div>
+                    <span className="overline">给自己的奖励</span>
+                    <h2>把积累换成一点开心</h2>
+                  </div>
+                  <small>{rewardClaims.length} 次兑换</small>
+                </div>
+
+                <div className="reward-grid">
+                  {REWARDS.map((reward) => {
+                    const available = shellBalance >= reward.cost;
+                    return (
+                      <article className={available ? "available" : ""} key={reward.id}>
+                        <span className="reward-icon" aria-hidden="true">{reward.icon}</span>
+                        <div>
+                          <strong>{reward.name}</strong>
+                          <p>{reward.description}</p>
+                        </div>
+                        <button
+                          type="button"
+                          className={available ? "ready" : ""}
+                          onClick={() => requestReward(reward)}
+                        >
+                          {available ? `${reward.cost} 栗壳 · 兑换` : `还差 ${reward.cost - shellBalance}`}
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {rewardClaims.length > 0 && (
+                  <details className="reward-history">
+                    <summary>
+                      <span>最近兑换</span>
+                      <span aria-hidden="true">⌄</span>
+                    </summary>
+                    <div>
+                      {rewardClaims.slice(0, 5).map((claim) => (
+                        <article key={claim.id}>
+                          <span>{claim.icon}</span>
+                          <strong>{claim.rewardName}</strong>
+                          <small>{formatRecordDate(claim.createdAt)} · −{claim.cost} 栗壳</small>
+                        </article>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </section>
+
               <section className="settings-block profile-actions">
                 <div className="settings-heading">
                   <div>
@@ -1243,6 +1444,51 @@ export function CheckInApp() {
             </div>
             <button className="save-button" type="submit">添加成长标签</button>
           </form>
+        </div>
+      )}
+
+      {pendingReward && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setPendingReward(null)}>
+          <section
+            className="bottom-sheet reward-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reward-title"
+            aria-describedby="reward-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label="关闭"
+              onClick={() => setPendingReward(null)}
+            >
+              ×
+            </button>
+            <span className="reward-sheet-icon" aria-hidden="true">{pendingReward.icon}</span>
+            <span className="overline">奖励确认</span>
+            <h2 id="reward-title">兑换“{pendingReward.name}”</h2>
+            <p id="reward-description">
+              将使用 {pendingReward.cost} 枚栗壳。兑换后，别忘了真的把这份奖励送给自己。
+            </p>
+            <div className="reward-cost-preview">
+              <span>当前 {shellBalance}</span>
+              <i aria-hidden="true">→</i>
+              <strong>剩余 {shellBalance - pendingReward.cost}</strong>
+            </div>
+            <div className="dialog-actions">
+              <button
+                className="dialog-button secondary"
+                type="button"
+                onClick={() => setPendingReward(null)}
+              >
+                再想想
+              </button>
+              <button className="dialog-button reward-confirm" type="button" onClick={redeemReward}>
+                确认兑换
+              </button>
+            </div>
+          </section>
         </div>
       )}
 
