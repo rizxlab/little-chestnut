@@ -1373,8 +1373,7 @@ export function CheckInApp() {
                   </span>
                   <i className="date-display-chevron" aria-hidden="true">›</i>
                 </button>
-                <h1>{greeting()}，今天想留下什么？</h1>
-                <p>不用完成一整件大事，记录一个已经发生的小行动就很好。</p>
+                <h1>{greeting()}</h1>
               </section>
 
               <section className="today-card">
