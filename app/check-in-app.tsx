@@ -419,6 +419,7 @@ export function CheckInApp() {
   const [showSettings, setShowSettings] = useState(false);
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [draftProfileNickname, setDraftProfileNickname] = useState("");
+  const [seedSampleHistory, setSeedSampleHistory] = useState(true);
   const [language, setLanguage] = useState<Language>("zh");
   const [theme, setTheme] = useState<Theme>("light");
   const [shellBalance, setShellBalance] = useState(0);
@@ -455,6 +456,8 @@ export function CheckInApp() {
   function applyAccountData(value: unknown, username: string) {
     const stored =
       value && typeof value === "object" ? (value as Record<string, unknown>) : null;
+    const allowsSampleHistory = stored?.seedSampleHistory !== false;
+    setSeedSampleHistory(allowsSampleHistory);
     const storedAreas = Array.isArray(stored?.areas) ? (stored.areas as Area[]) : [];
     const usesCurrentAreaSchema = stored?.areaSchemaVersion === AREA_SCHEMA_VERSION;
     const customStoredAreas = storedAreas.filter(
@@ -517,7 +520,8 @@ export function CheckInApp() {
       : [];
     const existingRecordIds = new Set(storedRecords.map((record) => record.id));
     const sampleKey = `${SAMPLE_HISTORY_KEY}:${username}`;
-    const shouldSeedHistory = localStorage.getItem(sampleKey) !== "done";
+    const shouldSeedHistory =
+      allowsSampleHistory && localStorage.getItem(sampleKey) !== "done";
     const mergedRecords = [
       ...storedRecords,
       ...(shouldSeedHistory
@@ -657,6 +661,7 @@ export function CheckInApp() {
       rewards,
       rewardClaims,
       areaSchemaVersion: AREA_SCHEMA_VERSION,
+      seedSampleHistory,
       profile: { nickname: account ? nickname.trim() : "" },
       preferences: { language, theme },
     };
@@ -681,6 +686,7 @@ export function CheckInApp() {
     records,
     rewardClaims,
     rewards,
+    seedSampleHistory,
     language,
     nickname,
     serverHydrated,
@@ -848,6 +854,7 @@ export function CheckInApp() {
           rewards,
           rewardClaims,
           areaSchemaVersion: AREA_SCHEMA_VERSION,
+          seedSampleHistory,
           profile: { nickname: nickname.trim() },
           preferences: { language, theme },
         }),
