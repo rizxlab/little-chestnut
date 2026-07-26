@@ -91,8 +91,8 @@ const ACTION_ICON_OPTIONS = [
   "🎧", "🧹", "☀️", "🌙", "🍎", "🥗", "☕", "🫁", "🧠", "🛏️",
 ];
 const AREA_ICON_OPTIONS = [
-  "🌿", "💚", "🌱", "📚", "🎨", "🧘", "🤝", "☀️", "🌙", "💼",
-  "🏡", "🎯", "💡", "🌸", "🫶", "✨", "🧠", "💪",
+  "🌿", "💚", "🌱", "📖", "📚", "🎨", "🌙", "💰", "🤝", "🧭",
+  "☀️", "💼", "🏡", "🎯", "💡", "🌸", "🫶", "✨", "🧠", "💪",
 ];
 const REWARD_ICON_OPTIONS = [
   "🎁", "🍵", "☕", "🎧", "🍰", "🧁", "🌙", "🎬", "📚", "🎮",
@@ -134,22 +134,48 @@ function IconPicker({
 }
 
 const DEFAULT_AREAS: Area[] = [
-  { id: "health", name: "健康", icon: "💚", color: "#4f8069", isDefault: true },
-  { id: "body", name: "身体", icon: "🌱", color: "#667957", isDefault: true },
-  { id: "learn", name: "学习", icon: "📚", color: "#56748a", isDefault: true },
+  { id: "body", name: "身体", icon: "🌱", color: "#5f8065", isDefault: true },
+  { id: "wisdom", name: "智慧", icon: "📖", color: "#56748a", isDefault: true },
   { id: "create", name: "创造", icon: "🎨", color: "#8a6478", isDefault: true },
-  { id: "mind", name: "精神", icon: "🧘", color: "#8d7650", isDefault: true },
-  { id: "life", name: "生活", icon: "🏠", color: "#9a684f", isDefault: true },
+  { id: "soul", name: "心灵", icon: "🌙", color: "#78698f", isDefault: true },
+  { id: "wealth", name: "财富", icon: "💰", color: "#a37845", isDefault: true },
+  { id: "relationships", name: "关系", icon: "🤝", color: "#9b6a62", isDefault: true },
+  { id: "explore", name: "探索", icon: "🧭", color: "#527d86", isDefault: true },
 ];
-const AREA_COLORS = ["#4f8069", "#9b6a62", "#78698f", "#527d86", "#8d7650", "#56748a"];
+const AREA_COLORS = [
+  "#5f8065",
+  "#56748a",
+  "#8a6478",
+  "#78698f",
+  "#a37845",
+  "#9b6a62",
+  "#527d86",
+];
+const AREA_SCHEMA_VERSION = 3;
+const LEGACY_DEFAULT_AREA_IDS = new Set([
+  "health",
+  "body",
+  "learn",
+  "create",
+  "mind",
+  "life",
+]);
+const LEGACY_AREA_ID_MAP: Record<string, string> = {
+  health: "body",
+  body: "body",
+  learn: "wisdom",
+  create: "create",
+  mind: "soul",
+  life: "explore",
+};
 
 const DEFAULT_ACTIONS: MicroAction[] = [
-  { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["health", "body"], value: 1, repeatable: true },
-  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", tagIds: ["health", "body"], value: 1, repeatable: true, timerSeconds: 5 },
-  { id: "read", name: "阅读一页", icon: "📖", tagIds: ["learn", "mind"], value: 1, repeatable: true },
-  { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["learn"], value: 1, repeatable: true },
-  { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create", "mind"], value: 1, repeatable: true },
-  { id: "idea", name: "记录一个灵感", icon: "💡", tagIds: ["create", "mind"], value: 1, repeatable: true },
+  { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["body"], value: 1, repeatable: true },
+  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", tagIds: ["body"], value: 1, repeatable: true, timerSeconds: 5 },
+  { id: "read", name: "阅读一页", icon: "📖", tagIds: ["wisdom"], value: 1, repeatable: true },
+  { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["wisdom"], value: 1, repeatable: true },
+  { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create"], value: 1, repeatable: true },
+  { id: "idea", name: "记录一个灵感", icon: "💡", tagIds: ["create"], value: 1, repeatable: true },
 ];
 
 const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
@@ -246,6 +272,16 @@ function normalizedTagIds(value: { tagIds?: string[]; areaId?: string }) {
   return value.areaId ? [value.areaId] : [];
 }
 
+function migratedTagIds(value: { tagIds?: string[]; areaId?: string }) {
+  return Array.from(
+    new Set(
+      normalizedTagIds(value).map(
+        (id) => LEGACY_AREA_ID_MAP[id] || id,
+      ),
+    ),
+  );
+}
+
 function sampleDate(daysAgo: number, hour: number, minute = 0) {
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
@@ -260,7 +296,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "water",
       actionName: "喝一杯水",
       icon: "💧",
-      tagIds: ["health", "body"],
+      tagIds: ["body"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(2, 9, 20),
@@ -270,7 +306,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "read",
       actionName: "阅读一页",
       icon: "📖",
-      tagIds: ["learn", "mind"],
+      tagIds: ["wisdom"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(4, 21, 10),
@@ -280,7 +316,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "idea",
       actionName: "记录一个灵感",
       icon: "💡",
-      tagIds: ["create", "mind"],
+      tagIds: ["create"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(4, 15, 35),
@@ -290,7 +326,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "stretch",
       actionName: "拉伸 5 秒",
       icon: "🙆",
-      tagIds: ["health", "body"],
+      tagIds: ["body"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(7, 8, 45),
@@ -300,7 +336,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "word",
       actionName: "学一个单词",
       icon: "🔤",
-      tagIds: ["learn"],
+      tagIds: ["wisdom"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(12, 12, 15),
@@ -310,7 +346,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "sketch",
       actionName: "画一个草图",
       icon: "✏️",
-      tagIds: ["create", "mind"],
+      tagIds: ["create"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(18, 18, 30),
@@ -320,7 +356,7 @@ function buildSampleRecords(): GrowthRecord[] {
       actionId: "water",
       actionName: "喝一杯水",
       icon: "💧",
-      tagIds: ["health", "body"],
+      tagIds: ["body"],
       value: 1,
       source: "主动记录",
       createdAt: sampleDate(31, 10, 5),
@@ -420,15 +456,23 @@ export function CheckInApp() {
     const stored =
       value && typeof value === "object" ? (value as Record<string, unknown>) : null;
     const storedAreas = Array.isArray(stored?.areas) ? (stored.areas as Area[]) : [];
+    const usesCurrentAreaSchema = stored?.areaSchemaVersion === AREA_SCHEMA_VERSION;
+    const customStoredAreas = storedAreas.filter(
+      (area) =>
+        !LEGACY_DEFAULT_AREA_IDS.has(area.id)
+        && !DEFAULT_AREAS.some((defaultArea) => defaultArea.id === area.id),
+    );
     setAreas(
       storedAreas.length
-        ? [
-            ...storedAreas,
-            ...DEFAULT_AREAS.filter(
-              (defaultArea) =>
-                !storedAreas.some((area) => area.id === defaultArea.id),
-            ),
-          ]
+        ? usesCurrentAreaSchema
+          ? [
+              ...storedAreas,
+              ...DEFAULT_AREAS.filter(
+                (defaultArea) =>
+                  !storedAreas.some((area) => area.id === defaultArea.id),
+              ),
+            ]
+          : [...DEFAULT_AREAS, ...customStoredAreas]
         : DEFAULT_AREAS,
     );
 
@@ -451,9 +495,14 @@ export function CheckInApp() {
                 action.id === "stretch" && action.name === "拉伸 5 秒"
                   ? defaultAction?.icon || action.icon
                   : action.icon,
-              tagIds: action.tagIds?.length
-                ? action.tagIds
-                : defaultAction?.tagIds || normalizedTagIds(action),
+              tagIds: migratedTagIds(
+                action.tagIds?.length
+                  ? action
+                  : {
+                      ...action,
+                      tagIds: defaultAction?.tagIds || normalizedTagIds(action),
+                    },
+              ),
               timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
             };
           })
@@ -463,7 +512,7 @@ export function CheckInApp() {
     const storedRecords = Array.isArray(stored?.records)
       ? (stored.records as GrowthRecord[]).map((record) => ({
           ...record,
-          tagIds: normalizedTagIds(record),
+          tagIds: migratedTagIds(record),
         }))
       : [];
     const existingRecordIds = new Set(storedRecords.map((record) => record.id));
@@ -607,6 +656,7 @@ export function CheckInApp() {
       shellsEarned,
       rewards,
       rewardClaims,
+      areaSchemaVersion: AREA_SCHEMA_VERSION,
       profile: { nickname: account ? nickname.trim() : "" },
       preferences: { language, theme },
     };
@@ -797,6 +847,7 @@ export function CheckInApp() {
           shellsEarned,
           rewards,
           rewardClaims,
+          areaSchemaVersion: AREA_SCHEMA_VERSION,
           profile: { nickname: nickname.trim() },
           preferences: { language, theme },
         }),
