@@ -895,7 +895,6 @@ export function CheckInApp() {
               <section className="page-heading">
                 <span className="overline">GROWTH OVERVIEW</span>
                 <h1>成长正在发生</h1>
-                <p>不看完成率，只看你真实留下的积累。</p>
               </section>
 
               <div className="stat-grid">
