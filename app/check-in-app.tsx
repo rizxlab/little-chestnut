@@ -2428,55 +2428,46 @@ export function CheckInApp() {
                 >
                   <i style={{ width: `${shellProgress}%` }} />
                 </span>
-              </section>
 
-              <section className="reward-section">
-                <div className="section-title-row reward-section-heading">
-                  <div>
-                    <span className="overline">给自己的奖励</span>
-                    <h2>把积累换成一点开心</h2>
+                <div className="shell-rewards-inline">
+                  <div className="shell-rewards-heading">
+                    <span>给自己的奖励</span>
+                    <button type="button" onClick={() => setShowRewardManager(true)}>
+                      管理
+                    </button>
                   </div>
-                  <button type="button" onClick={() => setShowRewardManager(true)}>奖励管理</button>
-                </div>
-
                 {rewards.length ? (
-                  <div className="reward-grid">
-                  {rewards.map((reward) => {
-                    const available = shellBalance >= reward.cost;
-                    return (
-                      <article className={available ? "available" : ""} key={reward.id}>
-                        <span className="reward-icon" aria-hidden="true">{reward.icon}</span>
-                        <div>
+                  <div className="shell-reward-list">
+                    {rewards.map((reward) => {
+                      const available = shellBalance >= reward.cost;
+                      return (
+                        <button
+                          className={available ? "available" : ""}
+                          type="button"
+                          key={reward.id}
+                          onClick={() => requestReward(reward)}
+                        >
+                          <span aria-hidden="true">{reward.icon}</span>
                           <strong>{reward.name}</strong>
-                          {reward.description && <p>{reward.description}</p>}
-                        </div>
-                        <div className="reward-card-controls">
-                          <button
-                            type="button"
-                            className={`reward-redeem-button ${available ? "ready" : ""}`}
-                            onClick={() => requestReward(reward)}
-                          >
-                            {available ? `${reward.cost} 栗壳 · 兑换` : `还差 ${reward.cost - shellBalance}`}
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
+                          <small>
+                            {available ? `${reward.cost} 枚 · 兑换` : `还差 ${reward.cost - shellBalance}`}
+                          </small>
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <button
-                    className="reward-empty"
+                    className="shell-reward-empty"
                     type="button"
                     onClick={() => setShowRewardManager(true)}
                   >
-                    <span aria-hidden="true">＋</span>
-                    <strong>添加第一个奖励</strong>
-                    <small>写下你想用栗壳换取的小开心</small>
+                    ＋ 添加一个奖励
                   </button>
                 )}
 
                 {rewardClaims.length > 0 && (
-                  <details className="reward-history">
+                  <details className="reward-history shell-reward-history">
                     <summary>
                       <span>最近兑换</span>
                       <span aria-hidden="true">⌄</span>
@@ -2492,6 +2483,7 @@ export function CheckInApp() {
                     </div>
                   </details>
                 )}
+                </div>
               </section>
 
               <section className="settings-block profile-actions">
