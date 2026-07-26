@@ -443,7 +443,7 @@ export function CheckInApp() {
         <header className="app-header">
           <button className="wordmark" type="button" onClick={() => changeTab("today")}>
             <span className="brand-seed" aria-hidden="true">栗</span>
-            <strong>栗子打卡</strong>
+            <strong>栗子小事</strong>
           </button>
         </header>
 
@@ -751,7 +751,7 @@ export function CheckInApp() {
                   <span className="philosophy-title">
                     <i aria-hidden="true">○</i>
                     <span>
-                      <strong>关于栗子打卡</strong>
+                      <strong>关于栗子小事</strong>
                       <small>产品理念与记录原则</small>
                     </span>
                   </span>
