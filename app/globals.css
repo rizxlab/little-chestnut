@@ -34,10 +34,50 @@ button, input, select { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
 
 .shell {
+  position: relative;
   display: grid;
   min-height: 100svh;
   place-items: center;
   padding: 24px;
+}
+
+.global-home-button {
+  position: fixed;
+  z-index: 70;
+  top: max(42px, calc((100svh - 920px) / 2 + 18px));
+  right: max(22px, calc((100vw - 500px) / 2 + 22px));
+  display: inline-flex;
+  height: 38px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(111, 59, 39, .12);
+  border-radius: 14px;
+  padding: 0 12px 0 10px;
+  color: var(--chestnut);
+  background: rgba(255, 250, 242, .94);
+  box-shadow: 0 7px 20px rgba(82, 51, 33, .1);
+  backdrop-filter: blur(15px);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+.global-home-button span {
+  display: grid;
+  width: 21px;
+  height: 21px;
+  place-items: center;
+  border-radius: 8px;
+  color: #fff9ef;
+  background: var(--chestnut);
+  font-family: Georgia, serif;
+  font-size: 15px;
+  line-height: 1;
+}
+.global-home-button:active {
+  transform: scale(.95);
+  background: #fff6e8;
+  box-shadow: 0 3px 12px rgba(82, 51, 33, .1);
 }
 
 .app-frame {
@@ -1082,6 +1122,10 @@ button { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 550px) {
   .shell { display: block; padding: 0; }
+  .global-home-button {
+    top: max(17px, env(safe-area-inset-top));
+    right: 18px;
+  }
   .app-frame {
     width: 100%;
     height: 100svh;

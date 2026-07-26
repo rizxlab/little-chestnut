@@ -525,6 +525,17 @@ export function CheckInApp() {
     });
   }
 
+  function returnToToday() {
+    setShowCalendar(false);
+    setShowActionEditor(false);
+    setShowAreaEditor(false);
+    setConfirmDialog(null);
+    changeTab("today");
+    window.requestAnimationFrame(() => {
+      if (appScrollRef.current) appScrollRef.current.scrollTop = 0;
+    });
+  }
+
   function shiftCalendarMonth(offset: number) {
     setCalendarMonth((current) => {
       const next = new Date(current.getFullYear(), current.getMonth() + offset, 1);
@@ -590,6 +601,16 @@ export function CheckInApp() {
 
   return (
     <main className="shell">
+      <button
+        className="global-home-button"
+        type="button"
+        aria-label="回到主页今日"
+        onClick={returnToToday}
+      >
+        <span aria-hidden="true">⌂</span>
+        今日
+      </button>
+
       <section className="app-frame">
         <header className="app-header">
           <button
