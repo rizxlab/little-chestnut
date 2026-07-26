@@ -531,35 +531,15 @@ button { -webkit-tap-highlight-color: transparent; }
 .timeline strong { font-size: 11px; }
 .timeline span { font-size: 9px; }
 
-.settings-card, .settings-block {
+.settings-block {
   border: 1px solid var(--line);
   border-radius: 20px;
   padding: 17px;
   background: var(--paper);
 }
-.install-card { display: flex; align-items: center; justify-content: space-between; }
-.install-card > div { display: flex; align-items: center; gap: 11px; }
-.settings-icon {
-  display: grid;
-  width: 39px;
-  height: 39px;
-  place-items: center;
-  border-radius: 13px;
-  color: white;
-  background: var(--chestnut);
-}
-.install-card > div > div, .data-settings > div { display: grid; gap: 3px; }
-.settings-card strong, .data-settings strong { font-size: 12px; }
-.settings-card small, .data-settings small { color: var(--muted); font-size: 9px; }
-.settings-card > button {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 7px 12px;
-  color: var(--chestnut);
-  background: #fffaf2;
-  font-size: 10px;
-  cursor: pointer;
-}
+.data-settings > div { display: grid; gap: 3px; }
+.data-settings strong { font-size: 12px; }
+.data-settings small { color: var(--muted); font-size: 9px; }
 .settings-block { margin-top: 14px; }
 .settings-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 14px; }
 .profile-actions { margin-top: 0; }

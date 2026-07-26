@@ -542,7 +542,7 @@ export function CheckInApp() {
               <section className="page-heading">
                 <span className="overline">MY SPACE</span>
                 <h1>我的栗子</h1>
-                <p>管理微行动、成长方向，也可以把栗子打卡留在手机桌面。</p>
+                <p>管理微行动和成长方向，让它更贴近你的节奏。</p>
               </section>
 
               <section className="settings-block profile-actions">
@@ -589,17 +589,6 @@ export function CheckInApp() {
                     );
                   })}
                 </div>
-              </section>
-
-              <section className="settings-card install-card">
-                <div>
-                  <span className="settings-icon">↓</span>
-                  <div>
-                    <strong>安装栗子打卡</strong>
-                    <small>像普通 App 一样从桌面打开</small>
-                  </div>
-                </div>
-                <button type="button" onClick={install}>安装</button>
               </section>
 
               <section className="settings-block">
