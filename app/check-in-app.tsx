@@ -12,7 +12,7 @@ import {
 } from "react";
 
 type Tab = "today" | "growth" | "profile";
-type GrowthPeriod = "today" | "week" | "month";
+type GrowthPeriod = "today" | "week" | "month" | "total";
 type Source = "主动记录" | "随机行动";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
@@ -1717,6 +1717,13 @@ export function CheckInApp() {
       totals: monthProgressTotals,
       maxTotal: maxMonthAreaTotal,
     },
+    {
+      id: "total",
+      label: tr("总计", "Total"),
+      count: records.length,
+      totals: allTotals,
+      maxTotal: maxAreaTotal,
+    },
   ];
   const activeGrowthPeriod =
     growthPeriodOptions.find((period) => period.id === growthPeriod)
@@ -2267,7 +2274,11 @@ export function CheckInApp() {
                   key={growthPeriod}
                 >
                   <div className="growth-progress-heading">
-                    <h2>{activeGrowthPeriod.label}{tr("进度", " progress")}</h2>
+                    <h2>
+                      {growthPeriod === "total"
+                        ? tr("总进度", "Total progress")
+                        : `${activeGrowthPeriod.label}${tr("进度", " progress")}`}
+                    </h2>
                     <small>{activeGrowthPeriod.count} {tr("件小事", "actions")}</small>
                   </div>
                   <div className="growth-areas">
@@ -2296,33 +2307,6 @@ export function CheckInApp() {
                   </div>
                 </div>
 
-                <div className="growth-progress-group total-progress-group">
-                  <div className="growth-progress-heading">
-                    <h2>{tr("总进度", "Total progress")}</h2>
-                    <small>{records.length} {tr("次成长", "moments")}</small>
-                  </div>
-                  <div className="growth-areas">
-                    {allTotals.map((area) => (
-                      <article className="growth-area" key={`total-${area.id}`}>
-                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
-                          {area.icon}
-                        </span>
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span className="progress-track">
-                            <i
-                              style={{
-                                width: `${Math.max(area.total ? 12 : 0, (area.total / maxAreaTotal) * 100)}%`,
-                                background: area.color,
-                              }}
-                            />
-                          </span>
-                        </div>
-                        <strong className="area-total">{area.total}</strong>
-                      </article>
-                    ))}
-                  </div>
-                </div>
               </section>
 
               <section className="content-section timeline-section">

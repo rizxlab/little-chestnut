@@ -1431,7 +1431,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .growth-period-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin-bottom: 18px;
   border: 1px solid var(--line);
