@@ -402,10 +402,10 @@ button { -webkit-tap-highlight-color: transparent; }
   position: relative;
   display: grid;
   min-width: 0;
-  min-height: 116px;
+  min-height: 92px;
   grid-template-columns: 42px 1fr;
-  grid-template-rows: 42px 1fr;
-  gap: 7px 10px;
+  grid-template-rows: 42px;
+  gap: 10px;
   border: 1px solid var(--line);
   border-radius: 19px;
   padding: 14px;
@@ -447,9 +447,6 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 6px 14px rgba(111, 59, 39, .11);
   transform: scale(1.05);
 }
-.quick-action.completed > .action-tag-list small {
-  background: rgba(255, 253, 248, .66);
-}
 .action-icon {
   display: grid;
   width: 42px;
@@ -467,7 +464,6 @@ button { -webkit-tap-highlight-color: transparent; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.quick-action > .action-tag-list { grid-column: 1 / 3; align-self: end; padding-right: 20px; }
 .check-control {
   position: absolute;
   right: 12px;

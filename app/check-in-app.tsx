@@ -1135,16 +1135,6 @@ export function CheckInApp() {
                           {action.icon}
                         </span>
                         <strong>{action.name}</strong>
-                        <span className="action-tag-list compact">
-                          {actionTags.map((tag) => (
-                            <small
-                              key={tag.id}
-                              style={{ color: tag.color, borderColor: `${tag.color}35` }}
-                            >
-                              {tag.name} +{action.value}
-                            </small>
-                          ))}
-                        </span>
                         <span
                           className={`check-control ${todayCount ? "checked" : ""} ${
                             justChecked ? "just-checked" : ""
