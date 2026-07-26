@@ -1857,8 +1857,11 @@ export function CheckInApp() {
                     aria-label={tr("打开设置", "Open settings")}
                     onClick={openSettings}
                   >
-                    <span aria-hidden="true">⚙</span>
-                    {tr("设置", "Settings")}
+                    <span className="settings-sliders-icon" aria-hidden="true">
+                      <i><b /></i>
+                      <i><b /></i>
+                      <i><b /></i>
+                    </span>
                   </button>
                 </div>
               </section>
