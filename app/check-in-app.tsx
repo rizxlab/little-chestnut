@@ -2498,7 +2498,7 @@ export function CheckInApp() {
                 <div className="settings-heading">
                   <div>
                     <span className="overline">行动管理</span>
-                    <h2>我的微行动</h2>
+                    <h2>我的小事</h2>
                   </div>
                   <button type="button" onClick={() => setShowActionManager(true)}>编辑</button>
                 </div>
