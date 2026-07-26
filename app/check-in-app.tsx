@@ -31,6 +31,7 @@ type MicroAction = {
   areaId?: string;
   value: number;
   repeatable: boolean;
+  timerSeconds?: number;
 };
 
 type GrowthRecord = {
@@ -94,7 +95,7 @@ const DEFAULT_AREAS: Area[] = [
 
 const DEFAULT_ACTIONS: MicroAction[] = [
   { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["health", "body"], value: 1, repeatable: true },
-  { id: "stretch", name: "拉伸 5 秒", icon: "🙆", tagIds: ["health", "body"], value: 1, repeatable: true },
+  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", tagIds: ["health", "body"], value: 1, repeatable: true, timerSeconds: 5 },
   { id: "read", name: "阅读一页", icon: "📖", tagIds: ["learn", "mind"], value: 1, repeatable: true },
   { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["learn"], value: 1, repeatable: true },
   { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create", "mind"], value: 1, repeatable: true },
@@ -310,6 +311,11 @@ export function CheckInApp() {
   const [draftIcon, setDraftIcon] = useState("🌱");
   const [draftTags, setDraftTags] = useState<string[]>(["body"]);
   const [draftValue, setDraftValue] = useState(1);
+  const [draftUsesTimer, setDraftUsesTimer] = useState(false);
+  const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
+  const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
+  const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running">("idle");
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
   const [dragOffset, setDragOffset] = useState(0);
@@ -369,9 +375,18 @@ export function CheckInApp() {
             );
             return {
               ...action,
+              name:
+                action.id === "stretch" && action.name === "拉伸 5 秒"
+                  ? defaultAction?.name || action.name
+                  : action.name,
+              icon:
+                action.id === "stretch" && action.name === "拉伸 5 秒"
+                  ? defaultAction?.icon || action.icon
+                  : action.icon,
               tagIds: action.tagIds?.length
                 ? action.tagIds
                 : defaultAction?.tagIds || normalizedTagIds(action),
+              timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
             };
           })
         : DEFAULT_ACTIONS,
@@ -528,6 +543,31 @@ export function CheckInApp() {
     document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language === "en" ? "en" : "zh-CN";
   }, [language, theme]);
+
+  useEffect(() => {
+    if (!timerAction || timerPhase === "idle") return;
+
+    if (timerSecondsLeft > 0) {
+      const timer = window.setTimeout(() => {
+        setTimerSecondsLeft((current) => Math.max(0, current - 1));
+      }, 1000);
+      return () => window.clearTimeout(timer);
+    }
+
+    if (timerPhase === "preparing") {
+      setTimerPhase("running");
+      setTimerSecondsLeft(Math.max(1, timerAction.timerSeconds || 1));
+      if ("vibrate" in navigator) navigator.vibrate(18);
+      return;
+    }
+
+    const completedAction = timerAction;
+    setTimerAction(null);
+    setTimerPhase("idle");
+    setTimerSecondsLeft(0);
+    if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
+    recordAction(completedAction);
+  }, [timerAction, timerPhase, timerSecondsLeft]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -814,7 +854,25 @@ export function CheckInApp() {
       suppressQuickClickRef.current = null;
       return;
     }
+    if (action.timerSeconds && action.timerSeconds > 0) {
+      setTimerAction(action);
+      setTimerPhase("idle");
+      setTimerSecondsLeft(action.timerSeconds);
+      return;
+    }
     recordAction(action);
+  }
+
+  function startActionTimer() {
+    if (!timerAction || timerPhase !== "idle") return;
+    setTimerPhase("preparing");
+    setTimerSecondsLeft(3);
+  }
+
+  function closeActionTimer() {
+    setTimerAction(null);
+    setTimerPhase("idle");
+    setTimerSecondsLeft(0);
   }
 
   function undoLatestActionRecord() {
@@ -906,6 +964,8 @@ export function CheckInApp() {
     setDraftIcon(action?.icon || "🌱");
     setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
     setDraftValue(action?.value || 1);
+    setDraftUsesTimer(Boolean(action?.timerSeconds));
+    setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
   }
 
@@ -931,6 +991,9 @@ export function CheckInApp() {
                 icon: draftIcon.trim() || "🌱",
                 tagIds: draftTags,
                 value: Math.max(1, draftValue),
+                timerSeconds: draftUsesTimer
+                  ? Math.min(3600, Math.max(1, draftTimerSeconds))
+                  : 0,
               }
             : action,
         ),
@@ -946,6 +1009,9 @@ export function CheckInApp() {
           tagIds: draftTags,
           value: Math.max(1, draftValue),
           repeatable: true,
+          timerSeconds: draftUsesTimer
+            ? Math.min(3600, Math.max(1, draftTimerSeconds))
+            : 0,
         },
       ]);
       showToast("新的微行动已加入");
@@ -1026,6 +1092,7 @@ export function CheckInApp() {
     setConfirmDialog(null);
     setPendingReward(null);
     setRecordActionMenu(null);
+    closeActionTimer();
     changeTab("today");
     scrollScreenToTop('[data-tab="today"]');
   }
@@ -1591,6 +1658,11 @@ export function CheckInApp() {
                           {action.icon}
                         </span>
                         <strong>{action.name}</strong>
+                        {action.timerSeconds && (
+                          <span className="action-timer-badge" aria-hidden="true">
+                            ◷ {action.timerSeconds}s
+                          </span>
+                        )}
                         <span
                           className={`check-control ${todayCount ? "checked" : ""} ${
                             justChecked ? "just-checked" : ""
@@ -2035,6 +2107,35 @@ export function CheckInApp() {
                 />
               </label>
             </div>
+            <div className="timer-editor-setting">
+              <button
+                className={draftUsesTimer ? "enabled" : ""}
+                type="button"
+                role="switch"
+                aria-checked={draftUsesTimer}
+                onClick={() => setDraftUsesTimer((current) => !current)}
+              >
+                <span aria-hidden="true">◷</span>
+                <div>
+                  <strong>完成前先倒计时</strong>
+                  <small>开始前会有 3 秒准备时间</small>
+                </div>
+                <i aria-hidden="true"><b /></i>
+              </button>
+              {draftUsesTimer && (
+                <label>
+                  计时时长（秒）
+                  <input
+                    type="number"
+                    min="1"
+                    max="3600"
+                    inputMode="numeric"
+                    value={draftTimerSeconds}
+                    onChange={(event) => setDraftTimerSeconds(Number(event.target.value))}
+                  />
+                </label>
+              )}
+            </div>
             <fieldset className="tag-fieldset">
               <legend>成长标签 <small>可多选</small></legend>
               <div className="tag-picker">
@@ -2232,6 +2333,75 @@ export function CheckInApp() {
                 </button>
               ))}
             </div>
+          </section>
+        </div>
+      )}
+
+      {timerAction && (
+        <div className="modal-backdrop timer-backdrop" role="presentation" onClick={closeActionTimer}>
+          <section
+            className="bottom-sheet timer-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="timer-title"
+            aria-describedby="timer-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              className="close-button"
+              type="button"
+              aria-label={tr("关闭计时", "Close timer")}
+              onClick={closeActionTimer}
+            >
+              ×
+            </button>
+            <span className="overline">
+              {timerPhase === "preparing"
+                ? tr("准备一下", "GET READY")
+                : timerPhase === "running"
+                  ? tr("正在计时", "IN PROGRESS")
+                  : tr("计时小事", "TIMED ACTION")}
+            </span>
+            <div
+              className={`timer-clock ${timerPhase}`}
+              style={{
+                background: `conic-gradient(var(--chestnut) ${
+                  timerPhase === "preparing"
+                    ? (timerSecondsLeft / 3) * 360
+                    : (timerSecondsLeft / Math.max(1, timerAction.timerSeconds || 1)) * 360
+                }deg, rgba(111, 59, 39, .1) 0deg)`,
+              }}
+            >
+              <div>
+                <span aria-hidden="true">
+                  {timerPhase === "preparing" ? "●" : timerAction.icon}
+                </span>
+                <strong>{timerSecondsLeft}</strong>
+                <small>{tr("秒", "sec")}</small>
+              </div>
+            </div>
+            <h2 id="timer-title">{timerAction.name}</h2>
+            <p id="timer-description">
+              {timerPhase === "preparing"
+                ? tr("保持准备，计时马上开始", "Get ready — the timer is about to start")
+                : timerPhase === "running"
+                  ? tr("保持住，结束后会自动打卡", "Keep going — completion will check in automatically")
+                  : tr("点击开始，3 秒准备后进入倒计时", "Start for a 3-second preparation, then the countdown begins")}
+            </p>
+            {timerPhase === "idle" ? (
+              <div className="dialog-actions">
+                <button className="dialog-button secondary" type="button" onClick={closeActionTimer}>
+                  {tr("取消", "Cancel")}
+                </button>
+                <button className="dialog-button timer-start-button" type="button" onClick={startActionTimer}>
+                  {tr("开始", "Start")}
+                </button>
+              </div>
+            ) : (
+              <button className="timer-cancel-button" type="button" onClick={closeActionTimer}>
+                {tr("取消计时", "Cancel timer")}
+              </button>
+            )}
           </section>
         </div>
       )}
