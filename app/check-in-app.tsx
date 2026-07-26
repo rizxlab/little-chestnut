@@ -389,6 +389,11 @@ export function CheckInApp() {
     left: 12,
     top: 12,
   });
+  const [manageActionMenu, setManageActionMenu] = useState<MicroAction | null>(null);
+  const [manageActionMenuPosition, setManageActionMenuPosition] = useState({
+    left: 12,
+    top: 12,
+  });
   const [lastCheckedAction, setLastCheckedAction] = useState<{
     id: string;
     token: number;
@@ -1078,7 +1083,23 @@ export function CheckInApp() {
     const top = Math.max(viewportPadding, rect.top - menuHeight - 7);
 
     setRecordActionMenuPosition({ left, top });
+    setManageActionMenu(null);
     setRecordActionMenu(action);
+  }
+
+  function openManageActionMenu(action: MicroAction, rect: DOMRect) {
+    const menuWidth = 144;
+    const menuHeight = 96;
+    const viewportPadding = 12;
+    const left = Math.min(
+      window.innerWidth - menuWidth - viewportPadding,
+      Math.max(viewportPadding, rect.left + rect.width - menuWidth),
+    );
+    const top = Math.max(viewportPadding, rect.top - menuHeight - 7);
+
+    setManageActionMenuPosition({ left, top });
+    setRecordActionMenu(null);
+    setManageActionMenu(action);
   }
 
   function startActionLongPress(
@@ -1114,6 +1135,21 @@ export function CheckInApp() {
   function finishActionLongPress() {
     clearLongPressTimer();
     longPressStartRef.current = null;
+  }
+
+  function startManageActionLongPress(
+    action: MicroAction,
+    event: ReactPointerEvent<HTMLElement>,
+  ) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    clearLongPressTimer();
+    longPressStartRef.current = { x: event.clientX, y: event.clientY };
+    const actionRect = event.currentTarget.getBoundingClientRect();
+    longPressTimerRef.current = window.setTimeout(() => {
+      openManageActionMenu(action, actionRect);
+      if ("vibrate" in navigator) navigator.vibrate(12);
+      longPressTimerRef.current = null;
+    }, 520);
   }
 
   function handleQuickActionClick(action: MicroAction) {
@@ -1254,18 +1290,32 @@ export function CheckInApp() {
     }
   }
 
+  function prepareActionEditor(action?: MicroAction) {
+    setEditingAction(action || null);
+    setDraftName(action?.name || "");
+    setDraftIcon(action?.icon || "🌱");
+    setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
+    setDraftValue(action?.value || 1);
+    setDraftUsesTimer(Boolean(action?.timerSeconds));
+    setDraftTimerSeconds(action?.timerSeconds || 5);
+    setShowActionEditor(true);
+  }
+
   function openActionEditor(action?: MicroAction) {
-    closeSecondaryModal("action-manager", () => {
-      setShowActionManager(false);
-      setEditingAction(action || null);
-      setDraftName(action?.name || "");
-      setDraftIcon(action?.icon || "🌱");
-      setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
-      setDraftValue(action?.value || 1);
-      setDraftUsesTimer(Boolean(action?.timerSeconds));
-      setDraftTimerSeconds(action?.timerSeconds || 5);
-      setShowActionEditor(true);
-    });
+    setManageActionMenu(null);
+    if (showActionManager) {
+      closeSecondaryModal("action-manager", () => {
+        setShowActionManager(false);
+        prepareActionEditor(action);
+      });
+      return;
+    }
+    prepareActionEditor(action);
+  }
+
+  function requestActionDelete(action: MicroAction) {
+    setManageActionMenu(null);
+    setConfirmDialog({ kind: "delete-action", action });
   }
 
   function closeActionEditor() {
@@ -1408,6 +1458,7 @@ export function CheckInApp() {
   function changeTab(nextTab: Tab) {
     setDragOffset(0);
     setIsDraggingTabs(false);
+    setManageActionMenu(null);
     if (nextTab === "growth") setGrowthPeriod("today");
     if (nextTab === tab) return;
     setTab(nextTab);
@@ -1473,6 +1524,7 @@ export function CheckInApp() {
     setConfirmDialog(null);
     setPendingReward(null);
     setRecordActionMenu(null);
+    setManageActionMenu(null);
     closeActionTimer();
     changeTab("today");
     scrollScreenToTop('[data-tab="today"]');
@@ -1709,6 +1761,7 @@ export function CheckInApp() {
           onTouchCancel={cancelTouchGesture}
           onScrollCapture={() => {
             if (recordActionMenu) setRecordActionMenu(null);
+            if (manageActionMenu) setManageActionMenu(null);
           }}
         >
           {showCalendar && (
@@ -2452,7 +2505,27 @@ export function CheckInApp() {
                   {actions.map((action) => {
                     const actionTags = tagsFor(action);
                     return (
-                      <article className="tag-action-card" key={action.id}>
+                      <article
+                        className="tag-action-card profile-action-card"
+                        key={action.id}
+                        role="button"
+                        tabIndex={0}
+                        aria-haspopup="menu"
+                        aria-label={`长按管理${action.name}`}
+                        onPointerDown={(event) => startManageActionLongPress(action, event)}
+                        onPointerMove={moveActionLongPress}
+                        onPointerUp={finishActionLongPress}
+                        onPointerCancel={finishActionLongPress}
+                        onContextMenu={(event) => {
+                          event.preventDefault();
+                          openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
+                        }}
+                      >
                         <div className="tag-action-summary">
                           <span className="tag-action-icon">{action.icon}</span>
                           <strong>{action.name}</strong>
@@ -3383,6 +3456,43 @@ export function CheckInApp() {
             >
               <span aria-hidden="true">↶</span>
               <strong>{tr("撤销一次", "Undo once")}</strong>
+            </button>
+          </section>
+        </div>
+      )}
+
+      {manageActionMenu && (
+        <div
+          className="record-action-layer"
+          role="presentation"
+          onClick={() => setManageActionMenu(null)}
+        >
+          <section
+            className="record-action-popover manage-action-popover"
+            role="menu"
+            aria-label={`${manageActionMenu.name}的管理选项`}
+            style={{
+              left: manageActionMenuPosition.left,
+              top: manageActionMenuPosition.top,
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => openActionEditor(manageActionMenu)}
+            >
+              <span aria-hidden="true">✎</span>
+              <strong>编辑</strong>
+            </button>
+            <button
+              className="danger"
+              type="button"
+              role="menuitem"
+              onClick={() => requestActionDelete(manageActionMenu)}
+            >
+              <span aria-hidden="true">×</span>
+              <strong>删除</strong>
             </button>
           </section>
         </div>

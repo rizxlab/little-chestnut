@@ -1309,6 +1309,21 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 13px;
   background: #fffdf9;
 }
+.profile-action-card {
+  -webkit-touch-callout: none;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+.profile-action-card:active {
+  transform: scale(.98);
+  border-color: rgba(111, 59, 39, .22);
+  box-shadow: 0 5px 14px rgba(82, 51, 33, .07);
+}
+.profile-action-card:focus-visible {
+  outline: 2px solid rgba(111, 59, 39, .34);
+  outline-offset: 2px;
+}
 .tag-action-summary {
   display: grid;
   width: 100%;
@@ -2587,6 +2602,20 @@ button { -webkit-tap-highlight-color: transparent; }
 .record-action-popover button:not(:disabled):active {
   background: rgba(111, 59, 39, .07);
   transform: scale(.98);
+}
+.manage-action-popover {
+  width: 144px;
+  transform-origin: bottom right;
+}
+.manage-action-popover button + button {
+  border-top: 1px solid rgba(111, 59, 39, .08);
+}
+.manage-action-popover button.danger {
+  color: #985a50;
+}
+.manage-action-popover button.danger > span {
+  color: #985a50;
+  background: #f7e9e5;
 }
 @keyframes context-pop {
   from {
