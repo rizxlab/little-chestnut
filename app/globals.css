@@ -561,18 +561,27 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .calendar-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
 .calendar-back {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  border: 0;
-  margin: 0 0 20px;
-  padding: 4px 0;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid rgba(111, 59, 39, .12);
+  border-radius: 14px;
+  margin: 0 0 18px;
+  padding: 0;
   color: var(--chestnut);
-  background: transparent;
-  font-size: 10px;
+  background: #fff8ee;
+  box-shadow: 0 6px 16px rgba(111, 59, 39, .08);
   cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
 }
-.calendar-back span { font-family: Georgia, serif; font-size: 22px; line-height: 0; }
+.calendar-back:active { transform: scale(.94); background: #f7ecdf; }
+.calendar-back span {
+  margin: -2px 0 0 -2px;
+  font-family: Georgia, serif;
+  font-size: 32px;
+  line-height: 1;
+}
 .calendar-card {
   border: 1px solid var(--line);
   border-radius: 23px;

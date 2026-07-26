@@ -893,9 +893,13 @@ export function CheckInApp() {
           {showCalendar && (
             <div className="screen calendar-screen">
               <section className="calendar-heading">
-                <button className="calendar-back" type="button" onClick={closeCalendar}>
+                <button
+                  className="calendar-back"
+                  type="button"
+                  aria-label="返回今日"
+                  onClick={closeCalendar}
+                >
                   <span aria-hidden="true">‹</span>
-                  返回今日
                 </button>
                 <span className="overline">CALENDAR</span>
                 <h1>日历记录</h1>
