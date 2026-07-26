@@ -319,6 +319,7 @@ export function CheckInApp() {
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
   const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running" | "success">("idle");
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
+  const [timerMultiplier, setTimerMultiplier] = useState(1);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [showAreaManager, setShowAreaManager] = useState(false);
   const [draftAreaName, setDraftAreaName] = useState("");
@@ -555,11 +556,13 @@ export function CheckInApp() {
 
     if (timerPhase === "success") {
       const completedAction = timerAction;
+      const completedCount = timerMultiplier;
       const timer = window.setTimeout(() => {
         setTimerAction(null);
         setTimerPhase("idle");
         setTimerSecondsLeft(0);
-        recordAction(completedAction);
+        setTimerMultiplier(1);
+        recordActionMultiple(completedAction, completedCount);
       }, 1050);
       return () => window.clearTimeout(timer);
     }
@@ -573,7 +576,9 @@ export function CheckInApp() {
 
     if (timerPhase === "preparing") {
       setTimerPhase("running");
-      setTimerSecondsLeft(Math.max(1, timerAction.timerSeconds || 1));
+      setTimerSecondsLeft(
+        Math.max(1, (timerAction.timerSeconds || 1) * timerMultiplier),
+      );
       if ("vibrate" in navigator) navigator.vibrate(18);
       return;
     }
@@ -581,7 +586,7 @@ export function CheckInApp() {
     setTimerPhase("success");
     setTimerSecondsLeft(0);
     if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
-  }, [timerAction, timerPhase, timerSecondsLeft]);
+  }, [timerAction, timerMultiplier, timerPhase, timerSecondsLeft]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -762,30 +767,40 @@ export function CheckInApp() {
     toastTimers.current.push(exitTimer, removeTimer);
   }
 
-  function recordAction(action: MicroAction, source: Source = "主动记录") {
+  function recordActionMultiple(
+    action: MicroAction,
+    count: number,
+    source: Source = "主动记录",
+  ) {
     const actionTags = tagsFor(action);
-    const record: GrowthRecord = {
-      id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    const safeCount = Math.max(1, Math.floor(count));
+    const timestamp = Date.now();
+    const newRecords = Array.from({ length: safeCount }, (_, index): GrowthRecord => ({
+      id: `${timestamp}-${index}-${Math.random().toString(16).slice(2)}`,
       actionId: action.id,
       actionName: action.name,
       icon: action.icon,
       tagIds: actionTags.map((tag) => tag.id),
       value: action.value,
       source,
-      createdAt: new Date().toISOString(),
-    };
-    setRecords((current) => [record, ...current]);
+      createdAt: new Date(timestamp + index).toISOString(),
+    })).reverse();
+    setRecords((current) => [...newRecords, ...current]);
     setLastCheckedAction({ id: action.id, token: Date.now() });
-    setShellBalance((current) => current + 1);
-    setShellsEarned((current) => current + 1);
+    setShellBalance((current) => current + safeCount);
+    setShellsEarned((current) => current + safeCount);
     const growthChanges = actionTags.map(
-      (tag) => `${tag.name} +${action.value}`,
+      (tag) => `${tag.name} +${action.value * safeCount}`,
     );
     showToast(
-      [...growthChanges, "栗壳 +1"].join(" · "),
+      [...growthChanges, `栗壳 +${safeCount}`].join(" · "),
       "成长已记录",
-      record.id,
+      newRecords[0].id,
     );
+  }
+
+  function recordAction(action: MicroAction, source: Source = "主动记录") {
+    recordActionMultiple(action, 1, source);
   }
 
   function undoRecord(recordId: string, showFeedback = true) {
@@ -859,6 +874,7 @@ export function CheckInApp() {
     if (action.timerSeconds && action.timerSeconds > 0) {
       setTimerAction(action);
       setTimerPhase("idle");
+      setTimerMultiplier(1);
       setTimerSecondsLeft(action.timerSeconds);
       return;
     }
@@ -876,6 +892,16 @@ export function CheckInApp() {
     setTimerAction(null);
     setTimerPhase("idle");
     setTimerSecondsLeft(0);
+    setTimerMultiplier(1);
+  }
+
+  function changeTimerMultiplier(delta: number) {
+    if (!timerAction || timerPhase !== "idle") return;
+    const nextMultiplier = Math.min(60, Math.max(1, timerMultiplier + delta));
+    setTimerMultiplier(nextMultiplier);
+    setTimerSecondsLeft(
+      Math.max(1, (timerAction.timerSeconds || 1) * nextMultiplier),
+    );
   }
 
   function skipActionTimer() {
@@ -2760,7 +2786,13 @@ export function CheckInApp() {
                     : `conic-gradient(var(--chestnut) ${
                         timerPhase === "preparing"
                           ? (timerSecondsLeft / 3) * 360
-                          : (timerSecondsLeft / Math.max(1, timerAction.timerSeconds || 1)) * 360
+                          : (
+                              timerSecondsLeft
+                              / Math.max(
+                                1,
+                                (timerAction.timerSeconds || 1) * timerMultiplier,
+                              )
+                            ) * 360
                       }deg, rgba(111, 59, 39, .1) 0deg)`,
               }}
             >
@@ -2788,13 +2820,53 @@ export function CheckInApp() {
             </h2>
             <p id="timer-description" aria-live="polite">
               {timerPhase === "success"
-                ? tr(`${timerAction.name}已完成，成长正在记录`, `${timerAction.name} is complete and being recorded`)
+                ? tr(
+                    `${timerAction.name}已完成 ${timerMultiplier} 次，成长正在记录`,
+                    `${timerAction.name} is complete ×${timerMultiplier} and being recorded`,
+                  )
                 : timerPhase === "preparing"
                 ? tr("保持准备，计时马上开始", "Get ready — the timer is about to start")
                 : timerPhase === "running"
-                  ? tr("保持住，结束后会自动打卡", "Keep going — completion will check in automatically")
+                  ? tr(
+                      `保持住，结束后会自动打卡 ${timerMultiplier} 次`,
+                      `Keep going — completion will check in ×${timerMultiplier}`,
+                    )
                   : tr("点击开始，3 秒准备后进入倒计时", "Start for a 3-second preparation, then the countdown begins")}
             </p>
+            {timerPhase === "idle" && (
+              <div className="timer-duration-picker">
+                <span>{tr("选择时长", "Duration")}</span>
+                <div>
+                  <button
+                    type="button"
+                    aria-label={tr("减少一档时长", "Decrease duration")}
+                    disabled={timerMultiplier === 1}
+                    onClick={() => changeTimerMultiplier(-1)}
+                  >
+                    −
+                  </button>
+                  <strong>
+                    {(timerAction.timerSeconds || 1) * timerMultiplier}
+                    <small>{tr("秒", " sec")}</small>
+                    <em>× {timerMultiplier} {tr("次", "check-ins")}</em>
+                  </strong>
+                  <button
+                    type="button"
+                    aria-label={tr("增加一档时长", "Increase duration")}
+                    disabled={timerMultiplier === 60}
+                    onClick={() => changeTimerMultiplier(1)}
+                  >
+                    +
+                  </button>
+                </div>
+                <small>
+                  {tr(
+                    `每档增加 ${timerAction.timerSeconds || 1} 秒，完成后按倍数记录`,
+                    `Each step adds ${timerAction.timerSeconds || 1} seconds and one check-in`,
+                  )}
+                </small>
+              </div>
+            )}
             {timerPhase === "idle" ? (
               <div className="dialog-actions">
                 <button className="dialog-button secondary" type="button" onClick={closeActionTimer}>

@@ -2514,6 +2514,61 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   font-size: 10px;
 }
+.timer-duration-picker {
+  display: grid;
+  gap: 8px;
+  margin: -5px 0 18px;
+}
+.timer-duration-picker > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+.timer-duration-picker > div {
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  gap: 10px;
+  align-items: center;
+}
+.timer-duration-picker button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(111, 59, 39, .14);
+  border-radius: 14px;
+  color: var(--chestnut);
+  background: rgba(255, 252, 246, .58);
+  font-family: Georgia, serif;
+  font-size: 22px;
+  cursor: pointer;
+}
+.timer-duration-picker button:active:not(:disabled) { transform: scale(.94); }
+.timer-duration-picker button:disabled { opacity: .3; cursor: default; }
+.timer-duration-picker strong {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: baseline;
+  color: var(--chestnut);
+  font-family: Georgia, serif;
+  font-size: 27px;
+  font-weight: 400;
+  line-height: 1;
+}
+.timer-duration-picker strong small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.timer-duration-picker strong em {
+  grid-column: 1 / -1;
+  margin-top: 5px;
+  color: var(--chestnut);
+  font-family: inherit;
+  font-size: 9px;
+  font-style: normal;
+}
+.timer-duration-picker > small {
+  color: var(--muted);
+  font-size: 8px;
+}
 .timer-start-button {
   border-color: var(--chestnut) !important;
   color: #fffaf2 !important;
@@ -2816,6 +2871,10 @@ html[data-theme="dark"] .timer-skip-button {
   border-color: rgba(225, 173, 140, .24) !important;
   color: #efb99a !important;
   background: rgba(72, 53, 43, .56) !important;
+}
+html[data-theme="dark"] .timer-duration-picker button {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(28, 22, 19, .42);
 }
 html[data-theme="dark"] .record-action-popover {
   border-color: var(--line);
