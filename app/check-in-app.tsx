@@ -1235,7 +1235,11 @@ export function CheckInApp() {
     instantClose = false,
   ) {
     if (event.touches.length !== 1 || event.currentTarget.scrollTop > 1) return;
-    if ((event.target as HTMLElement).closest(".modal-drag-handle")) return;
+    if (
+      (event.target as HTMLElement).closest(
+        ".modal-drag-handle, input, select, textarea",
+      )
+    ) return;
     const touch = event.touches[0];
     editorSheetSwipeRef.current = {
       id,
@@ -2216,6 +2220,19 @@ export function CheckInApp() {
       : actions.filter((action) =>
           normalizedTagIds(action).includes(activeActionAreaFilter),
         );
+  const safeDraftTimerSeconds = Math.min(
+    3600,
+    Math.max(
+      1,
+      Number.isFinite(draftTimerSeconds) ? Math.floor(draftTimerSeconds) : 1,
+    ),
+  );
+  const timerSliderMax = Math.min(
+    3600,
+    Math.max(300, Math.ceil(safeDraftTimerSeconds / 60) * 60),
+  );
+  const timerSliderProgress =
+    ((safeDraftTimerSeconds - 1) / Math.max(1, timerSliderMax - 1)) * 100;
 
   return (
     <main
@@ -3608,17 +3625,54 @@ export function CheckInApp() {
                 <i aria-hidden="true"><b /></i>
               </button>
               {draftUsesTimer && (
-                <label>
-                  计时时长（秒）
-                  <input
-                    type="number"
-                    min="1"
-                    max="3600"
-                    inputMode="numeric"
-                    value={draftTimerSeconds}
-                    onChange={(event) => setDraftTimerSeconds(Number(event.target.value))}
-                  />
-                </label>
+                <div className="timer-duration-editor">
+                  <div className="timer-duration-editor-heading">
+                    <strong>计时时长</strong>
+                    <output aria-live="polite">
+                      {safeDraftTimerSeconds}<small>秒</small>
+                    </output>
+                  </div>
+                  <label className="timer-duration-slider">
+                    <span>滑动选择时长</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max={timerSliderMax}
+                      step="1"
+                      value={safeDraftTimerSeconds}
+                      aria-label="滑动选择计时时长"
+                      style={
+                        {
+                          "--timer-slider-progress": `${timerSliderProgress}%`,
+                        } as CSSProperties
+                      }
+                      onChange={(event) =>
+                        setDraftTimerSeconds(Number(event.target.value))
+                      }
+                    />
+                    <small aria-hidden="true">
+                      <span>1 秒</span>
+                      <span>{Math.round(timerSliderMax / 2)} 秒</span>
+                      <span>{timerSliderMax} 秒</span>
+                    </small>
+                  </label>
+                  <label className="timer-duration-number">
+                    <span>精确输入</span>
+                    <div>
+                      <input
+                        type="number"
+                        min="1"
+                        max="3600"
+                        inputMode="numeric"
+                        value={draftTimerSeconds}
+                        onChange={(event) =>
+                          setDraftTimerSeconds(Number(event.target.value))
+                        }
+                      />
+                      <small>秒</small>
+                    </div>
+                  </label>
+                </div>
               )}
             </div>
             <fieldset className="tag-fieldset">
