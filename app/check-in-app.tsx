@@ -414,6 +414,8 @@ export function CheckInApp() {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftIcon, setDraftIcon] = useState("🌱");
+  const [draftPresetId, setDraftPresetId] = useState<string | null>("custom");
+  const [showActionIconPicker, setShowActionIconPicker] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(["body"]);
   const [draftValue, setDraftValue] = useState(1);
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
@@ -1430,11 +1432,35 @@ export function CheckInApp() {
     setEditingAction(action || null);
     setDraftName(action?.name || "");
     setDraftIcon(action?.icon || "🌱");
+    setDraftPresetId(action ? null : "custom");
+    setShowActionIconPicker(false);
     setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
     setDraftValue(action?.value || 1);
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
+  }
+
+  function applyActionPreset(action: MicroAction) {
+    setDraftPresetId(action.id);
+    setDraftName(action.name);
+    setDraftIcon(action.icon);
+    setDraftTags(normalizedTagIds(action));
+    setDraftValue(action.value);
+    setDraftUsesTimer(Boolean(action.timerSeconds));
+    setDraftTimerSeconds(action.timerSeconds || 5);
+    setShowActionIconPicker(false);
+  }
+
+  function startCustomAction() {
+    setDraftPresetId("custom");
+    setDraftName("");
+    setDraftIcon("🌱");
+    setDraftTags([areas[0]?.id || "body"]);
+    setDraftValue(1);
+    setDraftUsesTimer(false);
+    setDraftTimerSeconds(5);
+    setShowActionIconPicker(false);
   }
 
   function openActionEditor(action?: MicroAction) {
@@ -3026,15 +3052,65 @@ export function CheckInApp() {
             </button>
             <span className="overline">{editingAction ? "编辑微行动" : "新的微行动"}</span>
             <h2>{editingAction ? "把行动调整得更顺手" : "从一件足够小的事开始"}</h2>
-            <label>
+            {!editingAction && (
+              <fieldset className="action-preset-picker">
+                <legend>系统小事</legend>
+                <div>
+                  <button
+                    className={draftPresetId === "custom" ? "selected" : ""}
+                    type="button"
+                    onClick={startCustomAction}
+                  >
+                    <span aria-hidden="true">✦</span>
+                    <strong>自定义</strong>
+                  </button>
+                  {DEFAULT_ACTIONS.map((action) => (
+                    <button
+                      className={draftPresetId === action.id ? "selected" : ""}
+                      type="button"
+                      key={action.id}
+                      onClick={() => applyActionPreset(action)}
+                    >
+                      <span aria-hidden="true">{action.icon}</span>
+                      <strong>{action.name}</strong>
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            <label className="action-name-label">
               行动名称
-              <input
-                value={draftName}
-                onChange={(event) => setDraftName(event.target.value)}
-                placeholder="例如：阅读一页"
-                autoFocus
-              />
+              <div className="action-name-control">
+                <button
+                  className="action-icon-trigger"
+                  type="button"
+                  aria-label="选择小事图标"
+                  aria-expanded={showActionIconPicker}
+                  onClick={() => setShowActionIconPicker((current) => !current)}
+                >
+                  <span aria-hidden="true">{draftIcon}</span>
+                  <small aria-hidden="true">⌄</small>
+                </button>
+                <input
+                  value={draftName}
+                  onChange={(event) => setDraftName(event.target.value)}
+                  placeholder="例如：阅读一页"
+                />
+              </div>
             </label>
+            {showActionIconPicker && (
+              <div className="action-icon-panel">
+                <IconPicker
+                  label="选择图标"
+                  value={draftIcon}
+                  options={ACTION_ICON_OPTIONS}
+                  onChange={(icon) => {
+                    setDraftIcon(icon);
+                    setShowActionIconPicker(false);
+                  }}
+                />
+              </div>
+            )}
             <label>
               成长值
               <input
@@ -3045,12 +3121,6 @@ export function CheckInApp() {
                 onChange={(event) => setDraftValue(Number(event.target.value))}
               />
             </label>
-            <IconPicker
-              label="选择图标"
-              value={draftIcon}
-              options={ACTION_ICON_OPTIONS}
-              onChange={setDraftIcon}
-            />
             <div className="timer-editor-setting">
               <button
                 className={draftUsesTimer ? "enabled" : ""}
@@ -3061,7 +3131,7 @@ export function CheckInApp() {
               >
                 <span aria-hidden="true">◷</span>
                 <div>
-                  <strong>完成前先倒计时</strong>
+                  <strong>计时</strong>
                   <small>开始前会有 3 秒准备时间</small>
                 </div>
                 <i aria-hidden="true"><b /></i>
