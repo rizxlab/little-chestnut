@@ -2437,6 +2437,9 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .profile-editor {
   min-height: 390px;
+  max-height: calc(100dvh - 90px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .profile-editor-account {
   display: flex;

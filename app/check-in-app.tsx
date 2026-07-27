@@ -2140,7 +2140,10 @@ export function CheckInApp() {
   return (
     <main
       className={`shell${
-        showActionEditor || showAreaEditor || showRewardEditor
+        showActionEditor
+        || showAreaEditor
+        || showRewardEditor
+        || showProfileEditor
           ? " editor-modal-open"
           : ""
       }`}
@@ -3155,6 +3158,16 @@ export function CheckInApp() {
             aria-labelledby="profile-editor-title"
             onSubmit={saveProfile}
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe(
+                "profile-editor",
+                () => setShowProfileEditor(false),
+                event,
+              )
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("profile-editor", () => setShowProfileEditor(false))}
             <button
