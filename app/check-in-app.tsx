@@ -385,7 +385,7 @@ export function CheckInApp() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
-  const [orbitRippleKey, setOrbitRippleKey] = useState(0);
+  const [orbitRippleKey, setOrbitRippleKey] = useState(1);
   const [recordActionMenu, setRecordActionMenu] = useState<MicroAction | null>(null);
   const [recordActionMenuPosition, setRecordActionMenuPosition] = useState({
     left: 12,
@@ -1591,6 +1591,9 @@ export function CheckInApp() {
     setManageActionMenu(null);
     setProfileActionSwipe(null);
     if (nextTab === "growth") setGrowthPeriod("today");
+    if (nextTab === "today") {
+      setOrbitRippleKey((current) => current + 1);
+    }
     if (nextTab === tab) return;
     setTab(nextTab);
     scrollScreenToTop(`[data-tab="${nextTab}"]`);
@@ -1606,6 +1609,9 @@ export function CheckInApp() {
 
   function closeCalendar() {
     setShowCalendar(false);
+    if (tab === "today") {
+      setOrbitRippleKey((current) => current + 1);
+    }
     scrollScreenToTop(`[data-tab="${tab}"]`);
   }
 
