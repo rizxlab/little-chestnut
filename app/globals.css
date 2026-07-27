@@ -259,7 +259,7 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow: hidden;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 }
 .app-scroll::-webkit-scrollbar { display: none; }
 
@@ -685,6 +685,8 @@ button { -webkit-tap-highlight-color: transparent; }
   margin: 0 -3px 12px;
   padding: 3px 3px 4px;
   scrollbar-width: none;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
 }
 .action-filter-list::-webkit-scrollbar { display: none; }

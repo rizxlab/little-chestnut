@@ -2106,6 +2106,10 @@ export function CheckInApp() {
                   className="action-filter-list"
                   role="group"
                   aria-label={tr("按成长领域筛选小事", "Filter actions by growth area")}
+                  onTouchStart={(event) => event.stopPropagation()}
+                  onTouchMove={(event) => event.stopPropagation()}
+                  onTouchEnd={(event) => event.stopPropagation()}
+                  onTouchCancel={(event) => event.stopPropagation()}
                 >
                   <button
                     className={activeActionAreaFilter === "all" ? "active" : ""}
