@@ -2050,7 +2050,13 @@ export function CheckInApp() {
         );
 
   return (
-    <main className="shell">
+    <main
+      className={`shell${
+        showActionEditor || showAreaEditor || showRewardEditor
+          ? " editor-modal-open"
+          : ""
+      }`}
+    >
       <button
         className="global-home-button"
         type="button"
