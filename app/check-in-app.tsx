@@ -2719,6 +2719,68 @@ export function CheckInApp() {
                 <h1>{tr("成长正在发生", "Growth in progress")}</h1>
               </section>
 
+              <section className="growth-level-section">
+                <div className="growth-level-heading">
+                  <h2>{tr("领域等级", "Area levels")}</h2>
+                  <small>{tr("1 成长值 = 1 经验", "1 growth point = 1 XP")}</small>
+                </div>
+                <div
+                  className="growth-level-list"
+                  onTouchStart={(event) => event.stopPropagation()}
+                  onTouchMove={(event) => event.stopPropagation()}
+                  onTouchEnd={(event) => event.stopPropagation()}
+                  onTouchCancel={(event) => event.stopPropagation()}
+                >
+                  {growthLevels.map((area) => (
+                    <article
+                      className={`growth-level-card${area.isMax ? " max-level" : ""}`}
+                      key={`level-${area.id}`}
+                    >
+                      <span
+                        className="growth-level-icon"
+                        style={{ background: `${area.color}18` }}
+                        aria-hidden="true"
+                      >
+                        {area.icon}
+                      </span>
+                      <div className="growth-level-copy">
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span style={{ color: area.color }}>Lv.{area.level}</span>
+                        </div>
+                        <span
+                          className="growth-level-track"
+                          role="progressbar"
+                          aria-label={`${area.name} ${tr("等级进度", "level progress")}`}
+                          aria-valuemin={0}
+                          aria-valuemax={
+                            area.isMax
+                              ? Math.max(area.experience, area.nextThreshold)
+                              : area.nextThreshold
+                          }
+                          aria-valuenow={area.experience}
+                        >
+                          <i
+                            style={{
+                              width: `${area.progress}%`,
+                              background: area.color,
+                            }}
+                          />
+                        </span>
+                        <small>
+                          {area.isMax
+                            ? tr(`${area.experience} 经验 · 满级`, `${area.experience} XP · Max`)
+                            : tr(
+                                `${area.experience} / ${area.nextThreshold}`,
+                                `${area.experience} / ${area.nextThreshold} XP`,
+                              )}
+                        </small>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
               <div className="stat-grid">
                 <article>
                   <span>{tr("全部记录", "All records")}</span>
@@ -2802,70 +2864,6 @@ export function CheckInApp() {
                   </div>
                 </div>
 
-              </section>
-
-              <section className="content-section growth-level-section">
-                <div className="growth-divider" aria-hidden="true" />
-                <div className="growth-level-heading">
-                  <div>
-                    <span className="overline">
-                      {tr("领域等级", "AREA LEVELS")}
-                    </span>
-                    <h2>{tr("成长领域等级", "Growth area levels")}</h2>
-                  </div>
-                  <small>{tr("1 成长值 = 1 经验", "1 growth point = 1 XP")}</small>
-                </div>
-                <div className="growth-level-list">
-                  {growthLevels.map((area) => (
-                    <article
-                      className={`growth-level-card${area.isMax ? " max-level" : ""}`}
-                      key={`level-${area.id}`}
-                    >
-                      <span
-                        className="growth-level-icon"
-                        style={{ background: `${area.color}18` }}
-                        aria-hidden="true"
-                      >
-                        {area.icon}
-                      </span>
-                      <div className="growth-level-copy">
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span style={{ color: area.color }}>
-                            Lv.{area.level}
-                          </span>
-                        </div>
-                        <span
-                          className="growth-level-track"
-                          role="progressbar"
-                          aria-label={`${area.name} ${tr("等级进度", "level progress")}`}
-                          aria-valuemin={0}
-                          aria-valuemax={
-                            area.isMax
-                              ? Math.max(area.experience, area.nextThreshold)
-                              : area.nextThreshold
-                          }
-                          aria-valuenow={area.experience}
-                        >
-                          <i
-                            style={{
-                              width: `${area.progress}%`,
-                              background: area.color,
-                            }}
-                          />
-                        </span>
-                        <small>
-                          {area.isMax
-                            ? tr(`累计 ${area.experience} 经验 · 已满级`, `${area.experience} XP · Max level`)
-                            : tr(
-                                `${area.experience} / ${area.nextThreshold} 经验 · 还差 ${area.remaining}`,
-                                `${area.experience} / ${area.nextThreshold} XP · ${area.remaining} to go`,
-                              )}
-                        </small>
-                      </div>
-                    </article>
-                  ))}
-                </div>
               </section>
 
               <section className="content-section timeline-section">
