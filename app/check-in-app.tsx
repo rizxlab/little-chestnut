@@ -115,6 +115,16 @@ const ACTION_TIME_OPTIONS: {
   { id: "evening", label: "晚上", icon: "🌙", range: "18:00–04:59" },
   { id: "anytime", label: "不限时间", icon: "∞", range: "全天" },
 ];
+const PROFILE_ACTION_TIME_GROUPS: {
+  id: ActionTimeWindow;
+  label: string;
+  icon: string;
+}[] = [
+  { id: "morning", label: "早上", icon: "☀️" },
+  { id: "noon", label: "中午", icon: "◐" },
+  { id: "evening", label: "晚上", icon: "🌙" },
+  { id: "anytime", label: "全天", icon: "∞" },
+];
 const GROWTH_LEVEL_THRESHOLDS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
 const MAX_GROWTH_LEVEL = GROWTH_LEVEL_THRESHOLDS.length;
 
@@ -2233,6 +2243,12 @@ export function CheckInApp() {
   );
   const timerSliderProgress =
     ((safeDraftTimerSeconds - 1) / Math.max(1, timerSliderMax - 1)) * 100;
+  const profileActionGroups = PROFILE_ACTION_TIME_GROUPS.map((group) => ({
+    ...group,
+    actions: actions.filter(
+      (action) => actionTimeWindowFor(action) === group.id,
+    ),
+  })).filter((group) => group.actions.length > 0);
 
   return (
     <main
@@ -3073,8 +3089,16 @@ export function CheckInApp() {
                   <button type="button" onClick={() => setShowActionManager(true)}>编辑</button>
                 </div>
 
-                <div className="tag-action-grid">
-                  {actions.map((action) => {
+                <div className="profile-action-time-groups">
+                  {profileActionGroups.map((group) => (
+                    <section className="profile-action-time-group" key={group.id}>
+                      <div className="profile-action-time-heading">
+                        <span aria-hidden="true">{group.icon}</span>
+                        <strong>{group.label}</strong>
+                        <small>{group.actions.length}</small>
+                      </div>
+                      <div className="tag-action-grid">
+                  {group.actions.map((action) => {
                     const actionTags = tagsFor(action);
                     const swipeState =
                       profileActionSwipe?.id === action.id ? profileActionSwipe : null;
@@ -3163,18 +3187,15 @@ export function CheckInApp() {
                               {action.repeatable === false && (
                                 <small>每日一次</small>
                               )}
-                              {actionTimeWindowFor(action) !== "anytime" && (
-                                <small>
-                                  {actionTimeOptionFor(action).icon}{" "}
-                                  {actionTimeOptionFor(action).label}
-                                </small>
-                              )}
                             </span>
                           </div>
                         </article>
                       </div>
                     );
                   })}
+                      </div>
+                    </section>
+                  ))}
                 </div>
               </section>
 
