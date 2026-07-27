@@ -3169,6 +3169,57 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .dialog-button:active { transform: scale(.97); }
 
+/* Keep secondary information comfortably readable on a phone. */
+.login-brand small,
+.login-note,
+.date-display small,
+.calendar-weekdays span,
+.calendar-record-list article > div > small,
+.calendar-record-list .action-tag-list i,
+.calendar-day-detail .section-title-row > small,
+.settings-option-copy small,
+.theme-choice-grid small {
+  font-size: 10px;
+}
+.overline { font-size: 11px; }
+.date-display b { font-size: 11px; }
+.action-filter-list button,
+.action-filter-empty,
+.stat-grid span,
+.stat-grid small,
+.growth-progress-heading small,
+.timeline small,
+.timeline span,
+.bottom-nav button {
+  font-size: 10px;
+}
+.bottom-nav button.primary-tab { font-size: 11px; }
+.growth-area > div strong,
+.tag-action-summary > strong {
+  font-size: 12px;
+}
+.tag-action-summary .action-tag-list small {
+  padding: 3px 6px;
+  font-size: 9px;
+}
+.shell-progress-copy { font-size: 10px; }
+.shell-progress-copy small,
+.shell-rewards-heading,
+.shell-rewards-heading button,
+.shell-reward-list small,
+.shell-reward-empty,
+.shell-bank .shell-reward-history summary,
+.shell-bank .shell-reward-history article small {
+  font-size: 9px;
+}
+.shell-reward-list strong,
+.reward-history article strong,
+.data-settings small,
+.profile-editor-account small,
+.field-hint {
+  font-size: 10px;
+}
+
 html[data-theme="dark"] {
   --ink: #f2f4f7;
   --muted: #9da5b0;
