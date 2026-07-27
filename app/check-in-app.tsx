@@ -2495,7 +2495,7 @@ export function CheckInApp() {
                           {action.icon}
                         </span>
                         <strong>{action.name}</strong>
-                        {action.timerSeconds && (
+                        {Boolean(action.timerSeconds && action.timerSeconds > 0) && (
                           <span className="action-timer-badge" aria-hidden="true">
                             ◷ {action.timerSeconds}s
                           </span>
