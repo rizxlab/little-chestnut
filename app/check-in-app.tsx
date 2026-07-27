@@ -3038,6 +3038,8 @@ export function CheckInApp() {
           <form
             className={modalMotionClass("action-editor", "bottom-sheet action-editor")}
             style={modalMotionStyle("action-editor")}
+            tabIndex={-1}
+            autoFocus
             onSubmit={saveAction}
             onClick={(event) => event.stopPropagation()}
           >
@@ -3266,6 +3268,8 @@ export function CheckInApp() {
           <form
             className={modalMotionClass("area-editor", "bottom-sheet area-editor")}
             style={modalMotionStyle("area-editor")}
+            tabIndex={-1}
+            autoFocus
             onSubmit={saveArea}
             onClick={(event) => event.stopPropagation()}
           >
@@ -3291,7 +3295,6 @@ export function CheckInApp() {
                 value={draftAreaName}
                 onChange={(event) => setDraftAreaName(event.target.value)}
                 placeholder="例如：关系"
-                autoFocus
               />
             </label>
             <IconPicker
@@ -3343,6 +3346,8 @@ export function CheckInApp() {
           <form
             className={modalMotionClass("reward-editor", "bottom-sheet reward-editor")}
             style={modalMotionStyle("reward-editor")}
+            tabIndex={-1}
+            autoFocus
             onSubmit={saveReward}
             onClick={(event) => event.stopPropagation()}
           >
@@ -3363,7 +3368,6 @@ export function CheckInApp() {
                 value={draftRewardName}
                 onChange={(event) => setDraftRewardName(event.target.value)}
                 placeholder="例如：看一场电影"
-                autoFocus
               />
             </label>
             <IconPicker

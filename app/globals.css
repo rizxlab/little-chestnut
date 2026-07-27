@@ -2575,6 +2575,11 @@ button { -webkit-tap-highlight-color: transparent; }
   padding-bottom: max(28px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
+.action-editor:focus,
+.area-editor:focus,
+.reward-editor:focus {
+  outline: none;
+}
 .area-editor {
   min-height: min(680px, calc(100dvh - 90px));
   max-height: calc(100dvh - 90px);
