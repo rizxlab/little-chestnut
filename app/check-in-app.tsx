@@ -16,6 +16,7 @@ type GrowthPeriod = "today" | "week" | "month" | "total";
 type Source = "主动记录" | "随机行动";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
+type ActionTimeWindow = "morning" | "noon" | "evening" | "anytime";
 
 type Area = {
   id: string;
@@ -34,6 +35,7 @@ type MicroAction = {
   value: number;
   shellValue?: number;
   repeatable: boolean;
+  timeWindow?: ActionTimeWindow;
   timerSeconds?: number;
 };
 
@@ -102,6 +104,40 @@ const REWARD_ICON_OPTIONS = [
   "🎁", "🍵", "☕", "🎧", "🍰", "🧁", "🌙", "🎬", "📚", "🎮",
   "🛁", "🌸", "🍜", "🛍️", "🎵", "🌿", "✈️", "🍽️", "🧸", "🎟️",
 ];
+const ACTION_TIME_OPTIONS: {
+  id: ActionTimeWindow;
+  label: string;
+  icon: string;
+  range: string;
+}[] = [
+  { id: "morning", label: "早上", icon: "☀️", range: "05:00–11:59" },
+  { id: "noon", label: "中午", icon: "◐", range: "12:00–17:59" },
+  { id: "evening", label: "晚上", icon: "🌙", range: "18:00–04:59" },
+  { id: "anytime", label: "不限时间", icon: "∞", range: "全天" },
+];
+
+function actionTimeWindowFor(action?: Pick<MicroAction, "timeWindow"> | null) {
+  return ACTION_TIME_OPTIONS.some((option) => option.id === action?.timeWindow)
+    ? (action?.timeWindow as ActionTimeWindow)
+    : "anytime";
+}
+
+function actionTimeOptionFor(action?: Pick<MicroAction, "timeWindow"> | null) {
+  const timeWindow = actionTimeWindowFor(action);
+  return (
+    ACTION_TIME_OPTIONS.find((option) => option.id === timeWindow)
+    || ACTION_TIME_OPTIONS[3]
+  );
+}
+
+function isActionAvailableNow(action: MicroAction, now = new Date()) {
+  const timeWindow = actionTimeWindowFor(action);
+  const hour = now.getHours();
+  if (timeWindow === "morning") return hour >= 5 && hour < 12;
+  if (timeWindow === "noon") return hour >= 12 && hour < 18;
+  if (timeWindow === "evening") return hour >= 18 || hour < 5;
+  return true;
+}
 
 function IconPicker({
   label,
@@ -386,6 +422,7 @@ export function CheckInApp() {
   const [closingModal, setClosingModal] = useState<string | null>(null);
   const [modalDrag, setModalDrag] = useState<{ id: string; offset: number } | null>(null);
   const [tab, setTab] = useState<Tab>("today");
+  const [clockNow, setClockNow] = useState(() => new Date());
   const [growthPeriod, setGrowthPeriod] = useState<GrowthPeriod>("today");
   const [actionAreaFilter, setActionAreaFilter] = useState("all");
   const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
@@ -427,6 +464,8 @@ export function CheckInApp() {
   const [draftValue, setDraftValue] = useState(1);
   const [draftShellValue, setDraftShellValue] = useState(1);
   const [draftRepeatable, setDraftRepeatable] = useState(true);
+  const [draftTimeWindow, setDraftTimeWindow] =
+    useState<ActionTimeWindow>("anytime");
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
   const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
@@ -551,6 +590,7 @@ export function CheckInApp() {
               ),
               shellValue: shellValueFor(action),
               repeatable: action.repeatable !== false,
+              timeWindow: actionTimeWindowFor(action),
               timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
             };
           })
@@ -752,6 +792,11 @@ export function CheckInApp() {
     document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language === "en" ? "en" : "zh-CN";
   }, [language, theme]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (!timerAction || timerPhase === "idle") return;
@@ -996,6 +1041,11 @@ export function CheckInApp() {
     count: number,
     source: Source = "主动记录",
   ) {
+    if (!isActionAvailableNow(action)) {
+      const option = actionTimeOptionFor(action);
+      showToast(`${option.label} ${option.range}`, "当前不可打卡");
+      return;
+    }
     if (
       action.repeatable === false
       && records.some(
@@ -1412,6 +1462,11 @@ export function CheckInApp() {
       suppressQuickClickRef.current = null;
       return;
     }
+    if (!isActionAvailableNow(action)) {
+      const option = actionTimeOptionFor(action);
+      showToast(`${option.label} ${option.range}`, "当前不可打卡");
+      return;
+    }
     if (
       action.repeatable === false
       && records.some(
@@ -1568,6 +1623,7 @@ export function CheckInApp() {
     setDraftValue(action?.value || 1);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action?.repeatable !== false);
+    setDraftTimeWindow(actionTimeWindowFor(action));
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
@@ -1581,6 +1637,7 @@ export function CheckInApp() {
     setDraftValue(action.value);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action.repeatable !== false);
+    setDraftTimeWindow(actionTimeWindowFor(action));
     setDraftUsesTimer(Boolean(action.timerSeconds));
     setDraftTimerSeconds(action.timerSeconds || 5);
     setShowActionIconPicker(false);
@@ -1594,6 +1651,7 @@ export function CheckInApp() {
     setDraftValue(1);
     setDraftShellValue(1);
     setDraftRepeatable(true);
+    setDraftTimeWindow("anytime");
     setDraftUsesTimer(false);
     setDraftTimerSeconds(5);
     setShowActionIconPicker(false);
@@ -1645,6 +1703,7 @@ export function CheckInApp() {
                 value: Math.max(1, draftValue),
                 shellValue: shellValueFor({ shellValue: draftShellValue }),
                 repeatable: draftRepeatable,
+                timeWindow: draftTimeWindow,
                 timerSeconds: draftUsesTimer
                   ? Math.min(3600, Math.max(1, draftTimerSeconds))
                   : 0,
@@ -1664,6 +1723,7 @@ export function CheckInApp() {
           value: Math.max(1, draftValue),
           shellValue: shellValueFor({ shellValue: draftShellValue }),
           repeatable: draftRepeatable,
+          timeWindow: draftTimeWindow,
           timerSeconds: draftUsesTimer
             ? Math.min(3600, Math.max(1, draftTimerSeconds))
             : 0,
@@ -2463,19 +2523,29 @@ export function CheckInApp() {
                   {visibleTodayActions.map((action) => {
                     const actionTags = tagsFor(action);
                     const primaryTag = actionTags[0] || areas[0];
+                    const timeOption = actionTimeOptionFor(action);
+                    const timeAvailable = isActionAvailableNow(action, clockNow);
                     const todayCount = todayRecords.filter(
                       (record) => record.actionId === action.id,
                     ).length;
                     const justChecked = lastCheckedAction?.id === action.id;
                     return (
                       <button
-                        className={`quick-action ${todayCount ? "completed" : ""}`}
+                        className={`quick-action ${todayCount ? "completed" : ""}${
+                          timeAvailable ? "" : " time-locked"
+                        }`}
                         type="button"
                         key={action.id}
                         aria-label={
-                          action.repeatable === false
-                            ? `${action.name}，今天已记录 ${todayCount} 次，每天限一次`
-                            : `记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`
+                          `${
+                            action.repeatable === false
+                              ? `${action.name}，今天已记录 ${todayCount} 次，每天限一次`
+                              : `记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`
+                          }${
+                            actionTimeWindowFor(action) === "anytime"
+                              ? ""
+                              : `，限${timeOption.label}${timeOption.range}`
+                          }`
                         }
                         onClick={() => handleQuickActionClick(action)}
                         onContextMenu={(event) => {
@@ -2495,11 +2565,18 @@ export function CheckInApp() {
                           {action.icon}
                         </span>
                         <strong>{action.name}</strong>
-                        {Boolean(action.timerSeconds && action.timerSeconds > 0) && (
-                          <span className="action-timer-badge" aria-hidden="true">
-                            ◷ {action.timerSeconds}s
-                          </span>
-                        )}
+                        <span className="action-badge-row" aria-hidden="true">
+                          {actionTimeWindowFor(action) !== "anytime" && (
+                            <span className="action-time-badge">
+                              {timeOption.icon} {timeOption.label}
+                            </span>
+                          )}
+                          {Boolean(action.timerSeconds && action.timerSeconds > 0) && (
+                            <span className="action-timer-badge">
+                              ◷ {action.timerSeconds}s
+                            </span>
+                          )}
+                        </span>
                         <span
                           className={`check-control ${todayCount ? "checked" : ""} ${
                             justChecked ? "just-checked" : ""
@@ -2924,6 +3001,12 @@ export function CheckInApp() {
                               {action.repeatable === false && (
                                 <small>每日一次</small>
                               )}
+                              {actionTimeWindowFor(action) !== "anytime" && (
+                                <small>
+                                  {actionTimeOptionFor(action).icon}{" "}
+                                  {actionTimeOptionFor(action).label}
+                                </small>
+                              )}
                             </span>
                           </div>
                         </article>
@@ -3171,6 +3254,9 @@ export function CheckInApp() {
                         {actionTags.map((tag) => tag.name).join(" · ")}
                         {action.timerSeconds ? ` · 计时 ${action.timerSeconds} 秒` : ""}
                         {action.repeatable === false ? " · 每日一次" : ""}
+                        {actionTimeWindowFor(action) !== "anytime"
+                          ? ` · ${actionTimeOptionFor(action).label}`
+                          : ""}
                         {` · 栗壳 +${shellValueFor(action)}`}
                       </small>
                     </div>
@@ -3328,6 +3414,24 @@ export function CheckInApp() {
                 <i aria-hidden="true"><b /></i>
               </button>
             </div>
+            <fieldset className="action-time-setting">
+              <legend>可打卡时段</legend>
+              <div>
+                {ACTION_TIME_OPTIONS.map((option) => (
+                  <button
+                    className={draftTimeWindow === option.id ? "selected" : ""}
+                    type="button"
+                    key={option.id}
+                    aria-pressed={draftTimeWindow === option.id}
+                    onClick={() => setDraftTimeWindow(option.id)}
+                  >
+                    <span aria-hidden="true">{option.icon}</span>
+                    <strong>{option.label}</strong>
+                    <small>{option.range}</small>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
             <div className="timer-editor-setting">
               <button
                 className={draftUsesTimer ? "enabled" : ""}

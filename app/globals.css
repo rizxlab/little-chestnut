@@ -859,17 +859,40 @@ button { -webkit-tap-highlight-color: transparent; }
   overflow-wrap: anywhere;
   white-space: normal;
 }
-.action-timer-badge {
+.action-badge-row {
   position: absolute;
   bottom: 15px;
   left: 15px;
+  display: flex;
+  max-width: calc(100% - 58px);
+  gap: 4px;
+}
+.action-timer-badge,
+.action-time-badge {
   border-radius: 99px;
   padding: 4px 7px;
   color: var(--chestnut);
   background: rgba(111, 59, 39, .08);
-  font-family: Georgia, serif;
   font-size: 8px;
   line-height: 1;
+  white-space: nowrap;
+}
+.action-timer-badge {
+  font-family: Georgia, serif;
+}
+.action-time-badge {
+  color: #6c655d;
+  background: rgba(108, 101, 93, .08);
+}
+.quick-action.time-locked {
+  border-color: rgba(150, 140, 130, .22);
+  background: rgba(247, 244, 239, .78);
+  box-shadow: none;
+}
+.quick-action.time-locked .action-icon,
+.quick-action.time-locked > strong,
+.quick-action.time-locked .check-control {
+  opacity: .58;
 }
 .check-control {
   position: absolute;
@@ -2764,6 +2787,52 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-editor-setting > button.enabled > i { background: var(--chestnut); }
 .timer-editor-setting > button.enabled > i b { transform: translateX(15px); }
 .timer-editor-setting > label { margin-top: 8px; }
+.action-time-setting {
+  border: 0;
+  margin: 15px 0 0;
+  padding: 0;
+}
+.action-time-setting legend {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.action-time-setting > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.action-time-setting button {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 9px 3px 8px;
+  color: var(--ink);
+  background: #fffdf9;
+  cursor: pointer;
+}
+.action-time-setting button > span {
+  font-size: 15px;
+  line-height: 1;
+}
+.action-time-setting button strong {
+  font-size: 9px;
+  white-space: nowrap;
+}
+.action-time-setting button small {
+  color: var(--muted);
+  font-size: 6px;
+  white-space: nowrap;
+}
+.action-time-setting button.selected {
+  border-color: rgba(111, 59, 39, .34);
+  color: var(--chestnut);
+  background: #fff7eb;
+  box-shadow: inset 0 0 0 1px rgba(111, 59, 39, .05);
+}
 .reward-editor {
   min-height: min(680px, calc(100dvh - 90px));
   max-height: calc(100dvh - 90px);
@@ -3595,6 +3664,10 @@ html[data-theme="dark"] .reward-grid article.available {
   border-color: rgba(215, 154, 121, .35);
   background: #2b2d32;
 }
+html[data-theme="dark"] .quick-action.time-locked {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(23, 26, 31, .72);
+}
 html[data-theme="dark"] .action-filter-list button {
   border-color: var(--line);
   color: var(--muted);
@@ -3669,7 +3742,8 @@ html[data-theme="dark"] .icon-picker button {
 html[data-theme="dark"] .action-preset-picker button,
 html[data-theme="dark"] .action-name-control .action-icon-trigger,
 html[data-theme="dark"] .action-icon-panel,
-html[data-theme="dark"] .action-shell-stepper {
+html[data-theme="dark"] .action-shell-stepper,
+html[data-theme="dark"] .action-time-setting button {
   border-color: var(--line);
   color: var(--ink);
   background: rgba(24, 27, 32, .78);
@@ -3680,6 +3754,11 @@ html[data-theme="dark"] .action-shell-stepper button {
   background: #292d34;
 }
 html[data-theme="dark"] .action-preset-picker button.selected {
+  border-color: rgba(225, 173, 140, .42);
+  color: #efbd9d;
+  background: #343037;
+}
+html[data-theme="dark"] .action-time-setting button.selected {
   border-color: rgba(225, 173, 140, .42);
   color: #efbd9d;
   background: #343037;
