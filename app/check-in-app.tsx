@@ -3730,6 +3730,16 @@ export function CheckInApp() {
             aria-modal="true"
             aria-labelledby="area-manager-title"
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe(
+                "area-manager",
+                () => setShowAreaManager(false),
+                event,
+              )
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("area-manager", () => setShowAreaManager(false))}
             <button
