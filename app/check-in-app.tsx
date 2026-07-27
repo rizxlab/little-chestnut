@@ -1438,7 +1438,7 @@ export function CheckInApp() {
 
   function closeActionEditor() {
     setShowActionEditor(false);
-    setShowActionManager(true);
+    setShowActionManager(false);
   }
 
   function toggleDraftTag(tagId: string) {
@@ -1494,7 +1494,7 @@ export function CheckInApp() {
   function deleteAction(action: MicroAction) {
     closeSecondaryModal("action-editor", () => {
       setShowActionEditor(false);
-      setShowActionManager(true);
+      setShowActionManager(false);
       setConfirmDialog({ kind: "delete-action", action });
     });
   }
