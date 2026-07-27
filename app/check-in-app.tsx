@@ -1307,7 +1307,7 @@ export function CheckInApp() {
 
   function openRecordActionMenu(action: MicroAction, rect: DOMRect) {
     const menuWidth = 132;
-    const menuHeight = 52;
+    const menuHeight = 96;
     const viewportPadding = 12;
     const left = Math.min(
       window.innerWidth - menuWidth - viewportPadding,
@@ -4216,6 +4216,18 @@ export function CheckInApp() {
             }}
             onClick={(event) => event.stopPropagation()}
           >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                const action = recordActionMenu;
+                setRecordActionMenu(null);
+                openActionEditor(action);
+              }}
+            >
+              <span aria-hidden="true">✎</span>
+              <strong>{tr("编辑", "Edit")}</strong>
+            </button>
             <button
               type="button"
               role="menuitem"

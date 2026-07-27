@@ -3186,12 +3186,12 @@ button { -webkit-tap-highlight-color: transparent; }
   background: rgba(111, 59, 39, .07);
   transform: scale(.98);
 }
+.record-action-popover button + button {
+  border-top: 1px solid rgba(111, 59, 39, .08);
+}
 .manage-action-popover {
   width: 144px;
   transform-origin: bottom right;
-}
-.manage-action-popover button + button {
-  border-top: 1px solid rgba(111, 59, 39, .08);
 }
 .manage-action-popover button.danger {
   color: #985a50;
