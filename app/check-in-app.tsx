@@ -115,6 +115,8 @@ const ACTION_TIME_OPTIONS: {
   { id: "evening", label: "晚上", icon: "🌙", range: "18:00–04:59" },
   { id: "anytime", label: "不限时间", icon: "∞", range: "全天" },
 ];
+const GROWTH_LEVEL_THRESHOLDS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
+const MAX_GROWTH_LEVEL = GROWTH_LEVEL_THRESHOLDS.length;
 
 function actionTimeWindowFor(action?: Pick<MicroAction, "timeWindow"> | null) {
   return ACTION_TIME_OPTIONS.some((option) => option.id === action?.timeWindow)
@@ -137,6 +139,34 @@ function isActionAvailableNow(action: MicroAction, now = new Date()) {
   if (timeWindow === "noon") return hour >= 12 && hour < 18;
   if (timeWindow === "evening") return hour >= 18 || hour < 5;
   return true;
+}
+
+function growthLevelFor(experience: number) {
+  const safeExperience = Math.max(0, Math.floor(experience));
+  let level = 1;
+  for (let index = 1; index < GROWTH_LEVEL_THRESHOLDS.length; index += 1) {
+    if (safeExperience < GROWTH_LEVEL_THRESHOLDS[index]) break;
+    level = index + 1;
+  }
+  const currentThreshold = GROWTH_LEVEL_THRESHOLDS[level - 1];
+  const nextThreshold =
+    level < MAX_GROWTH_LEVEL
+      ? GROWTH_LEVEL_THRESHOLDS[level]
+      : currentThreshold;
+  const progress =
+    level === MAX_GROWTH_LEVEL
+      ? 100
+      : ((safeExperience - currentThreshold)
+        / Math.max(1, nextThreshold - currentThreshold)) * 100;
+  return {
+    level,
+    experience: safeExperience,
+    currentThreshold,
+    nextThreshold,
+    progress: Math.min(100, Math.max(0, progress)),
+    remaining: Math.max(0, nextThreshold - safeExperience),
+    isMax: level === MAX_GROWTH_LEVEL,
+  };
 }
 
 function IconPicker({
@@ -2064,6 +2094,10 @@ export function CheckInApp() {
   const weekProgressTotals = totalsFor(weekRecords);
   const monthProgressTotals = totalsFor(monthRecords);
   const allTotals = totalsFor(records);
+  const growthLevels = allTotals.map((area) => ({
+    ...area,
+    ...growthLevelFor(area.total),
+  }));
   const maxTodayAreaTotal = Math.max(1, ...todayProgressTotals.map((area) => area.total));
   const maxWeekAreaTotal = Math.max(1, ...weekProgressTotals.map((area) => area.total));
   const maxMonthAreaTotal = Math.max(1, ...monthProgressTotals.map((area) => area.total));
@@ -2722,6 +2756,70 @@ export function CheckInApp() {
                   </div>
                 </div>
 
+              </section>
+
+              <section className="content-section growth-level-section">
+                <div className="growth-divider" aria-hidden="true" />
+                <div className="growth-level-heading">
+                  <div>
+                    <span className="overline">
+                      {tr("领域等级", "AREA LEVELS")}
+                    </span>
+                    <h2>{tr("成长领域等级", "Growth area levels")}</h2>
+                  </div>
+                  <small>{tr("1 成长值 = 1 经验", "1 growth point = 1 XP")}</small>
+                </div>
+                <div className="growth-level-list">
+                  {growthLevels.map((area) => (
+                    <article
+                      className={`growth-level-card${area.isMax ? " max-level" : ""}`}
+                      key={`level-${area.id}`}
+                    >
+                      <span
+                        className="growth-level-icon"
+                        style={{ background: `${area.color}18` }}
+                        aria-hidden="true"
+                      >
+                        {area.icon}
+                      </span>
+                      <div className="growth-level-copy">
+                        <div>
+                          <strong>{area.name}</strong>
+                          <span style={{ color: area.color }}>
+                            Lv.{area.level}
+                          </span>
+                        </div>
+                        <span
+                          className="growth-level-track"
+                          role="progressbar"
+                          aria-label={`${area.name} ${tr("等级进度", "level progress")}`}
+                          aria-valuemin={0}
+                          aria-valuemax={
+                            area.isMax
+                              ? Math.max(area.experience, area.nextThreshold)
+                              : area.nextThreshold
+                          }
+                          aria-valuenow={area.experience}
+                        >
+                          <i
+                            style={{
+                              width: `${area.progress}%`,
+                              background: area.color,
+                            }}
+                          />
+                        </span>
+                        <small>
+                          {area.isMax
+                            ? tr(`累计 ${area.experience} 经验 · 已满级`, `${area.experience} XP · Max level`)
+                            : tr(
+                                `${area.experience} / ${area.nextThreshold} 经验 · 还差 ${area.remaining}`,
+                                `${area.experience} / ${area.nextThreshold} XP · ${area.remaining} to go`,
+                              )}
+                        </small>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </section>
 
               <section className="content-section timeline-section">
