@@ -477,6 +477,14 @@ export function CheckInApp() {
     time: number;
   } | null>(null);
   const modalDragCloseRef = useRef<(() => void) | null>(null);
+  const editorSheetSwipeRef = useRef<{
+    id: string;
+    x: number;
+    y: number;
+    time: number;
+    axis: "horizontal" | "vertical" | null;
+    close: () => void;
+  } | null>(null);
   const modalAnimationTimerRef = useRef<number | null>(null);
 
   function applyAccountData(value: unknown, username: string) {
@@ -1027,6 +1035,7 @@ export function CheckInApp() {
       setModalDrag(null);
       modalDragStartRef.current = null;
       modalDragCloseRef.current = null;
+      editorSheetSwipeRef.current = null;
       modalAnimationTimerRef.current = null;
     }, 240);
   }
@@ -1075,6 +1084,81 @@ export function CheckInApp() {
   function cancelModalDrag() {
     modalDragStartRef.current = null;
     modalDragCloseRef.current = null;
+    setModalDrag(null);
+  }
+
+  function startEditorSheetSwipe(
+    id: string,
+    close: () => void,
+    event: ReactTouchEvent<HTMLFormElement>,
+  ) {
+    if (event.touches.length !== 1 || event.currentTarget.scrollTop > 1) return;
+    if ((event.target as HTMLElement).closest(".modal-drag-handle")) return;
+    const touch = event.touches[0];
+    editorSheetSwipeRef.current = {
+      id,
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+      axis: null,
+      close,
+    };
+  }
+
+  function moveEditorSheetSwipe(event: ReactTouchEvent<HTMLFormElement>) {
+    const start = editorSheetSwipeRef.current;
+    if (!start || event.touches.length !== 1) return;
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+
+    if (!start.axis && Math.max(Math.abs(deltaX), Math.abs(deltaY)) >= 7) {
+      start.axis = Math.abs(deltaY) > Math.abs(deltaX) ? "vertical" : "horizontal";
+    }
+    if (start.axis === "horizontal") {
+      editorSheetSwipeRef.current = null;
+      return;
+    }
+    if (start.axis !== "vertical") return;
+    if (deltaY <= 0) {
+      editorSheetSwipeRef.current = null;
+      setModalDrag(null);
+      return;
+    }
+
+    event.preventDefault();
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setModalDrag({ id: start.id, offset: deltaY });
+  }
+
+  function finishEditorSheetSwipe(event: ReactTouchEvent<HTMLFormElement>) {
+    const start = editorSheetSwipeRef.current;
+    if (!start) return;
+    editorSheetSwipeRef.current = null;
+    if (start.axis !== "vertical" || event.changedTouches.length !== 1) {
+      setModalDrag(null);
+      return;
+    }
+
+    const offset = Math.max(0, event.changedTouches[0].clientY - start.y);
+    const velocity = offset / Math.max(1, Date.now() - start.time);
+    if (offset >= 78 || velocity >= 0.55) {
+      closeSecondaryModal(start.id, start.close);
+      return;
+    }
+
+    setModalDrag({ id: start.id, offset: 0 });
+    window.setTimeout(() => {
+      setModalDrag((current) =>
+        current?.id === start.id && current.offset === 0 ? null : current,
+      );
+    }, 180);
+  }
+
+  function cancelEditorSheetSwipe() {
+    editorSheetSwipeRef.current = null;
     setModalDrag(null);
   }
 
@@ -3042,6 +3126,12 @@ export function CheckInApp() {
             autoFocus
             onSubmit={saveAction}
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe("action-editor", closeActionEditor, event)
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("action-editor", closeActionEditor)}
             <button
@@ -3272,6 +3362,12 @@ export function CheckInApp() {
             autoFocus
             onSubmit={saveArea}
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe("area-editor", closeAreaEditor, event)
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("area-editor", closeAreaEditor)}
             <button
@@ -3350,6 +3446,16 @@ export function CheckInApp() {
             autoFocus
             onSubmit={saveReward}
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe(
+                "reward-editor",
+                () => setShowRewardEditor(false),
+                event,
+              )
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("reward-editor", () => setShowRewardEditor(false))}
             <button
