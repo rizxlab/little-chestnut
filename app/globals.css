@@ -2847,6 +2847,7 @@ button { -webkit-tap-highlight-color: transparent; }
   max-height: calc(100dvh - 90px);
   overflow-y: auto;
   padding-bottom: max(26px, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
 }
 .reward-manager h2,
 .action-manager h2 { margin-bottom: 14px; }

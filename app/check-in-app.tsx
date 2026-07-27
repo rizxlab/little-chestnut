@@ -1175,7 +1175,7 @@ export function CheckInApp() {
   function startEditorSheetSwipe(
     id: string,
     close: () => void,
-    event: ReactTouchEvent<HTMLFormElement>,
+    event: ReactTouchEvent<HTMLElement>,
   ) {
     if (event.touches.length !== 1 || event.currentTarget.scrollTop > 1) return;
     if ((event.target as HTMLElement).closest(".modal-drag-handle")) return;
@@ -1190,7 +1190,7 @@ export function CheckInApp() {
     };
   }
 
-  function moveEditorSheetSwipe(event: ReactTouchEvent<HTMLFormElement>) {
+  function moveEditorSheetSwipe(event: ReactTouchEvent<HTMLElement>) {
     const start = editorSheetSwipeRef.current;
     if (!start || event.touches.length !== 1) return;
     const touch = event.touches[0];
@@ -1218,7 +1218,7 @@ export function CheckInApp() {
     setModalDrag({ id: start.id, offset: deltaY });
   }
 
-  function finishEditorSheetSwipe(event: ReactTouchEvent<HTMLFormElement>) {
+  function finishEditorSheetSwipe(event: ReactTouchEvent<HTMLElement>) {
     const start = editorSheetSwipeRef.current;
     if (!start) return;
     editorSheetSwipeRef.current = null;
@@ -3753,6 +3753,16 @@ export function CheckInApp() {
             aria-modal="true"
             aria-labelledby="reward-manager-title"
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe(
+                "reward-manager",
+                () => setShowRewardManager(false),
+                event,
+              )
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
           >
             {modalDragHandle("reward-manager", () => setShowRewardManager(false))}
             <button
