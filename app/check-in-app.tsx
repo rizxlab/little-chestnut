@@ -547,12 +547,19 @@ export function CheckInApp() {
     axis: "horizontal" | "vertical" | null;
   } | null>(null);
   const areaEditorReturnToManagerRef = useRef(false);
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const touchStartRef = useRef<{
+    x: number;
+    y: number;
+    time: number;
+    screen: HTMLElement | null;
+    scrollTop: number;
+  } | null>(null);
   const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
   const modalDragStartRef = useRef<{
     id: string;
     y: number;
     time: number;
+    instantClose: boolean;
   } | null>(null);
   const modalDragCloseRef = useRef<(() => void) | null>(null);
   const editorSheetSwipeRef = useRef<{
@@ -562,6 +569,7 @@ export function CheckInApp() {
     time: number;
     axis: "horizontal" | "vertical" | null;
     close: () => void;
+    instantClose: boolean;
   } | null>(null);
   const modalAnimationTimerRef = useRef<number | null>(null);
 
@@ -863,9 +871,12 @@ export function CheckInApp() {
       return;
     }
 
-    setTimerPhase("success");
-    setTimerSecondsLeft(0);
-    if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
+    const finishTimer = window.setTimeout(() => {
+      setTimerPhase("success");
+      setTimerSecondsLeft(0);
+      if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
+    }, 100);
+    return () => window.clearTimeout(finishTimer);
   }, [timerAction, timerMultiplier, timerPhase, timerSecondsLeft]);
 
   useEffect(() => {
@@ -1159,10 +1170,16 @@ export function CheckInApp() {
     id: string,
     close: () => void,
     event: ReactPointerEvent<HTMLButtonElement>,
+    instantClose = false,
   ) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    modalDragStartRef.current = { id, y: event.clientY, time: Date.now() };
+    modalDragStartRef.current = {
+      id,
+      y: event.clientY,
+      time: Date.now(),
+      instantClose,
+    };
     modalDragCloseRef.current = close;
     setModalDrag({ id, offset: 0 });
   }
@@ -1170,9 +1187,18 @@ export function CheckInApp() {
   function moveModalDrag(event: ReactPointerEvent<HTMLButtonElement>) {
     const start = modalDragStartRef.current;
     if (!start) return;
+    const offset = Math.max(0, event.clientY - start.y);
+    if (start.instantClose && offset >= 7) {
+      const close = modalDragCloseRef.current;
+      modalDragStartRef.current = null;
+      modalDragCloseRef.current = null;
+      setModalDrag(null);
+      if (close) closeSecondaryModal(start.id, close);
+      return;
+    }
     setModalDrag({
       id: start.id,
-      offset: Math.max(0, event.clientY - start.y),
+      offset,
     });
   }
 
@@ -1206,6 +1232,7 @@ export function CheckInApp() {
     id: string,
     close: () => void,
     event: ReactTouchEvent<HTMLElement>,
+    instantClose = false,
   ) {
     if (event.touches.length !== 1 || event.currentTarget.scrollTop > 1) return;
     if ((event.target as HTMLElement).closest(".modal-drag-handle")) return;
@@ -1217,6 +1244,7 @@ export function CheckInApp() {
       time: Date.now(),
       axis: null,
       close,
+      instantClose,
     };
   }
 
@@ -1244,6 +1272,12 @@ export function CheckInApp() {
     event.preventDefault();
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
+    }
+    if (start.instantClose) {
+      editorSheetSwipeRef.current = null;
+      setModalDrag(null);
+      closeSecondaryModal(start.id, start.close);
+      return;
     }
     setModalDrag({ id: start.id, offset: deltaY });
   }
@@ -1289,13 +1323,19 @@ export function CheckInApp() {
     } as CSSProperties;
   }
 
-  function modalDragHandle(id: string, close: () => void) {
+  function modalDragHandle(
+    id: string,
+    close: () => void,
+    instantClose = false,
+  ) {
     return (
       <button
         className="modal-drag-handle"
         type="button"
         aria-label={tr("向下拖动关闭", "Drag down to close")}
-        onPointerDown={(event) => startModalDrag(id, close, event)}
+        onPointerDown={(event) =>
+          startModalDrag(id, close, event, instantClose)
+        }
         onPointerMove={moveModalDrag}
         onPointerUp={finishModalDrag}
         onPointerCancel={cancelModalDrag}
@@ -1956,10 +1996,13 @@ export function CheckInApp() {
       touchStartRef.current = null;
       return;
     }
+    const screen = target.closest<HTMLElement>(".tab-screen");
     touchStartRef.current = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
       time: Date.now(),
+      screen,
+      scrollTop: screen?.scrollTop || 0,
     };
     gestureAxisRef.current = null;
   }
@@ -1981,7 +2024,10 @@ export function CheckInApp() {
     }
     if (gestureAxisRef.current !== "horizontal") return;
 
-    event.preventDefault();
+    if (event.cancelable) event.preventDefault();
+    if (start.screen && start.screen.scrollTop !== start.scrollTop) {
+      start.screen.scrollTop = start.scrollTop;
+    }
     const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
     const atFirstEdge = currentIndex === 0 && deltaX > 0;
     const atLastEdge = currentIndex === NAV_ITEMS.length - 1 && deltaX < 0;
@@ -2193,7 +2239,7 @@ export function CheckInApp() {
 
       <section className="app-frame">
         <div
-          className="app-scroll"
+          className={`app-scroll${isDraggingTabs ? " tab-swipe-active" : ""}`}
           ref={appScrollRef}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
@@ -3394,13 +3440,18 @@ export function CheckInApp() {
             onSubmit={saveAction}
             onClick={(event) => event.stopPropagation()}
             onTouchStart={(event) =>
-              startEditorSheetSwipe("action-editor", closeActionEditor, event)
+              startEditorSheetSwipe(
+                "action-editor",
+                closeActionEditor,
+                event,
+                true,
+              )
             }
             onTouchMove={moveEditorSheetSwipe}
             onTouchEnd={finishEditorSheetSwipe}
             onTouchCancel={cancelEditorSheetSwipe}
           >
-            {modalDragHandle("action-editor", closeActionEditor)}
+            {modalDragHandle("action-editor", closeActionEditor, true)}
             <button
               className="close-button"
               type="button"
@@ -4062,6 +4113,10 @@ export function CheckInApp() {
                             )
                           ) * 360
                   }deg`,
+                  "--timer-duration": `${Math.max(
+                    1,
+                    (timerAction.timerSeconds || 1) * timerMultiplier,
+                  )}s`,
                   "--timer-ring-color":
                     timerPhase === "success"
                       ? "#6f9466"

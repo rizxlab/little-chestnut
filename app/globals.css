@@ -326,6 +326,11 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tab-screen::-webkit-scrollbar { display: none; }
 .tab-screen[aria-hidden="true"] { pointer-events: none; }
+.app-scroll.tab-swipe-active .tab-screen {
+  overflow-y: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
 
 .screen {
   min-height: 100%;
@@ -3261,6 +3266,15 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .timer-clock.timer-ring-reset {
   transition: none;
+}
+.timer-clock.running {
+  animation:
+    timer-ring-countdown var(--timer-duration, 1s) linear forwards;
+  transition: transform 220ms ease;
+}
+@keyframes timer-ring-countdown {
+  from { --timer-progress: 360deg; }
+  to { --timer-progress: 0deg; }
 }
 .timer-clock > div {
   display: grid;
