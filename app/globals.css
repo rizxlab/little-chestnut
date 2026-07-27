@@ -2037,12 +2037,26 @@ button { -webkit-tap-highlight-color: transparent; }
 .profile-actions { margin-top: 0; }
 .profile-actions .settings-heading { margin-bottom: 10px; }
 .area-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.area-chip-list span {
+.area-chip-list button {
   border: 1px solid;
   border-radius: 999px;
   padding: 7px 10px;
+  color: var(--ink);
   background: #fffdf9;
   font-size: 10px;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  user-select: none;
+  transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+}
+.area-chip-list button:active {
+  transform: scale(.96);
+  background: var(--cream);
+  box-shadow: 0 4px 12px rgba(82, 51, 33, .08);
+}
+.area-chip-list button:focus-visible {
+  outline: 2px solid rgba(111, 59, 39, .32);
+  outline-offset: 2px;
 }
 .philosophy {
   overflow: hidden;

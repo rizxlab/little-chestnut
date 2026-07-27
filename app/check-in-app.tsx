@@ -465,6 +465,7 @@ export function CheckInApp() {
     baseOffset: number;
     axis: "horizontal" | "vertical" | null;
   } | null>(null);
+  const areaEditorReturnToManagerRef = useRef(false);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
   const modalDragStartRef = useRef<{
@@ -1255,6 +1256,20 @@ export function CheckInApp() {
     }, 520);
   }
 
+  function startAreaLongPress(
+    area: Area,
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    clearLongPressTimer();
+    longPressStartRef.current = { x: event.clientX, y: event.clientY };
+    longPressTimerRef.current = window.setTimeout(() => {
+      openAreaEditor(area);
+      if ("vibrate" in navigator) navigator.vibrate(12);
+      longPressTimerRef.current = null;
+    }, 520);
+  }
+
   function handleQuickActionClick(action: MicroAction) {
     if (suppressQuickClickRef.current === action.id) {
       suppressQuickClickRef.current = null;
@@ -1484,19 +1499,31 @@ export function CheckInApp() {
     });
   }
 
+  function prepareAreaEditor(area?: Area, returnToManager = false) {
+    areaEditorReturnToManagerRef.current = returnToManager;
+    setEditingArea(area || null);
+    setDraftAreaName(area?.name || "");
+    setDraftAreaIcon(area?.icon || "🌿");
+    setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
+    setShowAreaEditor(true);
+  }
+
   function openAreaEditor(area?: Area) {
-    closeSecondaryModal("area-manager", () => {
-      setShowAreaManager(false);
-      setEditingArea(area || null);
-      setDraftAreaName(area?.name || "");
-      setDraftAreaIcon(area?.icon || "🌿");
-      setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
-      setShowAreaEditor(true);
-    });
+    if (showAreaManager) {
+      closeSecondaryModal("area-manager", () => {
+        setShowAreaManager(false);
+        prepareAreaEditor(area, true);
+      });
+      return;
+    }
+    prepareAreaEditor(area);
   }
 
   function closeAreaEditor() {
-    closeSecondaryModal("area-editor", closeAreaEditor);
+    setShowAreaEditor(false);
+    if (areaEditorReturnToManagerRef.current) {
+      setShowAreaManager(true);
+    }
   }
 
   function saveArea(event: FormEvent) {
@@ -1528,7 +1555,7 @@ export function CheckInApp() {
       showToast("成长领域已创建");
     }
     setShowAreaEditor(false);
-    setShowAreaManager(true);
+    setShowAreaManager(areaEditorReturnToManagerRef.current);
   }
 
   function deleteArea(area: Area) {
@@ -1546,7 +1573,7 @@ export function CheckInApp() {
     }
     closeSecondaryModal("area-editor", () => {
       setShowAreaEditor(false);
-      setShowAreaManager(true);
+      setShowAreaManager(areaEditorReturnToManagerRef.current);
       setConfirmDialog({ kind: "delete-area", area });
     });
   }
@@ -1745,7 +1772,7 @@ export function CheckInApp() {
         })),
       );
       showToast("成长领域已删除");
-      setShowAreaManager(true);
+      setShowAreaManager(areaEditorReturnToManagerRef.current);
     } else if (confirmDialog.kind === "delete-reward") {
       setRewards((current) =>
         current.filter((item) => item.id !== confirmDialog.reward.id),
@@ -1881,6 +1908,7 @@ export function CheckInApp() {
           onTouchEnd={handleTouchEnd}
           onTouchCancel={cancelTouchGesture}
           onScrollCapture={() => {
+            clearLongPressTimer();
             if (recordActionMenu) setRecordActionMenu(null);
             if (manageActionMenu) setManageActionMenu(null);
             if (profileActionSwipe) setProfileActionSwipe(null);
@@ -2713,9 +2741,27 @@ export function CheckInApp() {
                 </div>
                 <div className="area-chip-list">
                   {areas.map((area) => (
-                    <span key={area.id} style={{ borderColor: `${area.color}55` }}>
+                    <button
+                      type="button"
+                      key={area.id}
+                      style={{ borderColor: `${area.color}55` }}
+                      aria-label={`长按编辑成长领域${area.name}`}
+                      onPointerDown={(event) => startAreaLongPress(area, event)}
+                      onPointerMove={moveActionLongPress}
+                      onPointerUp={finishActionLongPress}
+                      onPointerCancel={finishActionLongPress}
+                      onContextMenu={(event) => {
+                        event.preventDefault();
+                        openAreaEditor(area);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        openAreaEditor(area);
+                      }}
+                    >
                       {area.icon} {area.name}
-                    </span>
+                    </button>
                   ))}
                 </div>
               </section>
