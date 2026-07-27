@@ -1330,14 +1330,56 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 15px;
   background: #fffdf9;
 }
+.profile-action-swipe-row {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  touch-action: pan-y;
+}
+.profile-action-swipe-actions {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 0 auto;
+  display: grid;
+  width: 132px;
+  grid-template-columns: repeat(2, 1fr);
+  overflow: hidden;
+  border-radius: 0 15px 15px 0;
+}
+.profile-action-swipe-actions button {
+  display: grid;
+  min-width: 0;
+  place-content: center;
+  gap: 3px;
+  border: 0;
+  color: #fff;
+  font-size: 10px;
+  cursor: pointer;
+}
+.profile-action-swipe-actions button span {
+  font-size: 16px;
+  line-height: 1;
+}
+.profile-action-swipe-actions .edit {
+  background: #9c785f;
+}
+.profile-action-swipe-actions .delete {
+  background: #b65f56;
+}
 .profile-action-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
   -webkit-touch-callout: none;
   user-select: none;
   cursor: pointer;
-  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  will-change: transform;
+  transition: transform 220ms cubic-bezier(.22, .78, .24, 1), border-color 150ms ease, box-shadow 150ms ease;
+}
+.profile-action-card.is-swiping {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .profile-action-card:active {
-  transform: scale(.98);
   border-color: rgba(111, 59, 39, .22);
   box-shadow: 0 5px 14px rgba(82, 51, 33, .07);
 }

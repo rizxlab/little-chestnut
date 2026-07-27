@@ -87,6 +87,7 @@ type ConfirmDialog =
 const STORAGE_KEY = "lizi-growth-v2";
 const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
 const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
+const PROFILE_ACTION_SWIPE_WIDTH = 132;
 const ACTION_ICON_OPTIONS = [
   "🌱", "💧", "🧘", "💪", "🏃", "🚶", "📖", "✏️", "📝", "🎨",
   "🎧", "🧹", "☀️", "🌙", "🍎", "🥗", "☕", "🫁", "🧠", "🛏️",
@@ -395,6 +396,11 @@ export function CheckInApp() {
     left: 12,
     top: 12,
   });
+  const [profileActionSwipe, setProfileActionSwipe] = useState<{
+    id: string;
+    offset: number;
+    dragging: boolean;
+  } | null>(null);
   const [lastCheckedAction, setLastCheckedAction] = useState<{
     id: string;
     token: number;
@@ -451,6 +457,14 @@ export function CheckInApp() {
   const longPressTimerRef = useRef<number | null>(null);
   const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
   const suppressQuickClickRef = useRef<string | null>(null);
+  const profileActionSwipeStartRef = useRef<{
+    id: string;
+    x: number;
+    y: number;
+    time: number;
+    baseOffset: number;
+    axis: "horizontal" | "vertical" | null;
+  } | null>(null);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
   const modalDragStartRef = useRef<{
@@ -1100,6 +1114,7 @@ export function CheckInApp() {
 
     setManageActionMenuPosition({ left, top });
     setRecordActionMenu(null);
+    setProfileActionSwipe(null);
     setManageActionMenu(action);
   }
 
@@ -1136,6 +1151,93 @@ export function CheckInApp() {
   function finishActionLongPress() {
     clearLongPressTimer();
     longPressStartRef.current = null;
+  }
+
+  function startProfileActionSwipe(
+    action: MicroAction,
+    event: ReactTouchEvent<HTMLDivElement>,
+  ) {
+    if (event.touches.length !== 1) return;
+    if ((event.target as HTMLElement).closest(".profile-action-swipe-actions")) return;
+    event.stopPropagation();
+    const touch = event.touches[0];
+    const baseOffset =
+      profileActionSwipe?.id === action.id ? profileActionSwipe.offset : 0;
+    profileActionSwipeStartRef.current = {
+      id: action.id,
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+      baseOffset,
+      axis: null,
+    };
+    setProfileActionSwipe({
+      id: action.id,
+      offset: baseOffset,
+      dragging: true,
+    });
+  }
+
+  function moveProfileActionSwipe(event: ReactTouchEvent<HTMLDivElement>) {
+    const start = profileActionSwipeStartRef.current;
+    if (!start || event.touches.length !== 1) return;
+    event.stopPropagation();
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+
+    if (!start.axis && Math.max(Math.abs(deltaX), Math.abs(deltaY)) >= 6) {
+      start.axis = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+    }
+    if (start.axis === "vertical") {
+      clearLongPressTimer();
+      profileActionSwipeStartRef.current = null;
+      setProfileActionSwipe(null);
+      return;
+    }
+    if (start.axis !== "horizontal") return;
+
+    event.preventDefault();
+    clearLongPressTimer();
+    const offset = Math.max(
+      -PROFILE_ACTION_SWIPE_WIDTH,
+      Math.min(8, start.baseOffset + deltaX),
+    );
+    setProfileActionSwipe({ id: start.id, offset, dragging: true });
+  }
+
+  function finishProfileActionSwipe(event: ReactTouchEvent<HTMLDivElement>) {
+    const start = profileActionSwipeStartRef.current;
+    if (!start) return;
+    event.stopPropagation();
+    profileActionSwipeStartRef.current = null;
+
+    if (start.axis !== "horizontal" || event.changedTouches.length !== 1) {
+      setProfileActionSwipe(null);
+      return;
+    }
+
+    const deltaX = event.changedTouches[0].clientX - start.x;
+    const velocity = deltaX / Math.max(1, Date.now() - start.time);
+    const finalOffset = Math.max(
+      -PROFILE_ACTION_SWIPE_WIDTH,
+      Math.min(8, start.baseOffset + deltaX),
+    );
+    const shouldOpen =
+      velocity < -0.25
+      || (velocity <= 0.25 && finalOffset < -PROFILE_ACTION_SWIPE_WIDTH / 2);
+
+    setProfileActionSwipe(
+      shouldOpen
+        ? { id: start.id, offset: -PROFILE_ACTION_SWIPE_WIDTH, dragging: false }
+        : null,
+    );
+  }
+
+  function cancelProfileActionSwipe(event: ReactTouchEvent<HTMLDivElement>) {
+    event.stopPropagation();
+    profileActionSwipeStartRef.current = null;
+    setProfileActionSwipe(null);
   }
 
   function startManageActionLongPress(
@@ -1460,6 +1562,7 @@ export function CheckInApp() {
     setDragOffset(0);
     setIsDraggingTabs(false);
     setManageActionMenu(null);
+    setProfileActionSwipe(null);
     if (nextTab === "growth") setGrowthPeriod("today");
     if (nextTab === tab) return;
     setTab(nextTab);
@@ -1780,6 +1883,7 @@ export function CheckInApp() {
           onScrollCapture={() => {
             if (recordActionMenu) setRecordActionMenu(null);
             if (manageActionMenu) setManageActionMenu(null);
+            if (profileActionSwipe) setProfileActionSwipe(null);
           }}
         >
           {showCalendar && (
@@ -2506,47 +2610,94 @@ export function CheckInApp() {
                 <div className="tag-action-grid">
                   {actions.map((action) => {
                     const actionTags = tagsFor(action);
+                    const swipeState =
+                      profileActionSwipe?.id === action.id ? profileActionSwipe : null;
+                    const swipeOpen =
+                      swipeState?.offset === -PROFILE_ACTION_SWIPE_WIDTH;
                     return (
-                      <article
-                        className="tag-action-card profile-action-card"
+                      <div
+                        className="profile-action-swipe-row"
                         key={action.id}
-                        role="button"
-                        tabIndex={0}
-                        aria-haspopup="menu"
-                        aria-label={`长按管理${action.name}`}
-                        onPointerDown={(event) => startManageActionLongPress(action, event)}
-                        onPointerMove={moveActionLongPress}
-                        onPointerUp={finishActionLongPress}
-                        onPointerCancel={finishActionLongPress}
-                        onContextMenu={(event) => {
-                          event.preventDefault();
-                          openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
-                        }}
-                        onKeyDown={(event) => {
-                          if (event.key !== "Enter" && event.key !== " ") return;
-                          event.preventDefault();
-                          openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
-                        }}
+                        onTouchStart={(event) => startProfileActionSwipe(action, event)}
+                        onTouchMove={moveProfileActionSwipe}
+                        onTouchEnd={finishProfileActionSwipe}
+                        onTouchCancel={cancelProfileActionSwipe}
                       >
-                        <div className="tag-action-summary">
-                          <span className="tag-action-icon">{action.icon}</span>
-                          <strong>{action.name}</strong>
-                          <span className="action-tag-list">
-                            {actionTags.map((tag) => (
-                              <small
-                                key={tag.id}
-                                style={{ color: tag.color, borderColor: `${tag.color}35` }}
-                              >
-                                {tag.name} +{action.value}
-                              </small>
-                            ))}
-                            <small className="action-shell-gain">
-                              <span aria-hidden="true">🌰</span>
-                              栗壳 +1
-                            </small>
-                          </span>
+                        <div
+                          className="profile-action-swipe-actions"
+                          aria-hidden={!swipeOpen}
+                        >
+                          <button
+                            className="edit"
+                            type="button"
+                            tabIndex={swipeOpen ? 0 : -1}
+                            onClick={() => {
+                              setProfileActionSwipe(null);
+                              openActionEditor(action);
+                            }}
+                          >
+                            <span aria-hidden="true">✎</span>
+                            编辑
+                          </button>
+                          <button
+                            className="delete"
+                            type="button"
+                            tabIndex={swipeOpen ? 0 : -1}
+                            onClick={() => {
+                              setProfileActionSwipe(null);
+                              requestActionDelete(action);
+                            }}
+                          >
+                            <span aria-hidden="true">×</span>
+                            删除
+                          </button>
                         </div>
-                      </article>
+                        <article
+                          className={`tag-action-card profile-action-card${
+                            swipeState?.dragging ? " is-swiping" : ""
+                          }`}
+                          style={{
+                            transform: `translate3d(${swipeState?.offset || 0}px, 0, 0)`,
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          aria-haspopup="menu"
+                          aria-expanded={swipeOpen}
+                          aria-label={`向左滑动、长按或按回车管理${action.name}`}
+                          onPointerDown={(event) => startManageActionLongPress(action, event)}
+                          onPointerMove={moveActionLongPress}
+                          onPointerUp={finishActionLongPress}
+                          onPointerCancel={finishActionLongPress}
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
+                          }}
+                        >
+                          <div className="tag-action-summary">
+                            <span className="tag-action-icon">{action.icon}</span>
+                            <strong>{action.name}</strong>
+                            <span className="action-tag-list">
+                              {actionTags.map((tag) => (
+                                <small
+                                  key={tag.id}
+                                  style={{ color: tag.color, borderColor: `${tag.color}35` }}
+                                >
+                                  {tag.name} +{action.value}
+                                </small>
+                              ))}
+                              <small className="action-shell-gain">
+                                <span aria-hidden="true">🌰</span>
+                                栗壳 +1
+                              </small>
+                            </span>
+                          </div>
+                        </article>
+                      </div>
                     );
                   })}
                 </div>
