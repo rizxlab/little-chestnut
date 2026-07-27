@@ -3547,11 +3547,13 @@ export function CheckInApp() {
                   <span className="timer-success-check" aria-hidden="true">✓</span>
                 ) : (
                   <>
-                    <span aria-hidden="true">
+                    <span className="timer-phase-icon" aria-hidden="true">
                       {timerPhase === "preparing" ? tr("预备", "READY") : timerAction.icon}
                     </span>
-                    <strong>{timerSecondsLeft}</strong>
-                    <small>{tr("秒", "sec")}</small>
+                    <span className="timer-countdown-value">
+                      <strong>{timerSecondsLeft}</strong>
+                      <small>{tr("秒", "sec")}</small>
+                    </span>
                   </>
                 )}
               </div>
@@ -3591,8 +3593,10 @@ export function CheckInApp() {
                     −
                   </button>
                   <strong>
-                    <b>{(timerAction.timerSeconds || 1) * timerMultiplier}</b>
-                    <small>{tr("秒", " sec")}</small>
+                    <span className="timer-duration-value">
+                      <b>{(timerAction.timerSeconds || 1) * timerMultiplier}</b>
+                      <small>{tr("秒", "sec")}</small>
+                    </span>
                     <em>× {timerMultiplier} {tr("次", "check-ins")}</em>
                   </strong>
                   <button

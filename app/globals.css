@@ -2887,7 +2887,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: grid;
   width: 136px;
   height: 136px;
-  grid-template-rows: 32px 1fr 22px;
+  grid-template-rows: 32px 1fr;
   place-items: center;
   border: 1px solid rgba(111, 59, 39, .08);
   border-radius: 50%;
@@ -2897,8 +2897,8 @@ button { -webkit-tap-highlight-color: transparent; }
     var(--paper);
   box-shadow: inset 0 0 0 5px rgba(255, 255, 255, .34);
 }
-.timer-clock span { font-size: 24px; line-height: 1; }
-.timer-clock.preparing span {
+.timer-phase-icon { font-size: 24px; line-height: 1; }
+.timer-clock.preparing .timer-phase-icon {
   color: #68738a;
   font-size: 9px;
   font-weight: 700;
@@ -2916,7 +2916,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-clock.preparing > div {
   width: 124px;
   height: 124px;
-  grid-template-rows: 25px 1fr 18px;
+  grid-template-rows: 25px 1fr;
   border-color: rgba(117, 129, 153, .16);
   padding: 15px 0 12px;
   background:
@@ -2941,6 +2941,20 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1;
 }
 .timer-clock small { color: var(--muted); font-size: 9px; }
+.timer-countdown-value {
+  display: inline-flex;
+  min-width: 100%;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.timer-countdown-value strong,
+.timer-countdown-value small {
+  position: static;
+  flex: 0 0 auto;
+}
 .timer-clock.success {
   position: relative;
   transition: none;
@@ -3031,19 +3045,28 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-duration-picker button:active:not(:disabled) { transform: scale(.94); }
 .timer-duration-picker button:disabled { opacity: .3; cursor: default; }
 .timer-duration-picker strong {
-  display: grid;
-  grid-template-columns: max-content max-content;
-  column-gap: 5px;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: baseline;
   color: var(--chestnut);
   font-family: Georgia, serif;
   font-size: 27px;
   font-weight: 400;
   line-height: 1;
 }
-.timer-duration-picker strong b {
+.timer-duration-value {
+  display: inline-flex;
+  width: 100%;
   min-width: 0;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.timer-duration-picker strong b {
+  min-width: max-content;
   font: inherit;
   font-weight: inherit;
   white-space: nowrap;
@@ -3054,7 +3077,7 @@ button { -webkit-tap-highlight-color: transparent; }
   white-space: nowrap;
 }
 .timer-duration-picker strong em {
-  grid-column: 1 / -1;
+  align-self: center;
   margin-top: 5px;
   color: var(--chestnut);
   font-family: inherit;
@@ -3488,7 +3511,7 @@ html[data-theme="dark"] .timer-clock.preparing > div {
     #171b23;
 }
 html[data-theme="dark"] .timer-clock.preparing strong { color: #c5cee0; }
-html[data-theme="dark"] .timer-clock.preparing span,
+html[data-theme="dark"] .timer-clock.preparing .timer-phase-icon,
 html[data-theme="dark"] .timer-clock.preparing small,
 html[data-theme="dark"] .timer-sheet.timer-phase-preparing > .overline {
   color: #aab5ca;
