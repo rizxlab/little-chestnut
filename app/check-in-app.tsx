@@ -2540,6 +2540,10 @@ export function CheckInApp() {
                                 {tag.name} +{action.value}
                               </small>
                             ))}
+                            <small className="action-shell-gain">
+                              <span aria-hidden="true">🌰</span>
+                              栗壳 +1
+                            </small>
                           </span>
                         </div>
                       </article>

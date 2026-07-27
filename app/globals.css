@@ -1382,6 +1382,15 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 2px 5px;
   font-size: 7px;
 }
+.tag-action-summary .action-tag-list small.action-shell-gain {
+  border-color: rgba(161, 105, 51, .28);
+  color: #87552f;
+  background: rgba(185, 132, 71, .09);
+  font-weight: 700;
+}
+.action-shell-gain span {
+  margin-right: 2px;
+}
 .row-actions {
   display: flex;
   justify-content: flex-end;
@@ -3492,6 +3501,11 @@ html[data-theme="dark"] .toast {
 }
 html[data-theme="dark"] .toast-copy strong,
 html[data-theme="dark"] .toast-copy small { color: #edf0f4; }
+html[data-theme="dark"] .tag-action-summary .action-tag-list small.action-shell-gain {
+  border-color: rgba(229, 170, 111, .3);
+  color: #efbd8d;
+  background: rgba(203, 132, 68, .13);
+}
 html[data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, .58); }
 html[data-theme="dark"] .modal-drag-handle span {
   background: rgba(210, 216, 224, .3);
