@@ -2587,6 +2587,65 @@ button { -webkit-tap-highlight-color: transparent; }
 .action-icon-panel .icon-picker legend {
   margin-bottom: 8px;
 }
+.action-shell-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 13px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 10px;
+  background: #fffdf9;
+}
+.action-shell-stepper > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.action-shell-stepper > div:first-child > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 12px;
+  background: #f4e8da;
+  font-size: 17px;
+}
+.action-shell-stepper > div:first-child > strong {
+  font-size: 11px;
+}
+.action-shell-stepper > div:last-child {
+  display: grid;
+  grid-template-columns: 38px 44px 38px;
+  align-items: center;
+  gap: 5px;
+}
+.action-shell-stepper button {
+  height: 36px;
+  border: 1px solid rgba(111, 59, 39, .14);
+  border-radius: 11px;
+  color: var(--chestnut);
+  background: #fff;
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.action-shell-stepper button:active:not(:disabled) {
+  transform: scale(.94);
+}
+.action-shell-stepper button:disabled {
+  opacity: .3;
+  cursor: default;
+}
+.action-shell-stepper output {
+  color: var(--chestnut);
+  text-align: center;
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-weight: 600;
+}
 .action-editor {
   min-height: min(680px, calc(100dvh - 90px));
   max-height: calc(100dvh - 90px);
@@ -3593,10 +3652,16 @@ html[data-theme="dark"] .icon-picker button {
 }
 html[data-theme="dark"] .action-preset-picker button,
 html[data-theme="dark"] .action-name-control .action-icon-trigger,
-html[data-theme="dark"] .action-icon-panel {
+html[data-theme="dark"] .action-icon-panel,
+html[data-theme="dark"] .action-shell-stepper {
   border-color: var(--line);
   color: var(--ink);
   background: rgba(24, 27, 32, .78);
+}
+html[data-theme="dark"] .action-shell-stepper > div:first-child > span,
+html[data-theme="dark"] .action-shell-stepper button {
+  border-color: var(--line);
+  background: #292d34;
 }
 html[data-theme="dark"] .action-preset-picker button.selected {
   border-color: rgba(225, 173, 140, .42);

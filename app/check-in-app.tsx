@@ -32,6 +32,7 @@ type MicroAction = {
   tagIds: string[];
   areaId?: string;
   value: number;
+  shellValue?: number;
   repeatable: boolean;
   timerSeconds?: number;
 };
@@ -44,6 +45,7 @@ type GrowthRecord = {
   tagIds: string[];
   areaId?: string;
   value: number;
+  shellValue?: number;
   source: Source;
   createdAt: string;
 };
@@ -221,6 +223,11 @@ function localDay(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate(),
   ).padStart(2, "0")}`;
+}
+
+function shellValueFor(item: { shellValue?: number } | null | undefined) {
+  const value = Number(item?.shellValue ?? 1);
+  return Math.min(99, Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1));
 }
 
 function isToday(date: Date) {
@@ -418,6 +425,7 @@ export function CheckInApp() {
   const [showActionIconPicker, setShowActionIconPicker] = useState(false);
   const [draftTags, setDraftTags] = useState<string[]>(["body"]);
   const [draftValue, setDraftValue] = useState(1);
+  const [draftShellValue, setDraftShellValue] = useState(1);
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
   const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
@@ -540,6 +548,7 @@ export function CheckInApp() {
                       tagIds: defaultAction?.tagIds || normalizedTagIds(action),
                     },
               ),
+              shellValue: shellValueFor(action),
               timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
             };
           })
@@ -550,6 +559,7 @@ export function CheckInApp() {
       ? (stored.records as GrowthRecord[]).map((record) => ({
           ...record,
           tagIds: migratedTagIds(record),
+          shellValue: shellValueFor(record),
         }))
       : [];
     const existingRecordIds = new Set(storedRecords.map((record) => record.id));
@@ -568,12 +578,18 @@ export function CheckInApp() {
     setShellBalance(
       typeof stored?.shellBalance === "number"
         ? Math.max(0, stored.shellBalance)
-        : mergedRecords.length,
+        : mergedRecords.reduce(
+            (total, record) => total + shellValueFor(record),
+            0,
+          ),
     );
     setShellsEarned(
       typeof stored?.shellsEarned === "number"
         ? Math.max(0, stored.shellsEarned)
-        : mergedRecords.length,
+        : mergedRecords.reduce(
+            (total, record) => total + shellValueFor(record),
+            0,
+          ),
     );
     setRewards(
       Array.isArray(stored?.rewards)
@@ -980,6 +996,8 @@ export function CheckInApp() {
   ) {
     const actionTags = tagsFor(action);
     const safeCount = Math.max(1, Math.floor(count));
+    const shellValue = shellValueFor(action);
+    const shellGain = shellValue * safeCount;
     const timestamp = Date.now();
     const newRecords = Array.from({ length: safeCount }, (_, index): GrowthRecord => ({
       id: `${timestamp}-${index}-${Math.random().toString(16).slice(2)}`,
@@ -988,18 +1006,19 @@ export function CheckInApp() {
       icon: action.icon,
       tagIds: actionTags.map((tag) => tag.id),
       value: action.value,
+      shellValue,
       source,
       createdAt: new Date(timestamp + index).toISOString(),
     })).reverse();
     setRecords((current) => [...newRecords, ...current]);
     setLastCheckedAction({ id: action.id, token: Date.now() });
-    setShellBalance((current) => current + safeCount);
-    setShellsEarned((current) => current + safeCount);
+    setShellBalance((current) => current + shellGain);
+    setShellsEarned((current) => current + shellGain);
     const growthChanges = actionTags.map(
       (tag) => `${tag.name} +${action.value * safeCount}`,
     );
     showToast(
-      [...growthChanges, `栗壳 +${safeCount}`].join(" · "),
+      [...growthChanges, `栗壳 +${shellGain}`].join(" · "),
       "成长已记录",
       newRecords[0].id,
     );
@@ -1010,9 +1029,12 @@ export function CheckInApp() {
   }
 
   function undoRecord(recordId: string, showFeedback = true) {
+    const shellValue = shellValueFor(
+      records.find((record) => record.id === recordId),
+    );
     setRecords((current) => current.filter((record) => record.id !== recordId));
-    setShellBalance((current) => Math.max(0, current - 1));
-    setShellsEarned((current) => Math.max(0, current - 1));
+    setShellBalance((current) => Math.max(0, current - shellValue));
+    setShellsEarned((current) => Math.max(0, current - shellValue));
     if (showFeedback) showToast("刚刚的成长记录已移除", "已撤销");
   }
 
@@ -1520,6 +1542,7 @@ export function CheckInApp() {
     setShowActionIconPicker(false);
     setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
     setDraftValue(action?.value || 1);
+    setDraftShellValue(shellValueFor(action));
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
@@ -1531,6 +1554,7 @@ export function CheckInApp() {
     setDraftIcon(action.icon);
     setDraftTags(normalizedTagIds(action));
     setDraftValue(action.value);
+    setDraftShellValue(shellValueFor(action));
     setDraftUsesTimer(Boolean(action.timerSeconds));
     setDraftTimerSeconds(action.timerSeconds || 5);
     setShowActionIconPicker(false);
@@ -1542,6 +1566,7 @@ export function CheckInApp() {
     setDraftIcon("🌱");
     setDraftTags([areas[0]?.id || "body"]);
     setDraftValue(1);
+    setDraftShellValue(1);
     setDraftUsesTimer(false);
     setDraftTimerSeconds(5);
     setShowActionIconPicker(false);
@@ -1591,6 +1616,7 @@ export function CheckInApp() {
                 icon: draftIcon.trim() || "🌱",
                 tagIds: draftTags,
                 value: Math.max(1, draftValue),
+                shellValue: shellValueFor({ shellValue: draftShellValue }),
                 timerSeconds: draftUsesTimer
                   ? Math.min(3600, Math.max(1, draftTimerSeconds))
                   : 0,
@@ -1608,6 +1634,7 @@ export function CheckInApp() {
           icon: draftIcon.trim() || "🌱",
           tagIds: draftTags,
           value: Math.max(1, draftValue),
+          shellValue: shellValueFor({ shellValue: draftShellValue }),
           repeatable: true,
           timerSeconds: draftUsesTimer
             ? Math.min(3600, Math.max(1, draftTimerSeconds))
@@ -2159,7 +2186,7 @@ export function CheckInApp() {
                             ))}
                             <i className="shell-gain-tag">
                               <span aria-hidden="true">🌰</span>
-                              栗壳 +1
+                              栗壳 +{shellValueFor(record)}
                             </i>
                           </span>
                         </div>
@@ -2854,7 +2881,7 @@ export function CheckInApp() {
                               ))}
                               <small className="action-shell-gain">
                                 <span aria-hidden="true">🌰</span>
-                                栗壳 +1
+                                栗壳 +{shellValueFor(action)}
                               </small>
                             </span>
                           </div>
@@ -3102,6 +3129,7 @@ export function CheckInApp() {
                       <small>
                         {actionTags.map((tag) => tag.name).join(" · ")}
                         {action.timerSeconds ? ` · 计时 ${action.timerSeconds} 秒` : ""}
+                        {` · 栗壳 +${shellValueFor(action)}`}
                       </small>
                     </div>
                     <i aria-hidden="true">›</i>
@@ -3213,6 +3241,35 @@ export function CheckInApp() {
                 onChange={(event) => setDraftValue(Number(event.target.value))}
               />
             </label>
+            <div className="action-shell-stepper">
+              <div>
+                <span aria-hidden="true">🌰</span>
+                <strong>栗壳获取</strong>
+              </div>
+              <div role="group" aria-label="调整每次完成获得的栗壳">
+                <button
+                  type="button"
+                  disabled={draftShellValue <= 1}
+                  aria-label="栗壳获取值减一"
+                  onClick={() =>
+                    setDraftShellValue((current) => Math.max(1, current - 1))
+                  }
+                >
+                  −1
+                </button>
+                <output aria-live="polite">+{draftShellValue}</output>
+                <button
+                  type="button"
+                  disabled={draftShellValue >= 99}
+                  aria-label="栗壳获取值加一"
+                  onClick={() =>
+                    setDraftShellValue((current) => Math.min(99, current + 1))
+                  }
+                >
+                  +1
+                </button>
+              </div>
+            </div>
             <div className="timer-editor-setting">
               <button
                 className={draftUsesTimer ? "enabled" : ""}
