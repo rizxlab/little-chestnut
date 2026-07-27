@@ -426,6 +426,7 @@ export function CheckInApp() {
   const [draftTags, setDraftTags] = useState<string[]>(["body"]);
   const [draftValue, setDraftValue] = useState(1);
   const [draftShellValue, setDraftShellValue] = useState(1);
+  const [draftRepeatable, setDraftRepeatable] = useState(true);
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
   const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
   const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
@@ -549,6 +550,7 @@ export function CheckInApp() {
                     },
               ),
               shellValue: shellValueFor(action),
+              repeatable: action.repeatable !== false,
               timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
             };
           })
@@ -994,8 +996,19 @@ export function CheckInApp() {
     count: number,
     source: Source = "主动记录",
   ) {
+    if (
+      action.repeatable === false
+      && records.some(
+        (record) =>
+          record.actionId === action.id && isToday(new Date(record.createdAt)),
+      )
+    ) {
+      showToast("这件小事每天只能打卡一次", "今日已完成");
+      return;
+    }
     const actionTags = tagsFor(action);
-    const safeCount = Math.max(1, Math.floor(count));
+    const safeCount =
+      action.repeatable === false ? 1 : Math.max(1, Math.floor(count));
     const shellValue = shellValueFor(action);
     const shellGain = shellValue * safeCount;
     const timestamp = Date.now();
@@ -1399,6 +1412,16 @@ export function CheckInApp() {
       suppressQuickClickRef.current = null;
       return;
     }
+    if (
+      action.repeatable === false
+      && records.some(
+        (record) =>
+          record.actionId === action.id && isToday(new Date(record.createdAt)),
+      )
+    ) {
+      showToast("这件小事每天只能打卡一次", "今日已完成");
+      return;
+    }
     if (action.timerSeconds && action.timerSeconds > 0) {
       setTimerAction(action);
       setTimerPhase("idle");
@@ -1427,6 +1450,7 @@ export function CheckInApp() {
 
   function changeTimerMultiplier(delta: number) {
     if (!timerAction || timerPhase !== "idle") return;
+    if (timerAction.repeatable === false) return;
     const nextMultiplier = Math.min(60, Math.max(1, timerMultiplier + delta));
     setTimerMultiplier(nextMultiplier);
     setTimerSecondsLeft(
@@ -1543,6 +1567,7 @@ export function CheckInApp() {
     setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
     setDraftValue(action?.value || 1);
     setDraftShellValue(shellValueFor(action));
+    setDraftRepeatable(action?.repeatable !== false);
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
     setShowActionEditor(true);
@@ -1555,6 +1580,7 @@ export function CheckInApp() {
     setDraftTags(normalizedTagIds(action));
     setDraftValue(action.value);
     setDraftShellValue(shellValueFor(action));
+    setDraftRepeatable(action.repeatable !== false);
     setDraftUsesTimer(Boolean(action.timerSeconds));
     setDraftTimerSeconds(action.timerSeconds || 5);
     setShowActionIconPicker(false);
@@ -1567,6 +1593,7 @@ export function CheckInApp() {
     setDraftTags([areas[0]?.id || "body"]);
     setDraftValue(1);
     setDraftShellValue(1);
+    setDraftRepeatable(true);
     setDraftUsesTimer(false);
     setDraftTimerSeconds(5);
     setShowActionIconPicker(false);
@@ -1617,6 +1644,7 @@ export function CheckInApp() {
                 tagIds: draftTags,
                 value: Math.max(1, draftValue),
                 shellValue: shellValueFor({ shellValue: draftShellValue }),
+                repeatable: draftRepeatable,
                 timerSeconds: draftUsesTimer
                   ? Math.min(3600, Math.max(1, draftTimerSeconds))
                   : 0,
@@ -1635,7 +1663,7 @@ export function CheckInApp() {
           tagIds: draftTags,
           value: Math.max(1, draftValue),
           shellValue: shellValueFor({ shellValue: draftShellValue }),
-          repeatable: true,
+          repeatable: draftRepeatable,
           timerSeconds: draftUsesTimer
             ? Math.min(3600, Math.max(1, draftTimerSeconds))
             : 0,
@@ -2444,7 +2472,11 @@ export function CheckInApp() {
                         className={`quick-action ${todayCount ? "completed" : ""}`}
                         type="button"
                         key={action.id}
-                        aria-label={`记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`}
+                        aria-label={
+                          action.repeatable === false
+                            ? `${action.name}，今天已记录 ${todayCount} 次，每天限一次`
+                            : `记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`
+                        }
                         onClick={() => handleQuickActionClick(action)}
                         onContextMenu={(event) => {
                           event.preventDefault();
@@ -2889,6 +2921,9 @@ export function CheckInApp() {
                                 <span aria-hidden="true">🌰</span>
                                 栗壳 +{shellValueFor(action)}
                               </small>
+                              {action.repeatable === false && (
+                                <small>每日一次</small>
+                              )}
                             </span>
                           </div>
                         </article>
@@ -3135,6 +3170,7 @@ export function CheckInApp() {
                       <small>
                         {actionTags.map((tag) => tag.name).join(" · ")}
                         {action.timerSeconds ? ` · 计时 ${action.timerSeconds} 秒` : ""}
+                        {action.repeatable === false ? " · 每日一次" : ""}
                         {` · 栗壳 +${shellValueFor(action)}`}
                       </small>
                     </div>
@@ -3275,6 +3311,22 @@ export function CheckInApp() {
                   +1
                 </button>
               </div>
+            </div>
+            <div className="timer-editor-setting action-repeat-setting">
+              <button
+                className={draftRepeatable ? "enabled" : ""}
+                type="button"
+                role="switch"
+                aria-checked={draftRepeatable}
+                onClick={() => setDraftRepeatable((current) => !current)}
+              >
+                <span aria-hidden="true">↻</span>
+                <div>
+                  <strong>当日可重复</strong>
+                  <small>{draftRepeatable ? "可多次打卡" : "每天仅一次"}</small>
+                </div>
+                <i aria-hidden="true"><b /></i>
+              </button>
             </div>
             <div className="timer-editor-setting">
               <button
@@ -3865,7 +3917,9 @@ export function CheckInApp() {
                   <button
                     type="button"
                     aria-label={tr("增加一档时长", "Increase duration")}
-                    disabled={timerMultiplier === 60}
+                    disabled={
+                      timerMultiplier === 60 || timerAction.repeatable === false
+                    }
                     onClick={() => changeTimerMultiplier(1)}
                   >
                     +
@@ -3873,8 +3927,12 @@ export function CheckInApp() {
                 </div>
                 <small>
                   {tr(
-                    `每档增加 ${timerAction.timerSeconds || 1} 秒，完成后按倍数记录`,
-                    `Each step adds ${timerAction.timerSeconds || 1} seconds and one check-in`,
+                    timerAction.repeatable === false
+                      ? "此小事每天仅可完成一次"
+                      : `每档增加 ${timerAction.timerSeconds || 1} 秒，完成后按倍数记录`,
+                    timerAction.repeatable === false
+                      ? "This action can be completed once per day"
+                      : `Each step adds ${timerAction.timerSeconds || 1} seconds and one check-in`,
                   )}
                 </small>
               </div>
