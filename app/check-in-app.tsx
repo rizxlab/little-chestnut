@@ -422,6 +422,7 @@ export function CheckInApp() {
   const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running" | "success">("idle");
   const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
   const [timerMultiplier, setTimerMultiplier] = useState(1);
+  const [timerRingResetting, setTimerRingResetting] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [showAreaManager, setShowAreaManager] = useState(false);
   const [draftAreaName, setDraftAreaName] = useState("");
@@ -750,6 +751,7 @@ export function CheckInApp() {
     }
 
     if (timerPhase === "preparing") {
+      setTimerRingResetting(true);
       setTimerPhase("running");
       setTimerSecondsLeft(
         Math.max(1, (timerAction.timerSeconds || 1) * timerMultiplier),
@@ -762,6 +764,20 @@ export function CheckInApp() {
     setTimerSecondsLeft(0);
     if ("vibrate" in navigator) navigator.vibrate([28, 45, 28]);
   }, [timerAction, timerMultiplier, timerPhase, timerSecondsLeft]);
+
+  useEffect(() => {
+    if (!timerRingResetting) return;
+    let secondFrame = 0;
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        setTimerRingResetting(false);
+      });
+    });
+    return () => {
+      window.cancelAnimationFrame(firstFrame);
+      if (secondFrame) window.cancelAnimationFrame(secondFrame);
+    };
+  }, [timerRingResetting]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -1278,6 +1294,7 @@ export function CheckInApp() {
     if (action.timerSeconds && action.timerSeconds > 0) {
       setTimerAction(action);
       setTimerPhase("idle");
+      setTimerRingResetting(false);
       setTimerMultiplier(1);
       setTimerSecondsLeft(action.timerSeconds);
       return;
@@ -1295,6 +1312,7 @@ export function CheckInApp() {
     if (timerPhase === "success") return;
     setTimerAction(null);
     setTimerPhase("idle");
+    setTimerRingResetting(false);
     setTimerSecondsLeft(0);
     setTimerMultiplier(1);
   }
@@ -3506,14 +3524,16 @@ export function CheckInApp() {
                   : tr("计时小事", "TIMED ACTION")}
             </span>
             <div
-              className={`timer-clock ${timerPhase}`}
+              className={`timer-clock ${timerPhase}${
+                timerRingResetting ? " timer-ring-reset" : ""
+              }`}
               style={
                 {
                   "--timer-progress": `${
                     timerPhase === "success"
                       ? 360
                       : timerPhase === "preparing"
-                        ? (timerSecondsLeft / 3) * 360
+                        ? 0
                         : (
                             timerSecondsLeft
                             / Math.max(

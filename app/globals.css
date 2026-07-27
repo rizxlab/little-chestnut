@@ -2881,7 +2881,10 @@ button { -webkit-tap-highlight-color: transparent; }
     var(--timer-ring-track, rgba(111, 59, 39, .1)) 0deg
   );
   box-shadow: 0 14px 35px rgba(111, 59, 39, .14);
-  transition: --timer-progress 1100ms linear, transform 220ms ease;
+  transition: --timer-progress 1000ms linear, transform 220ms ease;
+}
+.timer-clock.timer-ring-reset {
+  transition: none;
 }
 .timer-clock > div {
   display: grid;
@@ -2911,6 +2914,7 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow:
     0 14px 34px rgba(91, 103, 130, .18),
     0 0 0 7px rgba(137, 147, 170, .07);
+  transition: --timer-progress 3000ms linear, transform 220ms ease;
   animation: ready-clock-breathe 1800ms ease-in-out infinite;
 }
 .timer-clock.preparing > div {
