@@ -2211,7 +2211,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .data-settings small { color: var(--muted); font-size: 9px; }
 .settings-block { margin-top: 14px; }
 .settings-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 14px; }
-.profile-actions { margin-top: 0; }
+.profile-actions {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+}
 .profile-actions .settings-heading { margin-bottom: 10px; }
 .profile-action-time-groups {
   display: grid;
