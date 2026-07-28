@@ -142,6 +142,22 @@ function actionTimeOptionFor(action?: Pick<MicroAction, "timeWindow"> | null) {
   );
 }
 
+function actionsInTimeOrder(actions: readonly MicroAction[]) {
+  return actions
+    .map((action, originalIndex) => ({ action, originalIndex }))
+    .sort((first, second) => {
+      const firstTimeIndex = ACTION_TIME_OPTIONS.findIndex(
+        (option) => option.id === actionTimeWindowFor(first.action),
+      );
+      const secondTimeIndex = ACTION_TIME_OPTIONS.findIndex(
+        (option) => option.id === actionTimeWindowFor(second.action),
+      );
+      return firstTimeIndex - secondTimeIndex
+        || first.originalIndex - second.originalIndex;
+    })
+    .map(({ action }) => action);
+}
+
 function isActionAvailableNow(action: MicroAction, now = new Date()) {
   const timeWindow = actionTimeWindowFor(action);
   const hour = now.getHours();
@@ -2224,12 +2240,13 @@ export function CheckInApp() {
     actionAreaFilter === "all" || areas.some((area) => area.id === actionAreaFilter)
       ? actionAreaFilter
       : "all";
-  const visibleTodayActions =
+  const visibleTodayActions = actionsInTimeOrder(
     activeActionAreaFilter === "all"
       ? actions
       : actions.filter((action) =>
           normalizedTagIds(action).includes(activeActionAreaFilter),
-        );
+        ),
+  );
   const safeDraftTimerSeconds = Math.min(
     3600,
     Math.max(
