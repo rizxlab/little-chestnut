@@ -17,6 +17,12 @@ type Source = "主动记录" | "随机行动";
 type Language = "zh" | "en";
 type Theme = "light" | "dark";
 type ActionTimeWindow = "morning" | "noon" | "evening" | "anytime";
+type AppPreferences = {
+  language?: Language;
+  theme?: Theme;
+  cardMilestoneFirst?: number;
+  cardMilestoneSecond?: number;
+};
 
 type Area = {
   id: string;
@@ -91,6 +97,8 @@ type ConfirmDialog =
 const STORAGE_KEY = "lizi-growth-v2";
 const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
 const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
+const DEFAULT_CARD_MILESTONE_FIRST = 5;
+const DEFAULT_CARD_MILESTONE_SECOND = 10;
 const PROFILE_ACTION_SWIPE_WIDTH = 132;
 const ACTION_ICON_OPTIONS = [
   "🌱", "💧", "🧘", "💪", "🏃", "🚶", "📖", "✏️", "📝", "🎨",
@@ -362,6 +370,12 @@ function shellValueFor(item: { shellValue?: number } | null | undefined) {
   return Math.min(99, Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1));
 }
 
+function milestoneThreshold(value: unknown, fallback: number, min = 1, max = 99) {
+  const numericValue = Number(value);
+  const candidate = Number.isFinite(numericValue) ? numericValue : fallback;
+  return Math.min(max, Math.max(min, Math.round(candidate)));
+}
+
 function isToday(date: Date) {
   return localDay(date) === localDay(new Date());
 }
@@ -584,6 +598,12 @@ export function CheckInApp() {
   const [seedSampleHistory, setSeedSampleHistory] = useState(true);
   const [language, setLanguage] = useState<Language>("zh");
   const [theme, setTheme] = useState<Theme>("light");
+  const [cardMilestoneFirst, setCardMilestoneFirst] = useState(
+    DEFAULT_CARD_MILESTONE_FIRST,
+  );
+  const [cardMilestoneSecond, setCardMilestoneSecond] = useState(
+    DEFAULT_CARD_MILESTONE_SECOND,
+  );
   const [shellBalance, setShellBalance] = useState(0);
   const [shellsEarned, setShellsEarned] = useState(0);
   const [bankDropKey, setBankDropKey] = useState(0);
@@ -750,7 +770,7 @@ export function CheckInApp() {
     );
     const preferences =
       stored?.preferences && typeof stored.preferences === "object"
-        ? (stored.preferences as { language?: Language; theme?: Theme })
+        ? (stored.preferences as AppPreferences)
         : null;
     const profile =
       stored?.profile && typeof stored.profile === "object"
@@ -763,6 +783,20 @@ export function CheckInApp() {
     );
     setLanguage(preferences?.language === "en" ? "en" : "zh");
     setTheme(preferences?.theme === "dark" ? "dark" : "light");
+    const nextFirstMilestone = milestoneThreshold(
+      preferences?.cardMilestoneFirst,
+      DEFAULT_CARD_MILESTONE_FIRST,
+      1,
+      98,
+    );
+    const nextSecondMilestone = milestoneThreshold(
+      preferences?.cardMilestoneSecond,
+      DEFAULT_CARD_MILESTONE_SECOND,
+      nextFirstMilestone + 1,
+      99,
+    );
+    setCardMilestoneFirst(nextFirstMilestone);
+    setCardMilestoneSecond(nextSecondMilestone);
     if (shouldSeedHistory) localStorage.setItem(sampleKey, "done");
   }
 
@@ -860,7 +894,12 @@ export function CheckInApp() {
       areaSchemaVersion: AREA_SCHEMA_VERSION,
       seedSampleHistory,
       profile: { nickname: account ? nickname.trim() : "" },
-      preferences: { language, theme },
+      preferences: {
+        language,
+        theme,
+        cardMilestoneFirst,
+        cardMilestoneSecond,
+      },
     };
     localStorage.setItem(
       account ? `${STORAGE_KEY}:${account.username}` : GUEST_STORAGE_KEY,
@@ -880,6 +919,8 @@ export function CheckInApp() {
     account,
     areas,
     actions,
+    cardMilestoneFirst,
+    cardMilestoneSecond,
     records,
     rewardClaims,
     rewards,
@@ -1076,7 +1117,12 @@ export function CheckInApp() {
           areaSchemaVersion: AREA_SCHEMA_VERSION,
           seedSampleHistory,
           profile: { nickname: nickname.trim() },
-          preferences: { language, theme },
+          preferences: {
+            language,
+            theme,
+            cardMilestoneFirst,
+            cardMilestoneSecond,
+          },
         }),
       }).catch(() => null);
     }
@@ -2187,6 +2233,8 @@ export function CheckInApp() {
       setPendingReward(null);
       setLanguage("zh");
       setTheme("light");
+      setCardMilestoneFirst(DEFAULT_CARD_MILESTONE_FIRST);
+      setCardMilestoneSecond(DEFAULT_CARD_MILESTONE_SECOND);
       changeTab("today");
       showToast("已恢复为新的开始");
     }
@@ -2281,9 +2329,9 @@ export function CheckInApp() {
   const visibleShellCount = Math.min(12, shellBalance);
   const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
   const todayCardMilestone =
-    todayRecords.length >= 20
+    todayRecords.length >= cardMilestoneSecond
       ? "milestone-20"
-      : todayRecords.length >= 10
+      : todayRecords.length >= cardMilestoneFirst
         ? "milestone-10"
         : "";
   const activeActionAreaFilter =
@@ -2550,6 +2598,135 @@ export function CheckInApp() {
                     <strong>{tr("夜间", "Dark")}</strong>
                     <small>{tr("柔和低亮", "Soft and dim")}</small>
                   </button>
+                </div>
+              </section>
+
+              <section className="settings-panel milestone-settings-panel">
+                <div className="settings-option-copy">
+                  <span className="settings-option-icon" aria-hidden="true">✦</span>
+                  <div>
+                    <strong>{tr("成长卡片效果", "Growth card effects")}</strong>
+                  </div>
+                </div>
+
+                <div
+                  className="milestone-preview-grid"
+                  aria-label={tr("成长卡片效果预览", "Growth card effect previews")}
+                >
+                  <article className="milestone-preview-card base">
+                    <span>{tr("普通", "Base")}</span>
+                    <strong>{Math.max(0, cardMilestoneFirst - 1)}</strong>
+                    <small>{tr("次", "times")}</small>
+                    <em aria-hidden="true">🌰</em>
+                  </article>
+                  <article className="milestone-preview-card stage-one">
+                    <span>{tr("进阶", "Glow")}</span>
+                    <strong>{cardMilestoneFirst}</strong>
+                    <small>{tr("次", "times")}</small>
+                    <em aria-hidden="true">🌰</em>
+                  </article>
+                  <article className="milestone-preview-card stage-two">
+                    <span>{tr("高级", "Stellar")}</span>
+                    <strong>{cardMilestoneSecond}</strong>
+                    <small>{tr("次", "times")}</small>
+                    <em aria-hidden="true">🌰</em>
+                  </article>
+                </div>
+
+                <div className="milestone-threshold-list">
+                  <div className="milestone-threshold-row">
+                    <div>
+                      <strong>{tr("进阶效果", "Glow effect")}</strong>
+                      <small>{tr(`第 ${cardMilestoneFirst} 次开始`, `Starts at ${cardMilestoneFirst}`)}</small>
+                    </div>
+                    <div role="group" aria-label={tr("调整进阶效果次数", "Adjust glow threshold")}>
+                      <button
+                        type="button"
+                        disabled={cardMilestoneFirst <= 1}
+                        onClick={() =>
+                          setCardMilestoneFirst((current) => Math.max(1, current - 1))
+                        }
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min="1"
+                        max={cardMilestoneSecond - 1}
+                        value={cardMilestoneFirst}
+                        aria-label={tr("进阶效果触发次数", "Glow effect threshold")}
+                        onChange={(event) =>
+                          setCardMilestoneFirst(
+                            milestoneThreshold(
+                              event.target.value,
+                              cardMilestoneFirst,
+                              1,
+                              cardMilestoneSecond - 1,
+                            ),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        disabled={cardMilestoneFirst >= cardMilestoneSecond - 1}
+                        onClick={() =>
+                          setCardMilestoneFirst((current) =>
+                            Math.min(cardMilestoneSecond - 1, current + 1),
+                          )
+                        }
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="milestone-threshold-row">
+                    <div>
+                      <strong>{tr("高级效果", "Stellar effect")}</strong>
+                      <small>{tr(`第 ${cardMilestoneSecond} 次开始`, `Starts at ${cardMilestoneSecond}`)}</small>
+                    </div>
+                    <div role="group" aria-label={tr("调整高级效果次数", "Adjust stellar threshold")}>
+                      <button
+                        type="button"
+                        disabled={cardMilestoneSecond <= cardMilestoneFirst + 1}
+                        onClick={() =>
+                          setCardMilestoneSecond((current) =>
+                            Math.max(cardMilestoneFirst + 1, current - 1),
+                          )
+                        }
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={cardMilestoneFirst + 1}
+                        max="99"
+                        value={cardMilestoneSecond}
+                        aria-label={tr("高级效果触发次数", "Stellar effect threshold")}
+                        onChange={(event) =>
+                          setCardMilestoneSecond(
+                            milestoneThreshold(
+                              event.target.value,
+                              cardMilestoneSecond,
+                              cardMilestoneFirst + 1,
+                              99,
+                            ),
+                          )
+                        }
+                      />
+                      <button
+                        type="button"
+                        disabled={cardMilestoneSecond >= 99}
+                        onClick={() =>
+                          setCardMilestoneSecond((current) => Math.min(99, current + 1))
+                        }
+                      >
+                        ＋
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </section>
 
