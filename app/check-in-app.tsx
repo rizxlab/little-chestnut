@@ -238,6 +238,45 @@ const DEFAULT_AREAS: Area[] = [
   { id: "relationships", name: "关系", icon: "🤝", color: "#9b6a62", isDefault: true },
   { id: "explore", name: "探索", icon: "🧭", color: "#527d86", isDefault: true },
 ];
+const AREA_INTRODUCTIONS: Record<string, { zh: string; en: string }> = {
+  body: {
+    zh: "照顾身体的能量、力量与日常节律，让每一次行动都成为更稳固的基础。",
+    en: "Care for your energy, strength, and daily rhythm—small actions that build a steadier foundation.",
+  },
+  wisdom: {
+    zh: "通过阅读、学习与思考积累理解，让新知识一点点沉淀为自己的能力。",
+    en: "Build understanding through reading, learning, and reflection, turning knowledge into lasting ability.",
+  },
+  create: {
+    zh: "把想法变成看得见的表达，在一次次尝试中留下属于自己的作品。",
+    en: "Turn ideas into visible expression and leave behind work that is distinctly yours.",
+  },
+  soul: {
+    zh: "留意内心的感受与需要，为平静、觉察和自我关怀留出空间。",
+    en: "Notice what you feel and need, making space for calm, awareness, and self-care.",
+  },
+  wealth: {
+    zh: "关注资源的积累与使用，通过微小而持续的选择建立更从容的生活。",
+    en: "Build and use resources mindfully through small, consistent choices that create more ease.",
+  },
+  relationships: {
+    zh: "用真诚的交流与陪伴滋养连接，让重要的人在日常中被看见。",
+    en: "Nurture connection through honest communication and presence, helping important people feel seen.",
+  },
+  explore: {
+    zh: "保持好奇，主动接触新的地方、体验与可能，让生活不断打开。",
+    en: "Stay curious and meet new places, experiences, and possibilities as life keeps opening up.",
+  },
+};
+
+function areaIntroduction(area: Area, language: Language) {
+  const introduction = AREA_INTRODUCTIONS[area.id];
+  if (introduction) return introduction[language];
+  return language === "zh"
+    ? `记录与“${area.name}”有关的小小行动，看见这个方向如何在日常里慢慢生长。`
+    : `Collect small actions related to “${area.name}” and watch this area grow through everyday life.`;
+}
+
 const AREA_COLORS = [
   "#5f8065",
   "#56748a",
@@ -531,6 +570,7 @@ export function CheckInApp() {
   const [timerRingResetting, setTimerRingResetting] = useState(false);
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [showAreaManager, setShowAreaManager] = useState(false);
+  const [growthAreaDetailId, setGrowthAreaDetailId] = useState<string | null>(null);
   const [draftAreaName, setDraftAreaName] = useState("");
   const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
   const [draftAreaColor, setDraftAreaColor] = useState(AREA_COLORS[0]);
@@ -2174,6 +2214,15 @@ export function CheckInApp() {
     ...area,
     ...growthLevelFor(area.total),
   }));
+  const growthAreaDetail =
+    growthLevels.find((area) => area.id === growthAreaDetailId) || null;
+  const growthAreaDetailActions = growthAreaDetail
+    ? actionsInTimeOrder(
+        actions.filter((action) =>
+          normalizedTagIds(action).includes(growthAreaDetail.id),
+        ),
+      )
+    : [];
   const maxTodayAreaTotal = Math.max(1, ...todayProgressTotals.map((area) => area.total));
   const maxWeekAreaTotal = Math.max(1, ...weekProgressTotals.map((area) => area.total));
   const maxMonthAreaTotal = Math.max(1, ...monthProgressTotals.map((area) => area.total));
@@ -2782,9 +2831,12 @@ export function CheckInApp() {
                   onTouchCancel={(event) => event.stopPropagation()}
                 >
                   {growthLevels.map((area) => (
-                    <article
+                    <button
                       className={`growth-level-card${area.isMax ? " max-level" : ""}`}
+                      type="button"
                       key={`level-${area.id}`}
+                      aria-label={`${tr("查看", "View")} ${area.name}`}
+                      onClick={() => setGrowthAreaDetailId(area.id)}
                     >
                       <span
                         className="growth-level-icon"
@@ -2826,7 +2878,7 @@ export function CheckInApp() {
                               )}
                         </small>
                       </div>
-                    </article>
+                    </button>
                   ))}
                 </div>
               </section>
@@ -2890,7 +2942,13 @@ export function CheckInApp() {
                   </div>
                   <div className="growth-areas">
                     {activeGrowthPeriod.totals.map((area) => (
-                      <article className="growth-area" key={`${growthPeriod}-${area.id}`}>
+                      <button
+                        className="growth-area"
+                        type="button"
+                        key={`${growthPeriod}-${area.id}`}
+                        aria-label={`${tr("查看", "View")} ${area.name}`}
+                        onClick={() => setGrowthAreaDetailId(area.id)}
+                      >
                         <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
                           {area.icon}
                         </span>
@@ -2909,7 +2967,7 @@ export function CheckInApp() {
                           </span>
                         </div>
                         <strong className="area-total">{area.total}</strong>
-                      </article>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -3752,6 +3810,128 @@ export function CheckInApp() {
               </button>
             )}
           </form>
+        </div>
+      )}
+
+      {growthAreaDetail && (
+        <div
+          className="modal-backdrop"
+          role="presentation"
+          onClick={() =>
+            closeSecondaryModal(
+              "growth-area-detail",
+              () => setGrowthAreaDetailId(null),
+            )
+          }
+        >
+          <section
+            className={modalMotionClass(
+              "growth-area-detail",
+              "bottom-sheet growth-area-detail",
+            )}
+            style={modalMotionStyle("growth-area-detail")}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="growth-area-detail-title"
+            onClick={(event) => event.stopPropagation()}
+            onTouchStart={(event) =>
+              startEditorSheetSwipe(
+                "growth-area-detail",
+                () => setGrowthAreaDetailId(null),
+                event,
+              )
+            }
+            onTouchMove={moveEditorSheetSwipe}
+            onTouchEnd={finishEditorSheetSwipe}
+            onTouchCancel={cancelEditorSheetSwipe}
+          >
+            {modalDragHandle(
+              "growth-area-detail",
+              () => setGrowthAreaDetailId(null),
+            )}
+            <button
+              className="close-button"
+              type="button"
+              aria-label={tr("关闭", "Close")}
+              onClick={() =>
+                closeSecondaryModal(
+                  "growth-area-detail",
+                  () => setGrowthAreaDetailId(null),
+                )
+              }
+            >
+              ×
+            </button>
+
+            <div
+              className="growth-area-detail-hero"
+              style={{
+                background: `linear-gradient(145deg, ${growthAreaDetail.color}1f, ${growthAreaDetail.color}08)`,
+              }}
+            >
+              <span
+                className="growth-area-detail-icon"
+                style={{ background: `${growthAreaDetail.color}20` }}
+                aria-hidden="true"
+              >
+                {growthAreaDetail.icon}
+              </span>
+              <div>
+                <span className="overline">{tr("成长领域", "Growth area")}</span>
+                <h2 id="growth-area-detail-title">{growthAreaDetail.name}</h2>
+                <p>{areaIntroduction(growthAreaDetail, language)}</p>
+              </div>
+            </div>
+
+            <div className="growth-area-detail-stats">
+              <span>
+                <strong>{growthAreaDetail.total}</strong>
+                <small>{tr("累计成长", "Total growth")}</small>
+              </span>
+              <span>
+                <strong>Lv.{growthAreaDetail.level}</strong>
+                <small>{tr("当前等级", "Current level")}</small>
+              </span>
+              <span>
+                <strong>{growthAreaDetailActions.length}</strong>
+                <small>{tr("关联小事", "Linked actions")}</small>
+              </span>
+            </div>
+
+            <div className="growth-area-detail-actions">
+              <div className="growth-area-detail-heading">
+                <h3>{tr("这个领域的小事", "Actions in this area")}</h3>
+                <small>{growthAreaDetailActions.length}</small>
+              </div>
+              {growthAreaDetailActions.length ? (
+                <div className="growth-area-detail-list">
+                  {growthAreaDetailActions.map((action) => {
+                    const timeOption = actionTimeOptionFor(action);
+                    return (
+                      <article key={`area-detail-${action.id}`}>
+                        <span aria-hidden="true">{action.icon}</span>
+                        <div>
+                          <strong>{action.name}</strong>
+                          <small>
+                            {actionTimeWindowFor(action) === "anytime"
+                              ? tr("全天", "Anytime")
+                              : timeOption.label}
+                            {` · ${tr("成长", "Growth")} +${action.value}`}
+                            {` · ${tr("栗壳", "Shells")} +${shellValueFor(action)}`}
+                          </small>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="growth-area-detail-empty">
+                  <span aria-hidden="true">＋</span>
+                  <p>{tr("这个领域还没有关联的小事。", "No actions are linked to this area yet.")}</p>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       )}
 
