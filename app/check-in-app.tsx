@@ -104,6 +104,7 @@ const REWARD_ICON_OPTIONS = [
   "🎁", "🍵", "☕", "🎧", "🍰", "🧁", "🌙", "🎬", "📚", "🎮",
   "🛁", "🌸", "🍜", "🛍️", "🎵", "🌿", "✈️", "🍽️", "🧸", "🎟️",
 ];
+const REWARD_COST_OPTIONS = [5, 10, 20, 30, 50, 100];
 const ACTION_TIME_OPTIONS: {
   id: ActionTimeWindow;
   label: string;
@@ -2322,6 +2323,7 @@ export function CheckInApp() {
         showActionEditor
         || showAreaEditor
         || showRewardEditor
+        || showRewardManager
         || showProfileEditor
           ? " editor-modal-open"
           : ""
@@ -4152,16 +4154,35 @@ export function CheckInApp() {
                 maxLength={48}
               />
             </label>
-            <label>
-              所需栗壳
-              <input
-                type="number"
-                min="1"
-                max="9999"
-                value={draftRewardCost}
-                onChange={(event) => setDraftRewardCost(Number(event.target.value))}
-              />
-            </label>
+            <fieldset className="reward-cost-fieldset">
+              <legend>所需栗壳</legend>
+              <div className="reward-cost-options">
+                {REWARD_COST_OPTIONS.map((cost) => (
+                  <button
+                    className={draftRewardCost === cost ? "selected" : ""}
+                    type="button"
+                    key={cost}
+                    aria-pressed={draftRewardCost === cost}
+                    onClick={() => setDraftRewardCost(cost)}
+                  >
+                    <strong>{cost}</strong>
+                    <small>栗壳</small>
+                  </button>
+                ))}
+              </div>
+              <label className="reward-cost-custom">
+                <span>自定义</span>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="1"
+                  max="9999"
+                  value={draftRewardCost}
+                  onChange={(event) => setDraftRewardCost(Number(event.target.value))}
+                />
+                <small>枚</small>
+              </label>
+            </fieldset>
             <button
               className="save-button"
               type="submit"
