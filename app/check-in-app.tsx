@@ -2315,6 +2315,14 @@ export function CheckInApp() {
   const activeGrowthPeriod =
     growthPeriodOptions.find((period) => period.id === growthPeriod)
     || growthPeriodOptions[0];
+  const activeGrowthRecords =
+    growthPeriod === "today"
+      ? todayRecords
+      : growthPeriod === "week"
+        ? weekRecords
+        : growthPeriod === "month"
+          ? monthRecords
+          : records;
   const nextReward = [...rewards]
     .filter((reward) => reward.cost > shellBalance)
     .sort((first, second) => first.cost - second.cost)[0];
@@ -3156,9 +3164,9 @@ export function CheckInApp() {
 
               <section className="content-section timeline-section">
                 <div className="growth-divider" aria-hidden="true" />
-                {records.length ? (
-                  <div className="timeline">
-                    {records.slice(0, 12).map((record) => {
+                {activeGrowthRecords.length ? (
+                  <div className="timeline" key={`timeline-${growthPeriod}`}>
+                    {activeGrowthRecords.slice(0, 12).map((record) => {
                       const recordTags = tagsFor(record);
                       const primaryTag = recordTags[0] || areas[0];
                       return (
@@ -3181,7 +3189,14 @@ export function CheckInApp() {
                   </div>
                 ) : (
                   <div className="empty-state compact">
-                    <p>你的长期成长轨迹，会从这里慢慢展开。</p>
+                    <p>
+                      {growthPeriod === "total"
+                        ? tr("你的长期成长轨迹，会从这里慢慢展开。", "Your growth history will unfold here.")
+                        : tr(
+                            `${activeGrowthPeriod.label}还没有留下小事记录。`,
+                            `No actions recorded for ${activeGrowthPeriod.label.toLowerCase()} yet.`,
+                          )}
+                    </p>
                   </div>
                 )}
               </section>
