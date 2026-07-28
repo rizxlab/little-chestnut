@@ -3495,7 +3495,7 @@ export function CheckInApp() {
               ×
             </button>
             <span className="overline">行动管理</span>
-            <h2 id="action-manager-title">微行动管理</h2>
+            <h2 id="action-manager-title">我的小事</h2>
             <button
               className="action-manager-create"
               type="button"
@@ -3503,7 +3503,7 @@ export function CheckInApp() {
             >
               <span aria-hidden="true">＋</span>
               <div>
-                <strong>新建微行动</strong>
+                <strong>新建小事</strong>
                 <small>添加一件想记录的小事</small>
               </div>
             </button>
@@ -3573,8 +3573,8 @@ export function CheckInApp() {
             >
               ×
             </button>
-            <span className="overline">{editingAction ? "编辑微行动" : "新的微行动"}</span>
-            <h2>{editingAction ? "把行动调整得更顺手" : "从一件足够小的事开始"}</h2>
+            <span className="overline">{editingAction ? "编辑小事" : "新的小事"}</span>
+            <h2>我的小事</h2>
             {!editingAction && (
               <fieldset className="action-preset-picker">
                 <legend>系统小事</legend>
@@ -3634,16 +3634,35 @@ export function CheckInApp() {
                 />
               </div>
             )}
-            <label>
-              成长值
-              <input
-                type="number"
-                min="1"
-                max="10"
-                value={draftValue}
-                onChange={(event) => setDraftValue(Number(event.target.value))}
-              />
-            </label>
+            <div className="action-shell-stepper action-growth-stepper">
+              <div>
+                <span aria-hidden="true">🌱</span>
+                <strong>成长值</strong>
+              </div>
+              <div role="group" aria-label="调整每次完成获得的成长值">
+                <button
+                  type="button"
+                  disabled={draftValue <= 1}
+                  aria-label="成长值减一"
+                  onClick={() =>
+                    setDraftValue((current) => Math.max(1, current - 1))
+                  }
+                >
+                  −1
+                </button>
+                <output aria-live="polite">+{draftValue}</output>
+                <button
+                  type="button"
+                  disabled={draftValue >= 10}
+                  aria-label="成长值加一"
+                  onClick={() =>
+                    setDraftValue((current) => Math.min(10, current + 1))
+                  }
+                >
+                  +1
+                </button>
+              </div>
+            </div>
             <div className="action-shell-stepper">
               <div>
                 <span aria-hidden="true">🌰</span>

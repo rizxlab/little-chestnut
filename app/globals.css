@@ -2996,6 +2996,16 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 20px;
   font-weight: 600;
 }
+.action-growth-stepper {
+  border-color: rgba(95, 128, 101, .18);
+  background: rgba(247, 251, 245, .82);
+}
+.action-growth-stepper > div:first-child > span {
+  background: rgba(95, 128, 101, .13);
+}
+.action-growth-stepper output {
+  color: #5f8065;
+}
 .action-editor {
   min-height: min(680px, calc(100dvh - 90px));
   max-height: calc(100dvh - 90px);
