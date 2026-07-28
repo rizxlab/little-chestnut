@@ -2370,6 +2370,7 @@ export function CheckInApp() {
       className={`shell${
         showActionEditor
         || showAreaEditor
+        || showAreaManager
         || showRewardEditor
         || showRewardManager
         || showProfileEditor
