@@ -101,8 +101,14 @@ const DEFAULT_CARD_MILESTONE_FIRST = 5;
 const DEFAULT_CARD_MILESTONE_SECOND = 10;
 const PROFILE_ACTION_SWIPE_WIDTH = 132;
 const ACTION_ICON_OPTIONS = [
-  "🌱", "💧", "🧘", "💪", "🏃", "🚶", "📖", "✏️", "📝", "🎨",
-  "🎧", "🧹", "☀️", "🌙", "🍎", "🥗", "☕", "🫁", "🧠", "🛏️",
+  "🌱", "🌿", "🌳", "🌸", "🌻", "✨", "⭐", "🔥", "💧", "☀️",
+  "🌙", "🌈", "🍎", "🍊", "🥗", "🥛", "☕", "🍵", "🥤", "💊",
+  "🧘", "💪", "🏃", "🚶", "🚴", "🏊", "🤸", "🏋️", "🫁", "🫀",
+  "🧠", "🛏️", "🛁", "🪥", "📖", "📚", "✏️", "📝", "🔤", "💡",
+  "🎨", "🖌️", "📷", "🎬", "🎧", "🎵", "🎹", "🎸", "💻", "⌨️",
+  "🧹", "🧺", "🪴", "🍳", "🏡", "🗂️", "📅", "⏰", "✅", "🎯",
+  "💰", "🪙", "💼", "🤝", "💬", "📞", "✉️", "🫶", "😊", "🙏",
+  "🧭", "🗺️", "✈️", "🚆", "🌍", "🎁", "🎉", "🧩", "🎮", "🏆",
 ];
 const AREA_ICON_OPTIONS = [
   "🌿", "💚", "🌱", "📖", "📚", "🎨", "🌙", "💰", "🤝", "🧭",
@@ -1864,6 +1870,7 @@ export function CheckInApp() {
   function closeActionEditor() {
     setShowActionEditor(false);
     setShowActionManager(false);
+    setShowActionIconPicker(false);
   }
 
   function toggleDraftTag(tagId: string) {
@@ -3782,7 +3789,8 @@ export function CheckInApp() {
                   type="button"
                   aria-label="选择小事图标"
                   aria-expanded={showActionIconPicker}
-                  onClick={() => setShowActionIconPicker((current) => !current)}
+                  aria-haspopup="dialog"
+                  onClick={() => setShowActionIconPicker(true)}
                 >
                   <span aria-hidden="true">{draftIcon}</span>
                   <small aria-hidden="true">⌄</small>
@@ -3794,19 +3802,6 @@ export function CheckInApp() {
                 />
               </div>
             </label>
-            {showActionIconPicker && (
-              <div className="action-icon-panel">
-                <IconPicker
-                  label="选择图标"
-                  value={draftIcon}
-                  options={ACTION_ICON_OPTIONS}
-                  onChange={(icon) => {
-                    setDraftIcon(icon);
-                    setShowActionIconPicker(false);
-                  }}
-                />
-              </div>
-            )}
             <div className="action-shell-stepper action-growth-stepper">
               <div>
                 <span aria-hidden="true">🌱</span>
@@ -4004,6 +3999,44 @@ export function CheckInApp() {
               </button>
             )}
           </form>
+          {showActionIconPicker && (
+            <div
+              className="action-icon-dialog-backdrop"
+              role="presentation"
+              onClick={() => setShowActionIconPicker(false)}
+            >
+              <section
+                className="action-icon-dialog"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="action-icon-dialog-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="action-icon-dialog-heading">
+                  <div>
+                    <span className="overline">小事图标</span>
+                    <h2 id="action-icon-dialog-title">选择一个图标</h2>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label="关闭图标选择"
+                    onClick={() => setShowActionIconPicker(false)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <IconPicker
+                  label="所有可选图标"
+                  value={draftIcon}
+                  options={ACTION_ICON_OPTIONS}
+                  onChange={(icon) => {
+                    setDraftIcon(icon);
+                    setShowActionIconPicker(false);
+                  }}
+                />
+              </section>
+            </div>
+          )}
         </div>
       )}
 
