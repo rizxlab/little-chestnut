@@ -1692,21 +1692,17 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 7px;
 }
 .growth-level-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 7px;
-  overflow-x: auto;
-  margin: 0 -4px;
+  margin: 0;
   padding: 2px 4px 5px;
-  scrollbar-width: none;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
-.growth-level-list::-webkit-scrollbar { display: none; }
 .growth-level-card {
   display: grid;
-  width: 112px;
-  min-width: 112px;
+  width: 100%;
+  min-width: 0;
   grid-template-columns: 27px minmax(0, 1fr);
   gap: 7px;
   align-items: center;
