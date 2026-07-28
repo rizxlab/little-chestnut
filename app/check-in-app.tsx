@@ -43,6 +43,9 @@ type MicroAction = {
   repeatable: boolean;
   timeWindow?: ActionTimeWindow;
   timerSeconds?: number;
+  temporary?: boolean;
+  temporaryDays?: number;
+  expiresOn?: string;
 };
 
 type GrowthRecord = {
@@ -106,7 +109,7 @@ const ACTION_ICON_OPTIONS = [
   "🧘", "💪", "🏃", "🚶", "🚴", "🏊", "🤸", "🏋️", "🫁", "🫀",
   "🧠", "🛏️", "🛁", "🪥", "📖", "📚", "✏️", "📝", "🔤", "💡",
   "🎨", "🖌️", "📷", "🎬", "🎧", "🎵", "🎹", "🎸", "💻", "⌨️",
-  "🧹", "🧺", "🪴", "🍳", "🏡", "🗂️", "📅", "⏰", "✅", "🎯",
+  "🧹", "🧺", "🪴", "🍳", "🏡", "🗂️", "📅", "⏰", "⏳", "✅", "🎯",
   "💰", "🪙", "💼", "🤝", "💬", "📞", "✉️", "🫶", "😊", "🙏",
   "🧭", "🗺️", "✈️", "🚆", "🌍", "🎁", "🎉", "🧩", "🎮", "🏆",
 ];
@@ -371,6 +374,30 @@ function localDay(date: Date) {
   ).padStart(2, "0")}`;
 }
 
+function temporaryActionDays(value: unknown) {
+  const numericValue = Number(value);
+  return Math.min(
+    30,
+    Math.max(1, Number.isFinite(numericValue) ? Math.round(numericValue) : 1),
+  );
+}
+
+function temporaryExpirationDay(days: number, start = new Date()) {
+  const expirationDay = new Date(start);
+  expirationDay.setDate(
+    expirationDay.getDate() + temporaryActionDays(days) - 1,
+  );
+  return localDay(expirationDay);
+}
+
+function isTemporaryActionExpired(action: MicroAction, now = new Date()) {
+  return Boolean(
+    action.temporary
+    && action.expiresOn
+    && action.expiresOn < localDay(now),
+  );
+}
+
 function shellValueFor(item: { shellValue?: number } | null | undefined) {
   const value = Number(item?.shellValue ?? 1);
   return Math.min(99, Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1));
@@ -580,6 +607,8 @@ export function CheckInApp() {
   const [draftValue, setDraftValue] = useState(1);
   const [draftShellValue, setDraftShellValue] = useState(1);
   const [draftRepeatable, setDraftRepeatable] = useState(true);
+  const [draftTemporary, setDraftTemporary] = useState(false);
+  const [draftTemporaryDays, setDraftTemporaryDays] = useState(1);
   const [draftTimeWindow, setDraftTimeWindow] =
     useState<ActionTimeWindow>("anytime");
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
@@ -723,8 +752,12 @@ export function CheckInApp() {
               repeatable: action.repeatable !== false,
               timeWindow: actionTimeWindowFor(action),
               timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
+              temporary: action.temporary === true,
+              temporaryDays: action.temporary
+                ? temporaryActionDays(action.temporaryDays)
+                : undefined,
             };
-          })
+          }).filter((action) => !isTemporaryActionExpired(action))
         : DEFAULT_ACTIONS,
     );
 
@@ -946,8 +979,27 @@ export function CheckInApp() {
   }, [language, theme]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setClockNow(new Date()), 60_000);
-    return () => window.clearInterval(timer);
+    const refreshTimeAndTemporaryActions = () => {
+      const now = new Date();
+      setClockNow(now);
+      setActions((current) => {
+        const activeActions = current.filter(
+          (action) => !isTemporaryActionExpired(action, now),
+        );
+        return activeActions.length === current.length ? current : activeActions;
+      });
+    };
+    const timer = window.setInterval(refreshTimeAndTemporaryActions, 60_000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshTimeAndTemporaryActions();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
@@ -1816,6 +1868,10 @@ export function CheckInApp() {
     setDraftValue(action?.value || 1);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action?.repeatable !== false);
+    setDraftTemporary(action?.temporary === true);
+    setDraftTemporaryDays(
+      action?.temporary ? temporaryActionDays(action.temporaryDays) : 1,
+    );
     setDraftTimeWindow(actionTimeWindowFor(action));
     setDraftUsesTimer(Boolean(action?.timerSeconds));
     setDraftTimerSeconds(action?.timerSeconds || 5);
@@ -1830,6 +1886,8 @@ export function CheckInApp() {
     setDraftValue(action.value);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action.repeatable !== false);
+    setDraftTemporary(false);
+    setDraftTemporaryDays(1);
     setDraftTimeWindow(actionTimeWindowFor(action));
     setDraftUsesTimer(Boolean(action.timerSeconds));
     setDraftTimerSeconds(action.timerSeconds || 5);
@@ -1844,10 +1902,31 @@ export function CheckInApp() {
     setDraftValue(1);
     setDraftShellValue(1);
     setDraftRepeatable(true);
+    setDraftTemporary(false);
+    setDraftTemporaryDays(1);
     setDraftTimeWindow("anytime");
     setDraftUsesTimer(false);
     setDraftTimerSeconds(5);
     setShowActionIconPicker(false);
+  }
+
+  function openTemporaryActionEditor() {
+    setManageActionMenu(null);
+    setEditingAction(null);
+    setDraftName("");
+    setDraftIcon("⏳");
+    setDraftPresetId(null);
+    setShowActionIconPicker(false);
+    setDraftTags([]);
+    setDraftValue(1);
+    setDraftShellValue(1);
+    setDraftRepeatable(true);
+    setDraftTemporary(true);
+    setDraftTemporaryDays(1);
+    setDraftTimeWindow("anytime");
+    setDraftUsesTimer(false);
+    setDraftTimerSeconds(5);
+    setShowActionEditor(true);
   }
 
   function openActionEditor(action?: MicroAction) {
@@ -1883,7 +1962,15 @@ export function CheckInApp() {
 
   function saveAction(event: FormEvent) {
     event.preventDefault();
-    if (!draftName.trim() || !draftTags.length) return;
+    if (!draftName.trim() || (!draftTemporary && !draftTags.length)) return;
+    const nextTemporaryDays = temporaryActionDays(draftTemporaryDays);
+    const nextTemporaryExpiration = draftTemporary
+      ? editingAction?.temporary
+        && temporaryActionDays(editingAction.temporaryDays) === nextTemporaryDays
+        && editingAction.expiresOn
+          ? editingAction.expiresOn
+          : temporaryExpirationDay(nextTemporaryDays)
+      : undefined;
 
     if (editingAction) {
       setActions((current) =>
@@ -1897,6 +1984,9 @@ export function CheckInApp() {
                 value: Math.max(1, draftValue),
                 shellValue: shellValueFor({ shellValue: draftShellValue }),
                 repeatable: draftRepeatable,
+                temporary: draftTemporary,
+                temporaryDays: draftTemporary ? nextTemporaryDays : undefined,
+                expiresOn: nextTemporaryExpiration,
                 timeWindow: draftTimeWindow,
                 timerSeconds: draftUsesTimer
                   ? Math.min(3600, Math.max(1, draftTimerSeconds))
@@ -1917,6 +2007,9 @@ export function CheckInApp() {
           value: Math.max(1, draftValue),
           shellValue: shellValueFor({ shellValue: draftShellValue }),
           repeatable: draftRepeatable,
+          temporary: draftTemporary,
+          temporaryDays: draftTemporary ? nextTemporaryDays : undefined,
+          expiresOn: nextTemporaryExpiration,
           timeWindow: draftTimeWindow,
           timerSeconds: draftUsesTimer
             ? Math.min(3600, Math.max(1, draftTimerSeconds))
@@ -2864,6 +2957,18 @@ export function CheckInApp() {
               </section>
 
               <section className="content-section today-actions-section">
+                <button
+                  className="temporary-action-add"
+                  type="button"
+                  onClick={openTemporaryActionEditor}
+                >
+                  <span aria-hidden="true">＋</span>
+                  <div>
+                    <strong>{tr("添加临时小事", "Add a temporary action")}</strong>
+                    <small>{tr("默认保留到今天结束", "Kept until the end of today by default")}</small>
+                  </div>
+                  <i aria-hidden="true">⏳</i>
+                </button>
                 <div
                   className="action-filter-list"
                   role="group"
@@ -2941,6 +3046,17 @@ export function CheckInApp() {
                         </span>
                         <strong>{action.name}</strong>
                         <span className="action-badge-row" aria-hidden="true">
+                          {action.temporary && (
+                            <span className="action-temporary-badge">
+                              ⏳{" "}
+                              {action.expiresOn === localDay(clockNow)
+                                ? tr("今天", "Today")
+                                : tr(
+                                    `至 ${action.expiresOn?.slice(5).replace("-", "/")}`,
+                                    `Until ${action.expiresOn?.slice(5).replace("-", "/")}`,
+                                  )}
+                            </span>
+                          )}
                           {actionTimeWindowFor(action) !== "anytime" && (
                             <span className="action-time-badge">
                               {timeOption.icon} {timeOption.label}
@@ -3455,6 +3571,11 @@ export function CheckInApp() {
                                   {tag.name} +{action.value}
                                 </small>
                               ))}
+                              {action.temporary && (
+                                <small className="action-temporary-tag">
+                                  ⏳ 临时
+                                </small>
+                              )}
                               <small className="action-shell-gain">
                                 <span aria-hidden="true">🌰</span>
                                 栗壳 +{shellValueFor(action)}
@@ -3720,6 +3841,11 @@ export function CheckInApp() {
                       <strong>{action.name}</strong>
                       <small>
                         {actionTags.map((tag) => tag.name).join(" · ")}
+                        {action.temporary
+                          ? `${actionTags.length ? " · " : ""}临时至 ${
+                              action.expiresOn?.slice(5).replace("-", "/") || "今天"
+                            }`
+                          : ""}
                         {action.timerSeconds ? ` · 计时 ${action.timerSeconds} 秒` : ""}
                         {action.repeatable === false ? " · 每日一次" : ""}
                         {actionTimeWindowFor(action) !== "anytime"
@@ -3752,10 +3878,72 @@ export function CheckInApp() {
               >
                 <span aria-hidden="true">‹</span>
               </button>
-              <span className="overline">{editingAction ? "编辑小事" : "新的小事"}</span>
+              <span className="overline">
+                {draftTemporary
+                  ? editingAction
+                    ? "编辑临时小事"
+                    : "新的临时小事"
+                  : editingAction
+                    ? "编辑小事"
+                    : "新的小事"}
+              </span>
               <h1>我的小事</h1>
             </section>
-            {!editingAction && (
+            {draftTemporary && (
+              <section className="temporary-action-settings">
+                <div className="temporary-action-settings-copy">
+                  <span aria-hidden="true">⏳</span>
+                  <div>
+                    <strong>临时小事</strong>
+                    <small>到期后只删除小事，打卡记录和栗壳会保留</small>
+                  </div>
+                </div>
+                <div className="temporary-duration-control">
+                  <div>
+                    <strong>有效天数</strong>
+                    <small>
+                      {draftTemporaryDays === 1
+                        ? "明天自动删除"
+                        : `保留至 ${temporaryExpirationDay(draftTemporaryDays).slice(5).replace("-", "月")}日`}
+                    </small>
+                  </div>
+                  <div role="group" aria-label="调整临时小事有效天数">
+                    <button
+                      type="button"
+                      disabled={draftTemporaryDays <= 1}
+                      onClick={() =>
+                        setDraftTemporaryDays((current) => Math.max(1, current - 1))
+                      }
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      max="30"
+                      value={draftTemporaryDays}
+                      aria-label="临时小事有效天数"
+                      onChange={(event) =>
+                        setDraftTemporaryDays(
+                          temporaryActionDays(event.target.value),
+                        )
+                      }
+                    />
+                    <button
+                      type="button"
+                      disabled={draftTemporaryDays >= 30}
+                      onClick={() =>
+                        setDraftTemporaryDays((current) => Math.min(30, current + 1))
+                      }
+                    >
+                      ＋
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+            {!editingAction && !draftTemporary && (
               <fieldset className="action-preset-picker">
                 <legend>系统小事</legend>
                 <div>
@@ -3831,6 +4019,11 @@ export function CheckInApp() {
                 </button>
               </div>
             </div>
+            {draftTemporary && !draftTags.length && (
+              <p className="temporary-growth-note">
+                当前不关联成长领域，因此不会增加成长值或领域经验。
+              </p>
+            )}
             <div className="action-shell-stepper">
               <div>
                 <span aria-hidden="true">🌰</span>
@@ -3961,7 +4154,9 @@ export function CheckInApp() {
               )}
             </div>
             <fieldset className="tag-fieldset">
-              <legend>成长领域 <small>可多选</small></legend>
+              <legend>
+                成长领域 <small>{draftTemporary ? "可不选" : "可多选"}</small>
+              </legend>
               <div className="tag-picker">
                 {areas.map((area) => {
                   const selected = draftTags.includes(area.id);
@@ -3980,12 +4175,17 @@ export function CheckInApp() {
                   );
                 })}
               </div>
-              {!draftTags.length && <small className="field-hint">至少选择一个成长领域</small>}
+              {!draftTags.length && !draftTemporary && (
+                <small className="field-hint">至少选择一个成长领域</small>
+              )}
             </fieldset>
             <button
               className="save-button"
               type="submit"
-              disabled={!draftName.trim() || !draftTags.length}
+              disabled={
+                !draftName.trim()
+                || (!draftTemporary && !draftTags.length)
+              }
             >
               {editingAction ? "保存修改" : "加入我的小事"}
             </button>
