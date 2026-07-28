@@ -135,7 +135,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 19px;
   letter-spacing: .08em;
 }
-.login-brand small { color: var(--muted); font-size: 9px; }
+.login-brand small { color: var(--muted); font-size: 10px; }
 .login-heading { margin: 34px 0 20px; }
 .login-heading h1 {
   margin: 5px 0 0;
@@ -188,7 +188,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-top: 13px;
   color: #a0958a;
   text-align: center;
-  font-size: 8px;
+  font-size: 10px;
 }
 
 .shell {
@@ -385,7 +385,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .date-display small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .date-display-chevron {
   margin-left: 2px;
@@ -741,7 +741,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   background: rgba(255, 249, 239, .72);
   box-shadow: 0 4px 12px rgba(71, 46, 30, .035);
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
   transition: color 150ms ease, border-color 150ms ease, background 150ms ease, transform 150ms ease;
 }
@@ -760,7 +760,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   text-align: center;
   background: rgba(255, 249, 239, .45);
-  font-size: 9px;
+  font-size: 10px;
 }
 .section-title-row {
   display: flex;
@@ -878,7 +878,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 4px 7px;
   color: var(--chestnut);
   background: rgba(111, 59, 39, .08);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -950,7 +950,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--chestnut);
   background: #f4ddc2;
   font-family: Georgia, serif;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 700;
 }
 
@@ -1117,7 +1117,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .settings-option-copy > div { display: grid; gap: 3px; }
 .settings-option-copy strong { font-size: 12px; }
-.settings-option-copy small { color: var(--muted); font-size: 8px; }
+.settings-option-copy small { color: var(--muted); font-size: 10px; }
 .settings-segmented {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1165,7 +1165,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 20px;
 }
 .theme-choice-grid strong { font-size: 11px; }
-.theme-choice-grid small { color: var(--muted); font-size: 8px; }
+.theme-choice-grid small { color: var(--muted); font-size: 10px; }
 .theme-choice-grid button.selected {
   border-color: rgba(111, 59, 39, .38);
   background: #fff8ed;
@@ -1178,7 +1178,7 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 7px;
   padding: 18px 8px 6px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 .settings-sync-note span {
   display: grid;
@@ -1188,7 +1188,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 50%;
   color: #fff;
   background: var(--leaf);
-  font-size: 9px;
+  font-size: 10px;
 }
 .settings-sync-note p { margin: 0; }
 .calendar-screen {
@@ -1276,7 +1276,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 3px 0;
   color: #a1958a;
   text-align: center;
-  font-size: 8px;
+  font-size: 10px;
 }
 .calendar-grid button, .calendar-empty { min-height: 43px; }
 .calendar-grid button {
@@ -1307,11 +1307,11 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 999px;
   color: #fffaf0;
   background: var(--leaf);
-  font-size: 7px;
+  font-size: 9px;
 }
 .calendar-grid button.selected small { color: var(--chestnut); background: #fff4df; }
 .calendar-day-detail { padding-top: 27px; }
-.calendar-day-detail .section-title-row > small { color: var(--muted); font-size: 9px; }
+.calendar-day-detail .section-title-row > small { color: var(--muted); font-size: 10px; }
 .calendar-record-list { display: grid; gap: 9px; }
 .calendar-record-list article {
   display: grid;
@@ -1325,14 +1325,14 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .calendar-record-list article > div { display: grid; gap: 4px; min-width: 0; }
 .calendar-record-list strong { font-size: 11px; }
-.calendar-record-list article > div > small { color: var(--muted); font-size: 8px; }
+.calendar-record-list article > div > small { color: var(--muted); font-size: 10px; }
 .calendar-record-list .action-tag-list { margin-top: 3px; }
 .calendar-record-list .action-tag-list i {
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 3px 6px;
   background: #fffdf9;
-  font-size: 8px;
+  font-size: 10px;
   font-style: normal;
   line-height: 1;
 }
@@ -1345,7 +1345,7 @@ button { -webkit-tap-highlight-color: transparent; }
   background: linear-gradient(135deg, rgba(255, 244, 216, .92), rgba(242, 222, 181, .7));
   font-weight: 700;
 }
-.shell-gain-tag span { font-size: 8px; }
+.shell-gain-tag span { font-size: 10px; }
 .primary-add {
   display: flex;
   width: 100%;
@@ -1379,7 +1379,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 999px;
   padding: 3px 6px;
   background: #fffdf9;
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1;
 }
 .tag-action-grid {
@@ -1485,7 +1485,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tag-action-summary .action-tag-list small {
   padding: 2px 5px;
-  font-size: 7px;
+  font-size: 9px;
 }
 .tag-action-summary .action-tag-list small.action-shell-gain {
   border-color: rgba(161, 105, 51, .28);
@@ -1507,7 +1507,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 2px;
   color: #9b8d80;
   background: transparent;
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
 }
 .tag-action-card .row-actions {
@@ -1536,7 +1536,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 15px 12px;
   background: var(--paper);
 }
-.stat-grid span, .stat-grid small { color: var(--muted); font-size: 9px; }
+.stat-grid span, .stat-grid small { color: var(--muted); font-size: 10px; }
 .stat-grid strong { margin: 4px 0 1px; font-family: Georgia, serif; font-size: 27px; font-weight: 400; }
 
 .growth-section { padding-top: 27px; }
@@ -1586,7 +1586,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: inherit;
   background: rgba(111, 59, 39, .07);
   font-family: Georgia, serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 400;
 }
 .growth-period-tabs button.active {
@@ -1626,7 +1626,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .growth-progress-heading small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .growth-areas { display: grid; gap: 9px; }
 .growth-area {
@@ -1689,7 +1689,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .growth-level-heading > small {
   flex: 0 0 auto;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 .growth-level-list {
   display: grid;
@@ -1741,14 +1741,14 @@ button { -webkit-tap-highlight-color: transparent; }
 .growth-level-copy strong {
   min-width: 0;
   overflow: hidden;
-  font-size: 9px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .growth-level-copy > div > span {
   flex: 0 0 auto;
   font-family: Georgia, serif;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
 }
 .growth-level-track {
@@ -1768,7 +1768,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .growth-level-copy > small {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -1840,7 +1840,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .growth-area-detail-stats small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 .growth-area-detail-actions {
   display: grid;
@@ -1866,7 +1866,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--chestnut);
   background: rgba(111, 59, 39, .08);
   font-family: Georgia, serif;
-  font-size: 9px;
+  font-size: 10px;
 }
 .growth-area-detail-list {
   display: grid;
@@ -1899,7 +1899,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .growth-area-detail-list strong { font-size: 11px; }
 .growth-area-detail-list small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.45;
 }
 .growth-area-detail-empty {
@@ -1918,7 +1918,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .growth-area-detail-empty p {
   margin: 0;
-  font-size: 9px;
+  font-size: 10px;
 }
 
 .timeline-section { padding-bottom: 12px; }
@@ -1949,9 +1949,9 @@ button { -webkit-tap-highlight-color: transparent; }
   box-shadow: 0 0 0 2px var(--cream-deep);
 }
 .timeline article > div { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; }
-.timeline small { grid-column: 1 / 3; color: var(--muted); font-size: 9px; }
+.timeline small { grid-column: 1 / 3; color: var(--muted); font-size: 10px; }
 .timeline strong { font-size: 11px; }
-.timeline span { font-size: 9px; }
+.timeline span { font-size: 10px; }
 .timeline-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px 7px; }
 .timeline-tags i { font-style: normal; }
 
@@ -2033,7 +2033,7 @@ button { -webkit-tap-highlight-color: transparent; }
   right: 0;
   left: 0;
   color: rgba(255, 248, 235, .42);
-  font-size: 8px;
+  font-size: 10px;
   text-align: center;
 }
 .jar-glass i {
@@ -2049,7 +2049,7 @@ button { -webkit-tap-highlight-color: transparent; }
     inset -4px -4px rgba(73, 35, 22, .16),
     0 3px 7px rgba(38, 17, 10, .18);
   font-family: STSong, Songti SC, serif;
-  font-size: 8px;
+  font-size: 10px;
   font-style: normal;
   transform: rotate(-8deg);
 }
@@ -2089,7 +2089,7 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1;
 }
 .shell-balance h2 small { color: #ead5be; font-size: 11px; }
-.shell-balance p { margin: 2px 0 0; color: rgba(255, 248, 235, .68); font-size: 9px; }
+.shell-balance p { margin: 2px 0 0; color: rgba(255, 248, 235, .68); font-size: 10px; }
 .shell-progress-copy {
   position: relative;
   z-index: 1;
@@ -2098,9 +2098,9 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 12px;
   margin-top: 18px;
   color: #f7e8d5;
-  font-size: 9px;
+  font-size: 10px;
 }
-.shell-progress-copy small { color: rgba(255, 248, 235, .6); font-size: 8px; white-space: nowrap; }
+.shell-progress-copy small { color: rgba(255, 248, 235, .6); font-size: 10px; white-space: nowrap; }
 .shell-progress-track {
   position: relative;
   z-index: 1;
@@ -2134,7 +2134,7 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: space-between;
   gap: 10px;
   color: rgba(255, 248, 235, .62);
-  font-size: 8px;
+  font-size: 10px;
 }
 .shell-rewards-heading button {
   border: 1px solid rgba(255, 248, 235, .14);
@@ -2142,7 +2142,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 4px 8px;
   color: rgba(255, 248, 235, .72);
   background: rgba(255, 255, 255, .06);
-  font-size: 8px;
+  font-size: 10px;
   cursor: pointer;
 }
 .shell-reward-list {
@@ -2176,13 +2176,13 @@ button { -webkit-tap-highlight-color: transparent; }
 .shell-reward-list strong {
   overflow: hidden;
   color: rgba(255, 248, 235, .84);
-  font-size: 9px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .shell-reward-list small {
   color: rgba(255, 248, 235, .48);
-  font-size: 7px;
+  font-size: 9px;
 }
 .shell-reward-list > button.available {
   border-color: rgba(255, 224, 168, .26);
@@ -2199,7 +2199,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 6px 10px;
   color: rgba(255, 248, 235, .68);
   background: rgba(255, 255, 255, .05);
-  font-size: 8px;
+  font-size: 10px;
   cursor: pointer;
 }
 .shell-bank .shell-reward-history {
@@ -2210,7 +2210,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .shell-bank .shell-reward-history summary {
   padding: 7px 9px;
   color: rgba(255, 248, 235, .5);
-  font-size: 8px;
+  font-size: 10px;
 }
 .shell-bank .shell-reward-history > div {
   border-top-color: rgba(255, 248, 235, .1);
@@ -2231,7 +2231,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 7px 10px;
   color: var(--chestnut);
   background: #fffaf2;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -2269,7 +2269,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .reward-grid p {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.5;
 }
 .reward-card-controls {
@@ -2282,7 +2282,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border: 1px solid var(--line);
   border-radius: 11px;
   padding: 8px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -2314,7 +2314,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .reward-empty span { font-family: Georgia, serif; font-size: 25px; }
 .reward-empty strong { font-size: 11px; }
-.reward-empty small { color: var(--muted); font-size: 8px; }
+.reward-empty small { color: var(--muted); font-size: 10px; }
 .reward-history {
   margin-top: 11px;
   border: 1px solid var(--line);
@@ -2326,7 +2326,7 @@ button { -webkit-tap-highlight-color: transparent; }
   justify-content: space-between;
   padding: 11px 13px;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
   list-style: none;
 }
@@ -2344,8 +2344,8 @@ button { -webkit-tap-highlight-color: transparent; }
   align-items: center;
   padding: 7px 0;
 }
-.reward-history article strong { font-size: 9px; }
-.reward-history article small { color: var(--muted); font-size: 8px; }
+.reward-history article strong { font-size: 10px; }
+.reward-history article small { color: var(--muted); font-size: 10px; }
 
 .settings-block {
   border: 1px solid var(--line);
@@ -2355,7 +2355,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .data-settings > div { display: grid; gap: 3px; }
 .data-settings strong { font-size: 12px; }
-.data-settings small { color: var(--muted); font-size: 9px; }
+.data-settings small { color: var(--muted); font-size: 10px; }
 .settings-block { margin-top: 14px; }
 .settings-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 14px; }
 .profile-actions {
@@ -2400,7 +2400,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   background: var(--cream);
   font-family: Georgia, serif;
-  font-size: 8px;
+  font-size: 10px;
 }
 .area-chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .area-chip-list button {
@@ -2455,7 +2455,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .philosophy-title > span { display: grid; gap: 2px; }
 .philosophy-title strong { color: #786f67; font-size: 10px; font-weight: 600; }
-.philosophy-title small { color: #aaa097; font-size: 8px; }
+.philosophy-title small { color: #aaa097; font-size: 10px; }
 .summary-chevron {
   color: #aaa097;
   font-size: 15px;
@@ -2483,7 +2483,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 7px;
   color: #9f6256;
   background: transparent;
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
 }
 
@@ -2504,7 +2504,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 4px;
   color: #a09589;
   background: transparent;
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
 }
 .bottom-nav button span { font-family: Georgia, serif; font-size: 18px; line-height: 1; }
@@ -2772,7 +2772,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 20px;
 }
 .profile-editor-account > div { display: grid; gap: 3px; }
-.profile-editor-account small { color: var(--muted); font-size: 8px; }
+.profile-editor-account small { color: var(--muted); font-size: 10px; }
 .profile-editor-account strong { font-size: 12px; }
 .profile-editor-logout {
   width: 100%;
@@ -2781,7 +2781,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 9px;
   color: #9a5b52;
   background: transparent;
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
 }
 .profile-editor-logout:active { opacity: .64; }
@@ -2835,7 +2835,7 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 50%;
   color: #fff;
   background: var(--chestnut);
-  font-size: 7px;
+  font-size: 9px;
   font-weight: 800;
 }
 .action-preset-picker {
@@ -2887,7 +2887,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .action-preset-picker button strong {
   max-width: 92px;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1.35;
   text-align: center;
@@ -2920,7 +2920,7 @@ button { -webkit-tap-highlight-color: transparent; }
   right: 4px;
   bottom: 2px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1;
 }
 .action-icon-panel {
@@ -3081,7 +3081,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .timer-editor-setting > button > div { display: grid; gap: 3px; }
 .timer-editor-setting > button strong { font-size: 11px; }
-.timer-editor-setting > button small { color: var(--muted); font-size: 8px; }
+.timer-editor-setting > button small { color: var(--muted); font-size: 10px; }
 .timer-editor-setting > button > i {
   position: relative;
   width: 36px;
@@ -3137,7 +3137,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-left: 3px;
   color: var(--muted);
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
 }
 .timer-duration-slider {
   display: grid;
@@ -3147,7 +3147,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-duration-slider > span,
 .timer-duration-number > span {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 .action-editor .timer-duration-slider input[type="range"] {
   width: 100%;
@@ -3204,7 +3204,7 @@ button { -webkit-tap-highlight-color: transparent; }
   display: flex;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 .timer-duration-number {
   display: grid;
@@ -3224,7 +3224,7 @@ button { -webkit-tap-highlight-color: transparent; }
   top: 50%;
   right: 11px;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -3260,12 +3260,12 @@ button { -webkit-tap-highlight-color: transparent; }
   line-height: 1;
 }
 .action-time-setting button strong {
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
 }
 .action-time-setting button small {
   color: var(--muted);
-  font-size: 6px;
+  font-size: 8px;
   white-space: nowrap;
 }
 .action-time-setting button.selected {
@@ -3328,7 +3328,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .reward-cost-options small {
   color: var(--muted);
-  font-size: 7px;
+  font-size: 9px;
 }
 .reward-editor .reward-cost-custom {
   display: grid;
@@ -3358,7 +3358,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .reward-cost-custom > small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .reward-manager,
 .action-manager {
@@ -3429,7 +3429,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .action-manager-list small {
   overflow: hidden;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3461,7 +3461,7 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 0;
   color: #a1554b;
   background: rgba(249, 235, 228, .72);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
@@ -3498,7 +3498,7 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   font-size: 10px;
 }
-.tag-fieldset legend small { color: #aaa097; font-size: 8px; }
+.tag-fieldset legend small { color: #aaa097; font-size: 10px; }
 .tag-picker { display: flex; flex-wrap: wrap; gap: 7px; }
 .tag-picker button {
   display: flex;
@@ -3512,10 +3512,10 @@ button { -webkit-tap-highlight-color: transparent; }
   font-size: 10px;
   cursor: pointer;
 }
-.tag-picker button span { color: #aaa097; font-size: 9px; }
+.tag-picker button span { color: #aaa097; font-size: 10px; }
 .tag-picker button.selected { background: #fff9ef; box-shadow: 0 5px 14px rgba(71,46,30,.06); }
 .tag-picker button.selected span { color: currentColor; }
-.field-hint { color: #9f6256; font-size: 9px; }
+.field-hint { color: #9f6256; font-size: 10px; }
 .sheet-description {
   margin: -8px 0 4px;
   color: var(--muted);
@@ -3699,7 +3699,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .timer-phase-icon { font-size: 24px; line-height: 1; }
 .timer-clock.preparing .timer-phase-icon {
   color: #68738a;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: .16em;
   animation: ready-pulse 1800ms ease-in-out infinite;
@@ -3740,7 +3740,7 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 400;
   line-height: 1;
 }
-.timer-clock small { color: var(--muted); font-size: 9px; }
+.timer-clock small { color: var(--muted); font-size: 10px; }
 .timer-countdown-value {
   display: inline-flex;
   min-width: 100%;
@@ -3823,7 +3823,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .timer-duration-picker > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
 }
 .timer-duration-picker > div {
   display: grid;
@@ -3873,7 +3873,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .timer-duration-picker strong small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   white-space: nowrap;
 }
 .timer-duration-picker strong em {
@@ -3881,12 +3881,12 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-top: 5px;
   color: var(--chestnut);
   font-family: inherit;
-  font-size: 9px;
+  font-size: 10px;
   font-style: normal;
 }
 .timer-duration-picker > small {
   color: var(--muted);
-  font-size: 8px;
+  font-size: 10px;
 }
 .timer-start-button {
   border-color: var(--chestnut) !important;
@@ -3912,14 +3912,14 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 6px 10px;
   color: var(--muted);
   background: transparent;
-  font-size: 9px;
+  font-size: 10px;
   cursor: pointer;
 }
 .timer-success-note {
   display: block;
   min-height: 34px;
   color: #64805f;
-  font-size: 9px;
+  font-size: 10px;
 }
 @keyframes timer-sheet-in {
   from { opacity: 0; transform: translateY(14px) scale(.94); }
@@ -4090,7 +4090,7 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .tag-action-summary .action-tag-list small {
   padding: 3px 6px;
-  font-size: 9px;
+  font-size: 10px;
 }
 .shell-progress-copy { font-size: 10px; }
 .shell-progress-copy small,
@@ -4100,7 +4100,7 @@ button { -webkit-tap-highlight-color: transparent; }
 .shell-reward-empty,
 .shell-bank .shell-reward-history summary,
 .shell-bank .shell-reward-history article small {
-  font-size: 9px;
+  font-size: 10px;
 }
 .shell-reward-list strong,
 .reward-history article strong,
