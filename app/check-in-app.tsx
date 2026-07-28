@@ -1918,15 +1918,13 @@ export function CheckInApp() {
       ]);
       showToast("新的微行动已加入");
     }
-    closeSecondaryModal("action-editor", closeActionEditor);
+    closeActionEditor();
   }
 
   function deleteAction(action: MicroAction) {
-    closeSecondaryModal("action-editor", () => {
-      setShowActionEditor(false);
-      setShowActionManager(false);
-      setConfirmDialog({ kind: "delete-action", action });
-    });
+    setShowActionEditor(false);
+    setShowActionManager(false);
+    setConfirmDialog({ kind: "delete-action", action });
   }
 
   function prepareAreaEditor(area?: Area, returnToManager = false) {
@@ -3733,41 +3731,23 @@ export function CheckInApp() {
       )}
 
       {showActionEditor && (
-        <div
-          className="modal-backdrop"
-          role="presentation"
-          onClick={() => closeSecondaryModal("action-editor", closeActionEditor)}
-        >
+        <div className="action-editor-page-layer">
           <form
-            className={modalMotionClass("action-editor", "bottom-sheet action-editor")}
-            style={modalMotionStyle("action-editor")}
-            tabIndex={-1}
-            autoFocus
+            className="screen action-editor action-editor-page"
             onSubmit={saveAction}
-            onClick={(event) => event.stopPropagation()}
-            onTouchStart={(event) =>
-              startEditorSheetSwipe(
-                "action-editor",
-                closeActionEditor,
-                event,
-                true,
-              )
-            }
-            onTouchMove={moveEditorSheetSwipe}
-            onTouchEnd={finishEditorSheetSwipe}
-            onTouchCancel={cancelEditorSheetSwipe}
           >
-            {modalDragHandle("action-editor", closeActionEditor, true)}
-            <button
-              className="close-button"
-              type="button"
-              aria-label="关闭"
-              onClick={() => closeSecondaryModal("action-editor", closeActionEditor)}
-            >
-              ×
-            </button>
-            <span className="overline">{editingAction ? "编辑小事" : "新的小事"}</span>
-            <h2>我的小事</h2>
+            <section className="action-editor-page-heading">
+              <button
+                className="settings-back"
+                type="button"
+                aria-label={tr("返回原页面", "Back")}
+                onClick={closeActionEditor}
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+              <span className="overline">{editingAction ? "编辑小事" : "新的小事"}</span>
+              <h1>我的小事</h1>
+            </section>
             {!editingAction && (
               <fieldset className="action-preset-picker">
                 <legend>系统小事</legend>
@@ -4012,7 +3992,7 @@ export function CheckInApp() {
               type="submit"
               disabled={!draftName.trim() || !draftTags.length}
             >
-              {editingAction ? "保存修改" : "加入我的微行动"}
+              {editingAction ? "保存修改" : "加入我的小事"}
             </button>
             {editingAction && (
               <button
@@ -4020,7 +4000,7 @@ export function CheckInApp() {
                 type="button"
                 onClick={() => deleteAction(editingAction)}
               >
-                删除这个微行动
+                删除这件小事
               </button>
             )}
           </form>
