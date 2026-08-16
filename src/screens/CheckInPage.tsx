@@ -11,552 +11,131 @@ import {
   useState,
 } from "react";
 
-type Tab = "today" | "growth" | "profile";
-type GrowthPeriod = "today" | "week" | "month" | "total";
-type Source = "主动记录" | "随机行动";
-type Language = "zh" | "en";
-type Theme = "light" | "dark";
-type ActionTimeWindow = "morning" | "noon" | "evening" | "anytime";
-type AppPreferences = {
-  language?: Language;
-  theme?: Theme;
-  cardMilestoneFirst?: number;
-  cardMilestoneSecond?: number;
-};
+import { DEFAULT_CARD_MILESTONE_FIRST, DEFAULT_CARD_MILESTONE_SECOND, NAV_ITEMS } from "../app/constants";
+import type { ConfirmDialog, GrowthPeriod, Tab, ToastState } from "../app/types";
+import { BottomNavigation } from "../components/layout/BottomNavigation";
+import { IconPicker } from "../components/ui/IconPicker";
+import { ToastStack } from "../components/ui/ToastStack";
+import { CalendarPage } from "./CalendarPage";
+import { SettingsPage } from "./SettingsPage";
+import { TodayPage } from "./TodayPage";
+import { GrowthPage } from "./GrowthPage";
+import { ProfilePage } from "./ProfilePage";
+import { AREA_COLORS, AREA_ICON_OPTIONS, DEFAULT_AREAS } from "../features/growth/constants";
+import { areaIntroduction, growthLevelFor, growthTotals, normalizedTagIds } from "../features/growth/domain/growth-rules";
+import type { GrowthArea as Area, GrowthRecord, GrowthSource as Source } from "../features/growth/types";
+import { DEFAULT_REWARDS, REWARD_COST_OPTIONS, REWARD_ICON_OPTIONS } from "../features/rewards/constants";
+import type { Reward } from "../features/rewards/types";
+import { createRewardClaim } from "../features/rewards/domain/redeem-reward";
+import { useRewardEditorState } from "../features/rewards/store/useRewardEditorState";
+import { addShells, canAfford, removeShells, spendShells } from "../features/shells/domain/wallet";
+import { ACTION_ICON_OPTIONS, ACTION_TIME_OPTIONS, DEFAULT_ACTIONS, PROFILE_ACTION_SWIPE_WIDTH } from "../features/tasks/constants";
+import { actionTimeOptionFor, actionTimeWindowFor, actionsInTimeOrder, isActionAvailableNow, isTemporaryActionExpired, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../features/tasks/domain/task-rules";
+import { completeTask } from "../features/tasks/domain/complete-task";
+import { useTaskEditorState } from "../features/tasks/store/useTaskEditorState";
+import type { MicroAction } from "../features/tasks/types";
+import type { Account } from "../features/user/types";
+import { useProfileEditorState } from "../features/user/store/useProfileEditorState";
+import { useGrowthEditorState } from "../features/growth/store/useGrowthEditorState";
+import { isToday, localDay, recordsForMonth, recordsForToday, recordsForWeek } from "../features/statistics/domain/date-ranges";
+import { getSessionAccount, loginAccount, logoutAccount, readAccountData, writeAccountData } from "../services/api/account-api";
+import { createAppDataSnapshot, normalizeAppData } from "../services/persistence/app-data";
+import { hasSeededSampleHistory, markSampleHistorySeeded, readAccountFallback, readGuestData, saveBrowserData } from "../services/persistence/browser-storage";
+import { createRuntimeId, runtimeNow } from "../shared/utils/runtime";
+import { useAppDataState } from "../stores/useAppDataState";
+import { useAuthState } from "../stores/useAuthState";
 
-type Area = {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  isDefault?: boolean;
-};
 
-type MicroAction = {
-  id: string;
-  name: string;
-  icon: string;
-  tagIds: string[];
-  areaId?: string;
-  value: number;
-  shellValue?: number;
-  repeatable: boolean;
-  timeWindow?: ActionTimeWindow;
-  timerSeconds?: number;
-  temporary?: boolean;
-  temporaryDays?: number;
-  expiresOn?: string;
-};
-
-type GrowthRecord = {
-  id: string;
-  actionId: string;
-  actionName: string;
-  icon: string;
-  tagIds: string[];
-  areaId?: string;
-  value: number;
-  shellValue?: number;
-  source: Source;
-  createdAt: string;
-};
-
-type ToastState = {
-  id: string;
-  title: string;
-  message: string;
-  undoRecordId?: string;
-  undone?: boolean;
-  leaving?: boolean;
-};
-
-type Reward = {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  cost: number;
-};
-
-type RewardClaim = {
-  id: string;
-  rewardId: string;
-  rewardName: string;
-  icon: string;
-  cost: number;
-  createdAt: string;
-};
-
-type Account = {
-  username: string;
-};
-
-type ConfirmDialog =
-  | { kind: "delete-action"; action: MicroAction }
-  | { kind: "delete-area"; area: Area }
-  | { kind: "delete-reward"; reward: Reward }
-  | { kind: "reset-data" };
-
-const STORAGE_KEY = "lizi-growth-v2";
-const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
-const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
-const DEFAULT_CARD_MILESTONE_FIRST = 5;
-const DEFAULT_CARD_MILESTONE_SECOND = 10;
-const PROFILE_ACTION_SWIPE_WIDTH = 132;
-const ACTION_ICON_OPTIONS = [
-  "🌱", "🌿", "🌳", "🌸", "🌻", "✨", "⭐", "🔥", "💧", "☀️",
-  "🌙", "🌈", "🍎", "🍊", "🥗", "🥛", "☕", "🍵", "🥤", "💊",
-  "🧘", "💪", "🏃", "🚶", "🚴", "🏊", "🤸", "🏋️", "🫁", "🫀",
-  "🧠", "🛏️", "🛁", "🪥", "📖", "📚", "✏️", "📝", "🔤", "💡",
-  "🎨", "🖌️", "📷", "🎬", "🎧", "🎵", "🎹", "🎸", "💻", "⌨️",
-  "🧹", "🧺", "🪴", "🍳", "🏡", "🗂️", "📅", "⏰", "⏳", "✅", "🎯",
-  "💰", "🪙", "💼", "🤝", "💬", "📞", "✉️", "🫶", "😊", "🙏",
-  "🧭", "🗺️", "✈️", "🚆", "🌍", "🎁", "🎉", "🧩", "🎮", "🏆",
-];
-const AREA_ICON_OPTIONS = [
-  "🌿", "💚", "🌱", "📖", "📚", "🎨", "🌙", "💰", "🤝", "🧭",
-  "☀️", "💼", "🏡", "🎯", "💡", "🌸", "🫶", "✨", "🧠", "💪",
-];
-const REWARD_ICON_OPTIONS = [
-  "🎁", "🍵", "☕", "🎧", "🍰", "🧁", "🌙", "🎬", "📚", "🎮",
-  "🛁", "🌸", "🍜", "🛍️", "🎵", "🌿", "✈️", "🍽️", "🧸", "🎟️",
-];
-const REWARD_COST_OPTIONS = [5, 10, 20, 30, 50, 100];
-const ACTION_TIME_OPTIONS: {
-  id: ActionTimeWindow;
-  label: string;
-  icon: string;
-  range: string;
-}[] = [
-  { id: "morning", label: "早上", icon: "☀️", range: "05:00–11:59" },
-  { id: "noon", label: "中午", icon: "◐", range: "12:00–17:59" },
-  { id: "evening", label: "晚上", icon: "🌙", range: "18:00–04:59" },
-  { id: "anytime", label: "不限时间", icon: "∞", range: "全天" },
-];
-const PROFILE_ACTION_TIME_GROUPS: {
-  id: ActionTimeWindow;
-  label: string;
-  icon: string;
-}[] = [
-  { id: "morning", label: "早上", icon: "☀️" },
-  { id: "noon", label: "中午", icon: "◐" },
-  { id: "evening", label: "晚上", icon: "🌙" },
-  { id: "anytime", label: "全天", icon: "∞" },
-];
-const GROWTH_LEVEL_THRESHOLDS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
-const MAX_GROWTH_LEVEL = GROWTH_LEVEL_THRESHOLDS.length;
-
-function actionTimeWindowFor(action?: Pick<MicroAction, "timeWindow"> | null) {
-  return ACTION_TIME_OPTIONS.some((option) => option.id === action?.timeWindow)
-    ? (action?.timeWindow as ActionTimeWindow)
-    : "anytime";
-}
-
-function actionTimeOptionFor(action?: Pick<MicroAction, "timeWindow"> | null) {
-  const timeWindow = actionTimeWindowFor(action);
-  return (
-    ACTION_TIME_OPTIONS.find((option) => option.id === timeWindow)
-    || ACTION_TIME_OPTIONS[3]
-  );
-}
-
-function actionsInTimeOrder(actions: readonly MicroAction[]) {
-  return actions
-    .map((action, originalIndex) => ({ action, originalIndex }))
-    .sort((first, second) => {
-      const firstTimeIndex = ACTION_TIME_OPTIONS.findIndex(
-        (option) => option.id === actionTimeWindowFor(first.action),
-      );
-      const secondTimeIndex = ACTION_TIME_OPTIONS.findIndex(
-        (option) => option.id === actionTimeWindowFor(second.action),
-      );
-      return firstTimeIndex - secondTimeIndex
-        || first.originalIndex - second.originalIndex;
-    })
-    .map(({ action }) => action);
-}
-
-function isActionAvailableNow(action: MicroAction, now = new Date()) {
-  const timeWindow = actionTimeWindowFor(action);
-  const hour = now.getHours();
-  if (timeWindow === "morning") return hour >= 5 && hour < 12;
-  if (timeWindow === "noon") return hour >= 12 && hour < 18;
-  if (timeWindow === "evening") return hour >= 18 || hour < 5;
-  return true;
-}
-
-function growthLevelFor(experience: number) {
-  const safeExperience = Math.max(0, Math.floor(experience));
-  let level = 1;
-  for (let index = 1; index < GROWTH_LEVEL_THRESHOLDS.length; index += 1) {
-    if (safeExperience < GROWTH_LEVEL_THRESHOLDS[index]) break;
-    level = index + 1;
-  }
-  const currentThreshold = GROWTH_LEVEL_THRESHOLDS[level - 1];
-  const nextThreshold =
-    level < MAX_GROWTH_LEVEL
-      ? GROWTH_LEVEL_THRESHOLDS[level]
-      : currentThreshold;
-  const progress =
-    level === MAX_GROWTH_LEVEL
-      ? 100
-      : ((safeExperience - currentThreshold)
-        / Math.max(1, nextThreshold - currentThreshold)) * 100;
-  return {
-    level,
-    experience: safeExperience,
-    currentThreshold,
-    nextThreshold,
-    progress: Math.min(100, Math.max(0, progress)),
-    remaining: Math.max(0, nextThreshold - safeExperience),
-    isMax: level === MAX_GROWTH_LEVEL,
-  };
-}
-
-function IconPicker({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: string[];
-  onChange: (icon: string) => void;
-}) {
-  const visibleOptions = options.includes(value) ? options : [value, ...options];
-  return (
-    <fieldset className="icon-picker">
-      <legend>{label}</legend>
-      <div>
-        {visibleOptions.map((icon) => (
-          <button
-            className={value === icon ? "selected" : ""}
-            type="button"
-            key={icon}
-            aria-label={`选择图标 ${icon}`}
-            aria-pressed={value === icon}
-            onClick={() => onChange(icon)}
-          >
-            {icon}
-            {value === icon && <span aria-hidden="true">✓</span>}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-const DEFAULT_AREAS: Area[] = [
-  { id: "body", name: "身体", icon: "🌱", color: "#5f8065", isDefault: true },
-  { id: "wisdom", name: "智慧", icon: "📖", color: "#56748a", isDefault: true },
-  { id: "create", name: "创造", icon: "🎨", color: "#8a6478", isDefault: true },
-  { id: "soul", name: "心灵", icon: "🌙", color: "#78698f", isDefault: true },
-  { id: "wealth", name: "财富", icon: "💰", color: "#a37845", isDefault: true },
-  { id: "relationships", name: "关系", icon: "🤝", color: "#9b6a62", isDefault: true },
-  { id: "explore", name: "探索", icon: "🧭", color: "#527d86", isDefault: true },
-];
-const AREA_INTRODUCTIONS: Record<string, { zh: string; en: string }> = {
-  body: {
-    zh: "照顾身体的能量、力量与日常节律，让每一次行动都成为更稳固的基础。",
-    en: "Care for your energy, strength, and daily rhythm—small actions that build a steadier foundation.",
-  },
-  wisdom: {
-    zh: "通过阅读、学习与思考积累理解，让新知识一点点沉淀为自己的能力。",
-    en: "Build understanding through reading, learning, and reflection, turning knowledge into lasting ability.",
-  },
-  create: {
-    zh: "把想法变成看得见的表达，在一次次尝试中留下属于自己的作品。",
-    en: "Turn ideas into visible expression and leave behind work that is distinctly yours.",
-  },
-  soul: {
-    zh: "留意内心的感受与需要，为平静、觉察和自我关怀留出空间。",
-    en: "Notice what you feel and need, making space for calm, awareness, and self-care.",
-  },
-  wealth: {
-    zh: "关注资源的积累与使用，通过微小而持续的选择建立更从容的生活。",
-    en: "Build and use resources mindfully through small, consistent choices that create more ease.",
-  },
-  relationships: {
-    zh: "用真诚的交流与陪伴滋养连接，让重要的人在日常中被看见。",
-    en: "Nurture connection through honest communication and presence, helping important people feel seen.",
-  },
-  explore: {
-    zh: "保持好奇，主动接触新的地方、体验与可能，让生活不断打开。",
-    en: "Stay curious and meet new places, experiences, and possibilities as life keeps opening up.",
-  },
-};
-
-function areaIntroduction(area: Area, language: Language) {
-  const introduction = AREA_INTRODUCTIONS[area.id];
-  if (introduction) return introduction[language];
-  return language === "zh"
-    ? `记录与“${area.name}”有关的小小行动，看见这个方向如何在日常里慢慢生长。`
-    : `Collect small actions related to “${area.name}” and watch this area grow through everyday life.`;
-}
-
-const AREA_COLORS = [
-  "#5f8065",
-  "#56748a",
-  "#8a6478",
-  "#78698f",
-  "#a37845",
-  "#9b6a62",
-  "#527d86",
-];
-const AREA_SCHEMA_VERSION = 3;
-const LEGACY_DEFAULT_AREA_IDS = new Set([
-  "health",
-  "body",
-  "learn",
-  "create",
-  "mind",
-  "life",
-]);
-const LEGACY_AREA_ID_MAP: Record<string, string> = {
-  health: "body",
-  body: "body",
-  learn: "wisdom",
-  create: "create",
-  mind: "soul",
-  life: "explore",
-};
-
-const DEFAULT_ACTIONS: MicroAction[] = [
-  { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["body"], value: 1, repeatable: true },
-  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", tagIds: ["body"], value: 1, repeatable: true, timerSeconds: 5 },
-  { id: "read", name: "阅读一页", icon: "📖", tagIds: ["wisdom"], value: 1, repeatable: true },
-  { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["wisdom"], value: 1, repeatable: true },
-  { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create"], value: 1, repeatable: true },
-  { id: "idea", name: "记录一个灵感", icon: "💡", tagIds: ["create"], value: 1, repeatable: true },
-];
-
-const NAV_ITEMS: { id: Tab; label: string; icon: string }[] = [
-  { id: "today", label: "今日", icon: "◉" },
-  { id: "growth", label: "成长", icon: "⌁" },
-  { id: "profile", label: "我的", icon: "○" },
-];
-
-const DEFAULT_REWARDS: Reward[] = [
-  {
-    id: "favorite-drink",
-    name: "喜欢的饮品",
-    description: "认真喝一杯自己喜欢的东西",
-    icon: "🍵",
-    cost: 5,
-  },
-  {
-    id: "slow-half-hour",
-    name: "兴趣半小时",
-    description: "留半小时，只做真正想做的事",
-    icon: "🎧",
-    cost: 12,
-  },
-  {
-    id: "small-treat",
-    name: "一份小甜点",
-    description: "给今天的自己一点甜",
-    icon: "🍰",
-    cost: 25,
-  },
-  {
-    id: "rest-evening",
-    name: "完整休息一晚",
-    description: "今晚不赶进度，安心休息",
-    icon: "🌙",
-    cost: 50,
-  },
-];
-
-function localDay(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
-}
-
-function temporaryActionDays(value: unknown) {
-  const numericValue = Number(value);
-  return Math.min(
-    30,
-    Math.max(1, Number.isFinite(numericValue) ? Math.round(numericValue) : 1),
-  );
-}
-
-function temporaryExpirationDay(days: number, start = new Date()) {
-  const expirationDay = new Date(start);
-  expirationDay.setDate(
-    expirationDay.getDate() + temporaryActionDays(days) - 1,
-  );
-  return localDay(expirationDay);
-}
-
-function isTemporaryActionExpired(action: MicroAction, now = new Date()) {
-  return Boolean(
-    action.temporary
-    && action.expiresOn
-    && action.expiresOn < localDay(now),
-  );
-}
-
-function shellValueFor(item: { shellValue?: number } | null | undefined) {
-  const value = Number(item?.shellValue ?? 1);
-  return Math.min(99, Math.max(1, Number.isFinite(value) ? Math.floor(value) : 1));
-}
-
-function milestoneThreshold(value: unknown, fallback: number, min = 1, max = 99) {
-  const numericValue = Number(value);
-  const candidate = Number.isFinite(numericValue) ? numericValue : fallback;
-  return Math.min(max, Math.max(min, Math.round(candidate)));
-}
-
-function isToday(date: Date) {
-  return localDay(date) === localDay(new Date());
-}
-
-function startOfWeek() {
-  const date = new Date();
-  const day = date.getDay() || 7;
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() - day + 1);
-  return date;
-}
-
-function greeting(language: Language) {
-  const hour = new Date().getHours();
-  if (language === "en") {
-    if (hour < 6) return "Good night";
-    if (hour < 11) return "Good morning";
-    if (hour < 14) return "Good afternoon";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
-  }
-  if (hour < 6) return "夜深了";
-  if (hour < 11) return "早上好";
-  if (hour < 14) return "中午好";
-  if (hour < 18) return "下午好";
-  return "晚上好";
-}
-
-function formatRecordDate(value: string) {
-  const date = new Date(value);
-  if (isToday(date)) {
-    return new Intl.DateTimeFormat("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).format(date);
-  }
-  return new Intl.DateTimeFormat("zh-CN", {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-}
-
-function normalizedTagIds(value: { tagIds?: string[]; areaId?: string }) {
-  if (value.tagIds?.length) return value.tagIds;
-  return value.areaId ? [value.areaId] : [];
-}
-
-function migratedTagIds(value: { tagIds?: string[]; areaId?: string }) {
-  return Array.from(
-    new Set(
-      normalizedTagIds(value).map(
-        (id) => LEGACY_AREA_ID_MAP[id] || id,
-      ),
-    ),
-  );
-}
-
-function sampleDate(daysAgo: number, hour: number, minute = 0) {
-  const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  date.setHours(hour, minute, 0, 0);
-  return date.toISOString();
-}
-
-function buildSampleRecords(): GrowthRecord[] {
-  return [
-    {
-      id: "sample-history-water",
-      actionId: "water",
-      actionName: "喝一杯水",
-      icon: "💧",
-      tagIds: ["body"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(2, 9, 20),
-    },
-    {
-      id: "sample-history-read",
-      actionId: "read",
-      actionName: "阅读一页",
-      icon: "📖",
-      tagIds: ["wisdom"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(4, 21, 10),
-    },
-    {
-      id: "sample-history-idea",
-      actionId: "idea",
-      actionName: "记录一个灵感",
-      icon: "💡",
-      tagIds: ["create"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(4, 15, 35),
-    },
-    {
-      id: "sample-history-stretch",
-      actionId: "stretch",
-      actionName: "拉伸 5 秒",
-      icon: "🙆",
-      tagIds: ["body"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(7, 8, 45),
-    },
-    {
-      id: "sample-history-word",
-      actionId: "word",
-      actionName: "学一个单词",
-      icon: "🔤",
-      tagIds: ["wisdom"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(12, 12, 15),
-    },
-    {
-      id: "sample-history-sketch",
-      actionId: "sketch",
-      actionName: "画一个草图",
-      icon: "✏️",
-      tagIds: ["create"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(18, 18, 30),
-    },
-    {
-      id: "sample-history-last-month",
-      actionId: "water",
-      actionName: "喝一杯水",
-      icon: "💧",
-      tagIds: ["body"],
-      value: 1,
-      source: "主动记录",
-      createdAt: sampleDate(31, 10, 5),
-    },
-  ];
-}
-
-export function CheckInApp() {
-  const [account, setAccount] = useState<Account | null>(null);
-  const [nickname, setNickname] = useState("");
-  const [authReady, setAuthReady] = useState(false);
-  const [serverHydrated, setServerHydrated] = useState(false);
+export function CheckInPage() {
+  const taskEditor = useTaskEditorState();
+  const growthEditor = useGrowthEditorState();
+  const rewardEditor = useRewardEditorState();
+  const profileEditor = useProfileEditorState();
+  const {
+    editingAction, setEditingAction,
+    showActionManager, setShowActionManager,
+    showActionEditor, setShowActionEditor,
+    draftName, setDraftName,
+    draftIcon, setDraftIcon,
+    draftPresetId, setDraftPresetId,
+    showActionIconPicker, setShowActionIconPicker,
+    draftTags, setDraftTags,
+    draftValue, setDraftValue,
+    draftShellValue, setDraftShellValue,
+    draftRepeatable, setDraftRepeatable,
+    draftTemporary, setDraftTemporary,
+    draftTemporaryDays, setDraftTemporaryDays,
+    draftTimeWindow, setDraftTimeWindow,
+    draftUsesTimer, setDraftUsesTimer,
+    draftTimerSeconds, setDraftTimerSeconds,
+    timerAction, setTimerAction,
+    timerPhase, setTimerPhase,
+    timerSecondsLeft, setTimerSecondsLeft,
+    timerMultiplier, setTimerMultiplier,
+    timerRingResetting, setTimerRingResetting,
+  } = taskEditor;
+  const {
+    editingArea, setEditingArea,
+    showAreaManager, setShowAreaManager,
+    showAreaEditor, setShowAreaEditor,
+    growthAreaDetailId, setGrowthAreaDetailId,
+    draftAreaName, setDraftAreaName,
+    draftAreaIcon, setDraftAreaIcon,
+    draftAreaColor, setDraftAreaColor,
+    areaEditorReturnToManager, setAreaEditorReturnToManager,
+  } = growthEditor;
+  const {
+    pendingReward, setPendingReward,
+    editingReward, setEditingReward,
+    showRewardManager, setShowRewardManager,
+    showRewardEditor, setShowRewardEditor,
+    draftRewardName, setDraftRewardName,
+    draftRewardDescription, setDraftRewardDescription,
+    draftRewardIcon, setDraftRewardIcon,
+    draftRewardCost, setDraftRewardCost,
+  } = rewardEditor;
+  const {
+    showProfileEditor,
+    setShowProfileEditor,
+    draftProfileNickname,
+    setDraftProfileNickname,
+  } = profileEditor;
+  const {
+    account,
+    setAccount,
+    authReady,
+    setAuthReady,
+    serverHydrated,
+    setServerHydrated,
+  } = useAuthState();
+  const {
+    nickname,
+    setNickname,
+    areas,
+    setAreas,
+    actions,
+    setActions,
+    records,
+    setRecords,
+    seedSampleHistory,
+    setSeedSampleHistory,
+    language,
+    setLanguage,
+    theme,
+    setTheme,
+    cardMilestoneFirst,
+    setCardMilestoneFirst,
+    cardMilestoneSecond,
+    setCardMilestoneSecond,
+    shellBalance,
+    setShellBalance,
+    shellsEarned,
+    setShellsEarned,
+    rewardClaims,
+    setRewardClaims,
+    rewards,
+    setRewards,
+  } = useAppDataState();
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -568,9 +147,6 @@ export function CheckInApp() {
   const [clockNow, setClockNow] = useState(() => new Date());
   const [growthPeriod, setGrowthPeriod] = useState<GrowthPeriod>("today");
   const [actionAreaFilter, setActionAreaFilter] = useState("all");
-  const [areas, setAreas] = useState<Area[]>(DEFAULT_AREAS);
-  const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
-  const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [ready, setReady] = useState(false);
   const [orbitRippleKey, setOrbitRippleKey] = useState(1);
   const [recordActionMenu, setRecordActionMenu] = useState<MicroAction | null>(null);
@@ -594,64 +170,12 @@ export function CheckInApp() {
   } | null>(null);
   const [toasts, setToasts] = useState<ToastState[]>([]);
   const toastTimers = useRef<number[]>([]);
-  const [editingAction, setEditingAction] = useState<MicroAction | null>(null);
-  const [showActionManager, setShowActionManager] = useState(false);
-  const [showActionEditor, setShowActionEditor] = useState(false);
-  const [showAreaEditor, setShowAreaEditor] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog | null>(null);
-  const [draftName, setDraftName] = useState("");
-  const [draftIcon, setDraftIcon] = useState("🌱");
-  const [draftPresetId, setDraftPresetId] = useState<string | null>("custom");
-  const [showActionIconPicker, setShowActionIconPicker] = useState(false);
-  const [draftTags, setDraftTags] = useState<string[]>(["body"]);
-  const [draftValue, setDraftValue] = useState(1);
-  const [draftShellValue, setDraftShellValue] = useState(1);
-  const [draftRepeatable, setDraftRepeatable] = useState(true);
-  const [draftTemporary, setDraftTemporary] = useState(false);
-  const [draftTemporaryDays, setDraftTemporaryDays] = useState(1);
-  const [draftTimeWindow, setDraftTimeWindow] =
-    useState<ActionTimeWindow>("anytime");
-  const [draftUsesTimer, setDraftUsesTimer] = useState(false);
-  const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
-  const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
-  const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running" | "success">("idle");
-  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
-  const [timerMultiplier, setTimerMultiplier] = useState(1);
-  const [timerRingResetting, setTimerRingResetting] = useState(false);
-  const [editingArea, setEditingArea] = useState<Area | null>(null);
-  const [showAreaManager, setShowAreaManager] = useState(false);
-  const [growthAreaDetailId, setGrowthAreaDetailId] = useState<string | null>(null);
-  const [draftAreaName, setDraftAreaName] = useState("");
-  const [draftAreaIcon, setDraftAreaIcon] = useState("🌿");
-  const [draftAreaColor, setDraftAreaColor] = useState(AREA_COLORS[0]);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [showProfileEditor, setShowProfileEditor] = useState(false);
-  const [draftProfileNickname, setDraftProfileNickname] = useState("");
-  const [seedSampleHistory, setSeedSampleHistory] = useState(true);
-  const [language, setLanguage] = useState<Language>("zh");
-  const [theme, setTheme] = useState<Theme>("light");
-  const [cardMilestoneFirst, setCardMilestoneFirst] = useState(
-    DEFAULT_CARD_MILESTONE_FIRST,
-  );
-  const [cardMilestoneSecond, setCardMilestoneSecond] = useState(
-    DEFAULT_CARD_MILESTONE_SECOND,
-  );
-  const [shellBalance, setShellBalance] = useState(0);
-  const [shellsEarned, setShellsEarned] = useState(0);
   const [bankDropKey, setBankDropKey] = useState(0);
-  const [rewardClaims, setRewardClaims] = useState<RewardClaim[]>([]);
-  const [rewards, setRewards] = useState<Reward[]>(DEFAULT_REWARDS);
-  const [pendingReward, setPendingReward] = useState<Reward | null>(null);
-  const [editingReward, setEditingReward] = useState<Reward | null>(null);
-  const [showRewardManager, setShowRewardManager] = useState(false);
-  const [showRewardEditor, setShowRewardEditor] = useState(false);
-  const [draftRewardName, setDraftRewardName] = useState("");
-  const [draftRewardDescription, setDraftRewardDescription] = useState("");
-  const [draftRewardIcon, setDraftRewardIcon] = useState("🎁");
-  const [draftRewardCost, setDraftRewardCost] = useState(10);
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
@@ -668,7 +192,6 @@ export function CheckInApp() {
     baseOffset: number;
     axis: "horizontal" | "vertical" | null;
   } | null>(null);
-  const areaEditorReturnToManagerRef = useRef(false);
   const touchStartRef = useRef<{
     x: number;
     y: number;
@@ -696,208 +219,91 @@ export function CheckInApp() {
   const modalAnimationTimerRef = useRef<number | null>(null);
 
   function applyAccountData(value: unknown, username: string) {
-    const stored =
-      value && typeof value === "object" ? (value as Record<string, unknown>) : null;
-    const allowsSampleHistory = stored?.seedSampleHistory !== false;
-    setSeedSampleHistory(allowsSampleHistory);
-    const storedAreas = Array.isArray(stored?.areas) ? (stored.areas as Area[]) : [];
-    const usesCurrentAreaSchema = stored?.areaSchemaVersion === AREA_SCHEMA_VERSION;
-    const customStoredAreas = storedAreas.filter(
-      (area) =>
-        !LEGACY_DEFAULT_AREA_IDS.has(area.id)
-        && !DEFAULT_AREAS.some((defaultArea) => defaultArea.id === area.id),
-    );
-    setAreas(
-      storedAreas.length
-        ? usesCurrentAreaSchema
-          ? [
-              ...storedAreas,
-              ...DEFAULT_AREAS.filter(
-                (defaultArea) =>
-                  !storedAreas.some((area) => area.id === defaultArea.id),
-              ),
-            ]
-          : [...DEFAULT_AREAS, ...customStoredAreas]
-        : DEFAULT_AREAS,
-    );
-
-    const storedActions = Array.isArray(stored?.actions)
-      ? (stored.actions as MicroAction[])
-      : [];
-    setActions(
-      storedActions.length
-        ? storedActions.map((action) => {
-            const defaultAction = DEFAULT_ACTIONS.find(
-              (item) => item.id === action.id,
-            );
-            return {
-              ...action,
-              name:
-                action.id === "stretch" && action.name === "拉伸 5 秒"
-                  ? defaultAction?.name || action.name
-                  : action.name,
-              icon:
-                action.id === "stretch" && action.name === "拉伸 5 秒"
-                  ? defaultAction?.icon || action.icon
-                  : action.icon,
-              tagIds: migratedTagIds(
-                action.tagIds?.length
-                  ? action
-                  : {
-                      ...action,
-                      tagIds: defaultAction?.tagIds || normalizedTagIds(action),
-                    },
-              ),
-              shellValue: shellValueFor(action),
-              repeatable: action.repeatable !== false,
-              timeWindow: actionTimeWindowFor(action),
-              timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
-              temporary: action.temporary === true,
-              temporaryDays: action.temporary
-                ? temporaryActionDays(action.temporaryDays)
-                : undefined,
-            };
-          }).filter((action) => !isTemporaryActionExpired(action))
-        : DEFAULT_ACTIONS,
-    );
-
-    const storedRecords = Array.isArray(stored?.records)
-      ? (stored.records as GrowthRecord[]).map((record) => ({
-          ...record,
-          tagIds: migratedTagIds(record),
-          shellValue: shellValueFor(record),
-        }))
-      : [];
-    const existingRecordIds = new Set(storedRecords.map((record) => record.id));
-    const sampleKey = `${SAMPLE_HISTORY_KEY}:${username}`;
-    const shouldSeedHistory =
-      allowsSampleHistory && localStorage.getItem(sampleKey) !== "done";
-    const mergedRecords = [
-      ...storedRecords,
-      ...(shouldSeedHistory
-        ? buildSampleRecords().filter(
-            (record) => !existingRecordIds.has(record.id),
-          )
-        : []),
-    ];
-    setRecords(mergedRecords);
-    setShellBalance(
-      typeof stored?.shellBalance === "number"
-        ? Math.max(0, stored.shellBalance)
-        : mergedRecords.reduce(
-            (total, record) => total + shellValueFor(record),
-            0,
-          ),
-    );
-    setShellsEarned(
-      typeof stored?.shellsEarned === "number"
-        ? Math.max(0, stored.shellsEarned)
-        : mergedRecords.reduce(
-            (total, record) => total + shellValueFor(record),
-            0,
-          ),
-    );
-    setRewards(
-      Array.isArray(stored?.rewards)
-        ? (stored.rewards as Reward[])
-        : DEFAULT_REWARDS,
-    );
-    setRewardClaims(
-      Array.isArray(stored?.rewardClaims)
-        ? (stored.rewardClaims as RewardClaim[])
-        : [],
-    );
-    const preferences =
-      stored?.preferences && typeof stored.preferences === "object"
-        ? (stored.preferences as AppPreferences)
-        : null;
-    const profile =
-      stored?.profile && typeof stored.profile === "object"
-        ? (stored.profile as { nickname?: string })
-        : null;
-    setNickname(
-      typeof profile?.nickname === "string"
-        ? profile.nickname.slice(0, 16)
-        : "",
-    );
-    setLanguage(preferences?.language === "en" ? "en" : "zh");
-    setTheme(preferences?.theme === "dark" ? "dark" : "light");
-    const nextFirstMilestone = milestoneThreshold(
-      preferences?.cardMilestoneFirst,
-      DEFAULT_CARD_MILESTONE_FIRST,
-      1,
-      98,
-    );
-    const nextSecondMilestone = milestoneThreshold(
-      preferences?.cardMilestoneSecond,
-      DEFAULT_CARD_MILESTONE_SECOND,
-      nextFirstMilestone + 1,
-      99,
-    );
-    setCardMilestoneFirst(nextFirstMilestone);
-    setCardMilestoneSecond(nextSecondMilestone);
-    if (shouldSeedHistory) localStorage.setItem(sampleKey, "done");
+    const data = normalizeAppData(value, {
+      sampleHistoryAlreadySeeded: hasSeededSampleHistory(username),
+    });
+    setSeedSampleHistory(data.seedSampleHistory);
+    setAreas(data.areas);
+    setActions(data.actions);
+    setRecords(data.records);
+    setShellBalance(data.shellBalance);
+    setShellsEarned(data.shellsEarned);
+    setRewards(data.rewards);
+    setRewardClaims(data.rewardClaims);
+    setNickname(data.profile.nickname);
+    setLanguage(data.preferences.language);
+    setTheme(data.preferences.theme);
+    setCardMilestoneFirst(data.preferences.cardMilestoneFirst);
+    setCardMilestoneSecond(data.preferences.cardMilestoneSecond);
+    if (data.didSeedSampleHistory) markSampleHistorySeeded(username);
   }
 
   async function hydrateAccount(nextAccount: Account) {
     setReady(false);
     setServerHydrated(false);
-    const response = await fetch("/api/account-data", {
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-    if (response.status === 401) throw new Error("登录状态已失效");
-    if (!response.ok) throw new Error("账号数据暂时无法读取");
-    const result = (await response.json()) as { data?: unknown };
-
-    let fallback: unknown = null;
-    try {
-      fallback = JSON.parse(
-        localStorage.getItem(`${STORAGE_KEY}:${nextAccount.username}`)
-          || (nextAccount.username === "123456"
-            ? localStorage.getItem(STORAGE_KEY)
-            : "")
-          || "null",
-      );
-    } catch {
-      fallback = null;
-    }
-
-    applyAccountData(result.data ?? fallback, nextAccount.username);
+    const serverData = await readAccountData();
+    const fallback = readAccountFallback(nextAccount.username);
+    applyAccountData(serverData ?? fallback, nextAccount.username);
     setAccount(nextAccount);
     setReady(true);
     setServerHydrated(true);
   }
 
   function hydrateGuest() {
-    let stored: unknown = null;
-    try {
-      stored = JSON.parse(
-        localStorage.getItem(GUEST_STORAGE_KEY)
-          || localStorage.getItem(STORAGE_KEY)
-          || "null",
-      );
-    } catch {
-      stored = null;
-    }
-    applyAccountData(stored, "guest");
+    applyAccountData(readGuestData(), "guest");
     setNickname("");
     setAccount(null);
     setReady(true);
     setServerHydrated(false);
   }
 
+  const persistedData = useMemo(
+    () => createAppDataSnapshot({
+      areas,
+      actions,
+      records,
+      shellBalance,
+      shellsEarned,
+      rewards,
+      rewardClaims,
+      seedSampleHistory,
+      profile: { nickname },
+      preferences: {
+        language,
+        theme,
+        cardMilestoneFirst,
+        cardMilestoneSecond,
+      },
+      accountUsername: account?.username,
+    }),
+    [
+      account?.username,
+      actions,
+      areas,
+      cardMilestoneFirst,
+      cardMilestoneSecond,
+      language,
+      nickname,
+      records,
+      rewardClaims,
+      rewards,
+      seedSampleHistory,
+      shellBalance,
+      shellsEarned,
+      theme,
+    ],
+  );
+
+  // Session bootstrap is intentionally one-shot; later account changes happen
+  // only through the explicit login/logout flows below.
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     let active = true;
     void (async () => {
       try {
-        const response = await fetch("/api/auth/session", {
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-        if (response.ok) {
-          const result = (await response.json()) as { account: Account };
-          await hydrateAccount(result.account);
+        const sessionAccount = await getSessionAccount();
+        if (sessionAccount) {
+          await hydrateAccount(sessionAccount);
         } else {
           hydrateGuest();
         }
@@ -919,59 +325,17 @@ export function CheckInApp() {
       if (modalAnimationTimerRef.current) window.clearTimeout(modalAnimationTimerRef.current);
     };
   }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   useEffect(() => {
     if (!ready) return;
-    const data = {
-      areas,
-      actions,
-      records,
-      shellBalance,
-      shellsEarned,
-      rewards,
-      rewardClaims,
-      areaSchemaVersion: AREA_SCHEMA_VERSION,
-      seedSampleHistory,
-      profile: { nickname: account ? nickname.trim() : "" },
-      preferences: {
-        language,
-        theme,
-        cardMilestoneFirst,
-        cardMilestoneSecond,
-      },
-    };
-    localStorage.setItem(
-      account ? `${STORAGE_KEY}:${account.username}` : GUEST_STORAGE_KEY,
-      JSON.stringify(data),
-    );
+    saveBrowserData(account?.username ?? null, persistedData);
     if (!account || !serverHydrated) return;
     const timer = window.setTimeout(() => {
-      void fetch("/api/account-data", {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      void writeAccountData(persistedData);
     }, 320);
     return () => window.clearTimeout(timer);
-  }, [
-    account,
-    areas,
-    actions,
-    cardMilestoneFirst,
-    cardMilestoneSecond,
-    records,
-    rewardClaims,
-    rewards,
-    seedSampleHistory,
-    language,
-    nickname,
-    serverHydrated,
-    shellBalance,
-    shellsEarned,
-    theme,
-    ready,
-  ]);
+  }, [account, persistedData, ready, serverHydrated]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -1000,8 +364,11 @@ export function CheckInApp() {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [setActions]);
 
+  // The timer is an explicit phase state machine. Its synchronous transition
+  // from preparation to running is required to keep the ring and count aligned.
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (!timerAction || timerPhase === "idle") return;
 
@@ -1044,6 +411,7 @@ export function CheckInApp() {
     }, 100);
     return () => window.clearTimeout(finishTimer);
   }, [timerAction, timerMultiplier, timerPhase, timerSecondsLeft]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   useEffect(() => {
     if (!timerRingResetting) return;
@@ -1057,7 +425,7 @@ export function CheckInApp() {
       window.cancelAnimationFrame(firstFrame);
       if (secondFrame) window.cancelAnimationFrame(secondFrame);
     };
-  }, [timerRingResetting]);
+  }, [setTimerRingResetting, timerRingResetting]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -1068,20 +436,11 @@ export function CheckInApp() {
   }, [tab]);
 
   const todayRecords = useMemo(
-    () => records.filter((record) => isToday(new Date(record.createdAt))),
+    () => recordsForToday(records),
     [records],
   );
-  const weekRecords = useMemo(() => {
-    const start = startOfWeek().getTime();
-    return records.filter((record) => new Date(record.createdAt).getTime() >= start);
-  }, [records]);
-  const monthRecords = useMemo(() => {
-    const now = new Date();
-    return records.filter((record) => {
-      const date = new Date(record.createdAt);
-      return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
-    });
-  }, [records]);
+  const weekRecords = useMemo(() => recordsForWeek(records), [records]);
+  const monthRecords = useMemo(() => recordsForMonth(records), [records]);
   const calendarRecordCounts = useMemo(() => {
     const counts = new Map<string, number>();
     records.forEach((record) => {
@@ -1118,12 +477,7 @@ export function CheckInApp() {
   }
 
   function totalsFor(source: GrowthRecord[]) {
-    return areas.map((area) => ({
-      ...area,
-      total: source
-        .filter((record) => normalizedTagIds(record).includes(area.id))
-        .reduce((sum, record) => sum + record.value, 0),
-    }));
+    return growthTotals(areas, source);
   }
 
   async function handleLogin(event: FormEvent) {
@@ -1132,23 +486,8 @@ export function CheckInApp() {
     setLoginPending(true);
     setLoginError("");
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: loginUsername.trim(),
-          password: loginPassword,
-        }),
-      });
-      const result = (await response.json().catch(() => null)) as {
-        account?: Account;
-        error?: string;
-      } | null;
-      if (!response.ok || !result?.account) {
-        throw new Error(result?.error || "暂时无法登录");
-      }
-      await hydrateAccount(result.account);
+      const nextAccount = await loginAccount(loginUsername.trim(), loginPassword);
+      await hydrateAccount(nextAccount);
       setLoginPassword("");
       closeSecondaryModal("login", () => setShowLogin(false));
     } catch (error) {
@@ -1160,34 +499,9 @@ export function CheckInApp() {
 
   async function logout() {
     if (account && serverHydrated) {
-      await fetch("/api/account-data", {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          areas,
-          actions,
-          records,
-          shellBalance,
-          shellsEarned,
-          rewards,
-          rewardClaims,
-          areaSchemaVersion: AREA_SCHEMA_VERSION,
-          seedSampleHistory,
-          profile: { nickname: nickname.trim() },
-          preferences: {
-            language,
-            theme,
-            cardMilestoneFirst,
-            cardMilestoneSecond,
-          },
-        }),
-      }).catch(() => null);
+      await writeAccountData(persistedData).catch(() => null);
     }
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "same-origin",
-    }).catch(() => null);
+    await logoutAccount();
     hydrateGuest();
     setShowLogin(false);
     setLoginPassword("");
@@ -1198,7 +512,7 @@ export function CheckInApp() {
     title = "操作完成",
     undoRecordId?: string,
   ) {
-    const id = `toast-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const id = createRuntimeId("toast");
     const duration = undoRecordId ? 3600 : 2200;
 
     toastTimers.current.forEach((timer) => window.clearTimeout(timer));
@@ -1269,33 +583,23 @@ export function CheckInApp() {
       return;
     }
     const actionTags = tagsFor(action);
-    const safeCount =
-      action.repeatable === false ? 1 : Math.max(1, Math.floor(count));
-    const shellValue = shellValueFor(action);
-    const shellGain = shellValue * safeCount;
-    const timestamp = Date.now();
-    const newRecords = Array.from({ length: safeCount }, (_, index): GrowthRecord => ({
-      id: `${timestamp}-${index}-${Math.random().toString(16).slice(2)}`,
-      actionId: action.id,
-      actionName: action.name,
-      icon: action.icon,
-      tagIds: actionTags.map((tag) => tag.id),
-      value: action.value,
-      shellValue,
+    const completion = completeTask(action, {
+      count,
       source,
-      createdAt: new Date(timestamp + index).toISOString(),
-    })).reverse();
-    setRecords((current) => [...newRecords, ...current]);
-    setLastCheckedAction({ id: action.id, token: Date.now() });
-    setShellBalance((current) => current + shellGain);
-    setShellsEarned((current) => current + shellGain);
+      tagIds: actionTags.map((tag) => tag.id),
+      timestamp: runtimeNow(),
+    });
+    setRecords((current) => [...completion.records, ...current]);
+    setLastCheckedAction({ id: action.id, token: runtimeNow() });
+    setShellBalance((current) => addShells(current, completion.shellGain));
+    setShellsEarned((current) => addShells(current, completion.shellGain));
     const growthChanges = actionTags.map(
-      (tag) => `${tag.name} +${action.value * safeCount}`,
+      (tag) => `${tag.name} +${action.value * completion.count}`,
     );
     showToast(
-      [...growthChanges, `栗壳 +${shellGain}`].join(" · "),
+      [...growthChanges, `栗壳 +${completion.shellGain}`].join(" · "),
       "成长已记录",
-      newRecords[0].id,
+      completion.records[0].id,
     );
   }
 
@@ -1308,8 +612,8 @@ export function CheckInApp() {
       records.find((record) => record.id === recordId),
     );
     setRecords((current) => current.filter((record) => record.id !== recordId));
-    setShellBalance((current) => Math.max(0, current - shellValue));
-    setShellsEarned((current) => Math.max(0, current - shellValue));
+    setShellBalance((current) => removeShells(current, shellValue));
+    setShellsEarned((current) => removeShells(current, shellValue));
     if (showFeedback) showToast("刚刚的成长记录已移除", "已撤销");
   }
 
@@ -1348,7 +652,7 @@ export function CheckInApp() {
     modalDragStartRef.current = {
       id,
       y: event.clientY,
-      time: Date.now(),
+      time: runtimeNow(),
       instantClose,
     };
     modalDragCloseRef.current = close;
@@ -1377,7 +681,7 @@ export function CheckInApp() {
     const start = modalDragStartRef.current;
     if (!start) return;
     const offset = Math.max(0, event.clientY - start.y);
-    const velocity = offset / Math.max(1, Date.now() - start.time);
+    const velocity = offset / Math.max(1, runtimeNow() - start.time);
     const close = modalDragCloseRef.current;
     modalDragStartRef.current = null;
     modalDragCloseRef.current = null;
@@ -1416,7 +720,7 @@ export function CheckInApp() {
       id,
       x: touch.clientX,
       y: touch.clientY,
-      time: Date.now(),
+      time: runtimeNow(),
       axis: null,
       close,
       instantClose,
@@ -1467,7 +771,7 @@ export function CheckInApp() {
     }
 
     const offset = Math.max(0, event.changedTouches[0].clientY - start.y);
-    const velocity = offset / Math.max(1, Date.now() - start.time);
+    const velocity = offset / Math.max(1, runtimeNow() - start.time);
     if (offset >= 78 || velocity >= 0.55) {
       closeSecondaryModal(start.id, start.close);
       return;
@@ -1600,7 +904,7 @@ export function CheckInApp() {
       id: action.id,
       x: touch.clientX,
       y: touch.clientY,
-      time: Date.now(),
+      time: runtimeNow(),
       baseOffset,
       axis: null,
     };
@@ -1651,7 +955,7 @@ export function CheckInApp() {
     }
 
     const deltaX = event.changedTouches[0].clientX - start.x;
-    const velocity = deltaX / Math.max(1, Date.now() - start.time);
+    const velocity = deltaX / Math.max(1, runtimeNow() - start.time);
     const finalOffset = Math.max(
       -PROFILE_ACTION_SWIPE_WIDTH,
       Math.min(8, start.baseOffset + deltaX),
@@ -1782,7 +1086,7 @@ export function CheckInApp() {
   }
 
   function requestReward(reward: Reward) {
-    if (shellBalance < reward.cost) {
+    if (!canAfford(shellBalance, reward.cost)) {
       showToast(`再积累 ${reward.cost - shellBalance} 枚栗壳就可以兑换`, "栗壳还不够");
       return;
     }
@@ -1790,16 +1094,9 @@ export function CheckInApp() {
   }
 
   function redeemReward() {
-    if (!pendingReward || shellBalance < pendingReward.cost) return;
-    const claim: RewardClaim = {
-      id: `reward-${Date.now()}-${Math.random().toString(16).slice(2)}`,
-      rewardId: pendingReward.id,
-      rewardName: pendingReward.name,
-      icon: pendingReward.icon,
-      cost: pendingReward.cost,
-      createdAt: new Date().toISOString(),
-    };
-    setShellBalance((current) => Math.max(0, current - pendingReward.cost));
+    if (!pendingReward || !canAfford(shellBalance, pendingReward.cost)) return;
+    const claim = createRewardClaim(pendingReward);
+    setShellBalance((current) => spendShells(current, pendingReward.cost));
     setRewardClaims((current) => [claim, ...current]);
     showToast(`${pendingReward.icon} ${pendingReward.name}，现在就去享受吧`, "奖励已兑换");
     closeSecondaryModal("reward-confirm", () => setPendingReward(null));
@@ -1837,7 +1134,7 @@ export function CheckInApp() {
     } else {
       setRewards((current) => [
         ...current,
-        { id: `reward-${Date.now()}`, ...rewardValues },
+        { id: createRuntimeId("reward"), ...rewardValues },
       ]);
       showToast("新的奖励已加入");
     }
@@ -2000,7 +1297,7 @@ export function CheckInApp() {
       setActions((current) => [
         ...current,
         {
-          id: `action-${Date.now()}`,
+          id: createRuntimeId("action"),
           name: draftName.trim(),
           icon: draftIcon.trim() || "🌱",
           tagIds: draftTags,
@@ -2028,7 +1325,7 @@ export function CheckInApp() {
   }
 
   function prepareAreaEditor(area?: Area, returnToManager = false) {
-    areaEditorReturnToManagerRef.current = returnToManager;
+    setAreaEditorReturnToManager(returnToManager);
     setEditingArea(area || null);
     setDraftAreaName(area?.name || "");
     setDraftAreaIcon(area?.icon || "🌿");
@@ -2049,7 +1346,7 @@ export function CheckInApp() {
 
   function closeAreaEditor() {
     setShowAreaEditor(false);
-    if (areaEditorReturnToManagerRef.current) {
+    if (areaEditorReturnToManager) {
       setShowAreaManager(true);
     }
   }
@@ -2074,7 +1371,7 @@ export function CheckInApp() {
       showToast("成长领域已更新");
     } else {
       const area: Area = {
-        id: `area-${Date.now()}`,
+        id: createRuntimeId("area"),
         name: draftAreaName.trim(),
         icon: draftAreaIcon.trim() || "🌿",
         color: draftAreaColor,
@@ -2083,7 +1380,7 @@ export function CheckInApp() {
       showToast("成长领域已创建");
     }
     setShowAreaEditor(false);
-    setShowAreaManager(areaEditorReturnToManagerRef.current);
+    setShowAreaManager(areaEditorReturnToManager);
   }
 
   function deleteArea(area: Area) {
@@ -2101,7 +1398,7 @@ export function CheckInApp() {
     }
     closeSecondaryModal("area-editor", () => {
       setShowAreaEditor(false);
-      setShowAreaManager(areaEditorReturnToManagerRef.current);
+      setShowAreaManager(areaEditorReturnToManager);
       setConfirmDialog({ kind: "delete-area", area });
     });
   }
@@ -2215,7 +1512,7 @@ export function CheckInApp() {
     touchStartRef.current = {
       x: event.touches[0].clientX,
       y: event.touches[0].clientY,
-      time: Date.now(),
+      time: runtimeNow(),
       screen,
       scrollTop: screen?.scrollTop || 0,
     };
@@ -2264,7 +1561,7 @@ export function CheckInApp() {
     const deltaX = event.changedTouches[0].clientX - start.x;
     const currentIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
     const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
-    const velocity = Math.abs(deltaX) / Math.max(1, Date.now() - start.time);
+    const velocity = Math.abs(deltaX) / Math.max(1, runtimeNow() - start.time);
     const shouldSwitch = Math.abs(deltaX) >= 68 || velocity >= 0.42;
 
     if (shouldSwitch && nextIndex >= 0 && nextIndex < NAV_ITEMS.length) {
@@ -2312,7 +1609,7 @@ export function CheckInApp() {
         })),
       );
       showToast("成长领域已删除");
-      setShowAreaManager(areaEditorReturnToManagerRef.current);
+      setShowAreaManager(areaEditorReturnToManager);
     } else if (confirmDialog.kind === "delete-reward") {
       setRewards((current) =>
         current.filter((item) => item.id !== confirmDialog.reward.id),
@@ -2421,18 +1718,9 @@ export function CheckInApp() {
         : growthPeriod === "month"
           ? monthRecords
           : records;
-  const nextReward = [...rewards]
-    .filter((reward) => reward.cost > shellBalance)
-    .sort((first, second) => first.cost - second.cost)[0];
-  const shellProgress = nextReward
-    ? Math.min(100, (shellBalance / nextReward.cost) * 100)
-    : rewards.length
-      ? 100
-      : 0;
   const actionMenuTodayCount = recordActionMenu
     ? todayRecords.filter((record) => record.actionId === recordActionMenu.id).length
     : 0;
-  const visibleShellCount = Math.min(12, shellBalance);
   const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
   const todayCardMilestone =
     todayRecords.length >= cardMilestoneSecond
@@ -2464,13 +1752,6 @@ export function CheckInApp() {
   );
   const timerSliderProgress =
     ((safeDraftTimerSeconds - 1) / Math.max(1, timerSliderMax - 1)) * 100;
-  const profileActionGroups = PROFILE_ACTION_TIME_GROUPS.map((group) => ({
-    ...group,
-    actions: actions.filter(
-      (action) => actionTimeWindowFor(action) === group.id,
-    ),
-  })).filter((group) => group.actions.length > 0);
-
   return (
     <main
       className={`shell${
@@ -2509,343 +1790,32 @@ export function CheckInApp() {
           }}
         >
           {showCalendar && (
-            <div className="screen calendar-screen">
-              <section className="calendar-heading">
-                <div className="calendar-heading-actions">
-                  <button
-                    className="calendar-back"
-                    type="button"
-                    aria-label="返回今日页面"
-                    onClick={closeCalendar}
-                  >
-                    <span aria-hidden="true">‹</span>
-                  </button>
-                </div>
-                <span className="overline">CALENDAR</span>
-                <h1>日历记录</h1>
-                <p>回看过去发生的小事，每一次都算成长。</p>
-              </section>
-
-              <section className="calendar-card">
-                <div className="calendar-toolbar">
-                  <button
-                    type="button"
-                    aria-label="上一个月"
-                    onClick={() => shiftCalendarMonth(-1)}
-                  >
-                    ‹
-                  </button>
-                  <strong>
-                    {new Intl.DateTimeFormat("zh-CN", {
-                      year: "numeric",
-                      month: "long",
-                    }).format(calendarMonth)}
-                  </strong>
-                  <button
-                    type="button"
-                    aria-label="下一个月"
-                    disabled={
-                      calendarMonth.getFullYear() === new Date().getFullYear()
-                      && calendarMonth.getMonth() === new Date().getMonth()
-                    }
-                    onClick={() => shiftCalendarMonth(1)}
-                  >
-                    ›
-                  </button>
-                </div>
-
-                <div className="calendar-weekdays" aria-hidden="true">
-                  {["日", "一", "二", "三", "四", "五", "六"].map((day) => (
-                    <span key={day}>{day}</span>
-                  ))}
-                </div>
-                <div className="calendar-grid">
-                  {calendarCells.map((cell, index) =>
-                    cell ? (
-                      <button
-                        className={`${cell.key === selectedCalendarDay ? "selected" : ""} ${
-                          cell.key === localDay(new Date()) ? "today" : ""
-                        } ${calendarRecordCounts.has(cell.key) ? "has-records" : ""}`}
-                        type="button"
-                        key={cell.key}
-                        aria-label={`${new Intl.DateTimeFormat("zh-CN", {
-                          month: "long",
-                          day: "numeric",
-                        }).format(cell.date)}，${calendarRecordCounts.get(cell.key) || 0} 条记录`}
-                        onClick={() => setSelectedCalendarDay(cell.key)}
-                      >
-                        <span>{cell.date.getDate()}</span>
-                        {calendarRecordCounts.has(cell.key) && (
-                          <small>{calendarRecordCounts.get(cell.key)}</small>
-                        )}
-                      </button>
-                    ) : (
-                      <span className="calendar-empty" key={`empty-${index}`} />
-                    ),
-                  )}
-                </div>
-              </section>
-
-              <section className="calendar-day-detail">
-                <div className="section-title-row">
-                  <div>
-                    <span className="overline">当天记录</span>
-                    <h2>
-                      {new Intl.DateTimeFormat("zh-CN", {
-                        month: "long",
-                        day: "numeric",
-                        weekday: "short",
-                      }).format(new Date(`${selectedCalendarDay}T12:00:00`))}
-                    </h2>
-                  </div>
-                  <small>{selectedDayRecords.length} 件小事</small>
-                </div>
-                {selectedDayRecords.length ? (
-                  <div className="calendar-record-list">
-                    {selectedDayRecords.map((record) => (
-                      <article key={record.id}>
-                        <span className="record-icon">{record.icon}</span>
-                        <div>
-                          <strong>{record.actionName}</strong>
-                          <small>{formatRecordDate(record.createdAt)} · {record.source}</small>
-                          <span className="action-tag-list">
-                            {tagsFor(record).map((tag) => (
-                              <i
-                                key={tag.id}
-                                style={{ color: tag.color, borderColor: `${tag.color}35` }}
-                              >
-                                {tag.name} +{record.value}
-                              </i>
-                            ))}
-                            <i className="shell-gain-tag">
-                              <span aria-hidden="true">🌰</span>
-                              栗壳 +{shellValueFor(record)}
-                            </i>
-                          </span>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="empty-state compact">
-                    <p>这一天还没有留下记录。</p>
-                  </div>
-                )}
-              </section>
-            </div>
+            <CalendarPage
+              month={calendarMonth}
+              cells={calendarCells}
+              recordCounts={calendarRecordCounts}
+              selectedDay={selectedCalendarDay}
+              selectedRecords={selectedDayRecords}
+              onClose={closeCalendar}
+              onShiftMonth={shiftCalendarMonth}
+              onSelectDay={setSelectedCalendarDay}
+              tagsFor={tagsFor}
+            />
           )}
 
           {showSettings && (
-            <div className="screen settings-screen">
-              <section className="settings-page-heading">
-                <button
-                  className="settings-back"
-                  type="button"
-                  aria-label={tr("返回我的页面", "Back to profile")}
-                  onClick={closeSettings}
-                >
-                  <span aria-hidden="true">‹</span>
-                </button>
-                <span className="overline">SETTINGS</span>
-                <h1>{tr("设置", "Settings")}</h1>
-              </section>
-
-              <section className="settings-panel">
-                <div className="settings-option-copy">
-                  <span className="settings-option-icon" aria-hidden="true">文</span>
-                  <div>
-                    <strong>{tr("界面语言", "Language")}</strong>
-                  </div>
-                </div>
-                <div className="settings-segmented" role="group" aria-label={tr("界面语言", "Language")}>
-                  <button
-                    className={language === "zh" ? "selected" : ""}
-                    type="button"
-                    aria-pressed={language === "zh"}
-                    onClick={() => setLanguage("zh")}
-                  >
-                    简体中文
-                  </button>
-                  <button
-                    className={language === "en" ? "selected" : ""}
-                    type="button"
-                    aria-pressed={language === "en"}
-                    onClick={() => setLanguage("en")}
-                  >
-                    English
-                  </button>
-                </div>
-              </section>
-
-              <section className="settings-panel">
-                <div className="settings-option-copy">
-                  <span className="settings-option-icon" aria-hidden="true">◐</span>
-                  <div>
-                    <strong>{tr("外观模式", "Appearance")}</strong>
-                  </div>
-                </div>
-                <div className="theme-choice-grid" role="group" aria-label={tr("外观模式", "Appearance")}>
-                  <button
-                    className={theme === "light" ? "selected" : ""}
-                    type="button"
-                    aria-pressed={theme === "light"}
-                    onClick={() => setTheme("light")}
-                  >
-                    <span aria-hidden="true">☀</span>
-                    <strong>{tr("日间", "Light")}</strong>
-                    <small>{tr("温暖明亮", "Warm and bright")}</small>
-                  </button>
-                  <button
-                    className={theme === "dark" ? "selected" : ""}
-                    type="button"
-                    aria-pressed={theme === "dark"}
-                    onClick={() => setTheme("dark")}
-                  >
-                    <span aria-hidden="true">☾</span>
-                    <strong>{tr("夜间", "Dark")}</strong>
-                    <small>{tr("柔和低亮", "Soft and dim")}</small>
-                  </button>
-                </div>
-              </section>
-
-              <section className="settings-panel milestone-settings-panel">
-                <div className="settings-option-copy">
-                  <span className="settings-option-icon" aria-hidden="true">✦</span>
-                  <div>
-                    <strong>{tr("成长卡片效果", "Growth card effects")}</strong>
-                  </div>
-                </div>
-
-                <div
-                  className="milestone-preview-grid"
-                  aria-label={tr("成长卡片效果预览", "Growth card effect previews")}
-                >
-                  <article className="milestone-preview-card base">
-                    <span>{tr("普通", "Base")}</span>
-                    <strong>{Math.max(0, cardMilestoneFirst - 1)}</strong>
-                    <small>{tr("次", "times")}</small>
-                    <em aria-hidden="true">🌰</em>
-                  </article>
-                  <article className="milestone-preview-card stage-one">
-                    <span>{tr("进阶", "Glow")}</span>
-                    <strong>{cardMilestoneFirst}</strong>
-                    <small>{tr("次", "times")}</small>
-                    <em aria-hidden="true">🌰</em>
-                  </article>
-                  <article className="milestone-preview-card stage-two">
-                    <span>{tr("高级", "Stellar")}</span>
-                    <strong>{cardMilestoneSecond}</strong>
-                    <small>{tr("次", "times")}</small>
-                    <em aria-hidden="true">🌰</em>
-                  </article>
-                </div>
-
-                <div className="milestone-threshold-list">
-                  <div className="milestone-threshold-row">
-                    <div>
-                      <strong>{tr("进阶效果", "Glow effect")}</strong>
-                      <small>{tr(`第 ${cardMilestoneFirst} 次开始`, `Starts at ${cardMilestoneFirst}`)}</small>
-                    </div>
-                    <div role="group" aria-label={tr("调整进阶效果次数", "Adjust glow threshold")}>
-                      <button
-                        type="button"
-                        disabled={cardMilestoneFirst <= 1}
-                        onClick={() =>
-                          setCardMilestoneFirst((current) => Math.max(1, current - 1))
-                        }
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min="1"
-                        max={cardMilestoneSecond - 1}
-                        value={cardMilestoneFirst}
-                        aria-label={tr("进阶效果触发次数", "Glow effect threshold")}
-                        onChange={(event) =>
-                          setCardMilestoneFirst(
-                            milestoneThreshold(
-                              event.target.value,
-                              cardMilestoneFirst,
-                              1,
-                              cardMilestoneSecond - 1,
-                            ),
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        disabled={cardMilestoneFirst >= cardMilestoneSecond - 1}
-                        onClick={() =>
-                          setCardMilestoneFirst((current) =>
-                            Math.min(cardMilestoneSecond - 1, current + 1),
-                          )
-                        }
-                      >
-                        ＋
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="milestone-threshold-row">
-                    <div>
-                      <strong>{tr("高级效果", "Stellar effect")}</strong>
-                      <small>{tr(`第 ${cardMilestoneSecond} 次开始`, `Starts at ${cardMilestoneSecond}`)}</small>
-                    </div>
-                    <div role="group" aria-label={tr("调整高级效果次数", "Adjust stellar threshold")}>
-                      <button
-                        type="button"
-                        disabled={cardMilestoneSecond <= cardMilestoneFirst + 1}
-                        onClick={() =>
-                          setCardMilestoneSecond((current) =>
-                            Math.max(cardMilestoneFirst + 1, current - 1),
-                          )
-                        }
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min={cardMilestoneFirst + 1}
-                        max="99"
-                        value={cardMilestoneSecond}
-                        aria-label={tr("高级效果触发次数", "Stellar effect threshold")}
-                        onChange={(event) =>
-                          setCardMilestoneSecond(
-                            milestoneThreshold(
-                              event.target.value,
-                              cardMilestoneSecond,
-                              cardMilestoneFirst + 1,
-                              99,
-                            ),
-                          )
-                        }
-                      />
-                      <button
-                        type="button"
-                        disabled={cardMilestoneSecond >= 99}
-                        onClick={() =>
-                          setCardMilestoneSecond((current) => Math.min(99, current + 1))
-                        }
-                      >
-                        ＋
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <div className="settings-sync-note">
-                <span aria-hidden="true">✓</span>
-                <p>
-                  {account
-                    ? tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.")
-                    : tr("设置与记录会保存在当前设备。", "Settings and records are saved on this device.")}
-                </p>
-              </div>
-            </div>
+            <SettingsPage
+              language={language}
+              theme={theme}
+              cardMilestoneFirst={cardMilestoneFirst}
+              cardMilestoneSecond={cardMilestoneSecond}
+              isSignedIn={Boolean(account)}
+              onClose={closeSettings}
+              setLanguage={setLanguage}
+              setTheme={setTheme}
+              setCardMilestoneFirst={setCardMilestoneFirst}
+              setCardMilestoneSecond={setCardMilestoneSecond}
+            />
           )}
 
           {!showCalendar && !showSettings && (
@@ -2856,866 +1826,108 @@ export function CheckInApp() {
                   transform: `translate3d(calc(${-activeTabIndex * 100}% + ${dragOffset}px), 0, 0)`,
                 }}
               >
-            <div className="screen tab-screen" data-tab="today" aria-hidden={tab !== "today"}>
-              <section className="welcome">
-                <div className="welcome-meta">
-                  <button
-                    className="date-display"
-                    type="button"
-                    aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      weekday: "long",
-                    }).format(new Date())}`}
-                    onClick={openCalendar}
-                  >
-                    <strong>
-                      {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
-                    </strong>
-                    <span>
-                      <b>
-                        {new Intl.DateTimeFormat(locale, {
-                          year: "numeric",
-                          month: "long",
-                        }).format(new Date())}
-                      </b>
-                      <small>
-                        {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
-                      </small>
-                    </span>
-                    <i className="date-display-chevron" aria-hidden="true">›</i>
-                  </button>
-                  <span
-                    className={`day-phase-icon ${
-                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "day" : "night"
-                    }`}
-                    role="img"
-                    aria-label={tr(
-                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "白天" : "夜晚",
-                      new Date().getHours() >= 6 && new Date().getHours() < 18 ? "Daytime" : "Night",
-                    )}
-                  >
-                    {new Date().getHours() >= 6 && new Date().getHours() < 18 ? "☀️" : "🌙"}
-                  </span>
-                </div>
-                <h1>
-                  {greeting(language)}
-                  {account
-                    ? `${language === "zh" ? "，" : ", "}${
-                        nickname.trim() || account.username
-                      }`
-                    : ""}
-                </h1>
-              </section>
+            <TodayPage
+              active={tab === "today"}
+              language={language}
+              locale={locale}
+              account={account}
+              nickname={nickname}
+              todayRecords={todayRecords}
+              todayTotals={todayTotals}
+              milestoneClass={todayCardMilestone}
+              orbitRippleKey={orbitRippleKey}
+              setOrbitRippleKey={setOrbitRippleKey}
+              areas={areas}
+              activeAreaFilter={activeActionAreaFilter}
+              setAreaFilter={setActionAreaFilter}
+              visibleActions={visibleTodayActions}
+              clockNow={clockNow}
+              lastCheckedAction={lastCheckedAction}
+              tagsFor={tagsFor}
+              onOpenCalendar={openCalendar}
+              onAddTemporaryAction={openTemporaryActionEditor}
+              onActionClick={handleQuickActionClick}
+              onOpenActionMenu={openRecordActionMenu}
+              onStartLongPress={startActionLongPress}
+              onMoveLongPress={moveActionLongPress}
+              onFinishLongPress={finishActionLongPress}
+            />
 
-              <section className={`today-card ${todayCardMilestone}`}>
-                <span className="today-milestone-stars" aria-hidden="true">
-                  <b />
-                  <b />
-                  <b />
-                  <b />
-                  <b />
-                  <b />
-                </span>
-                <div className="today-card-copy">
-                  <span>{tr("今日成长", "TODAY")}</span>
-                  <strong>{todayRecords.length}</strong>
-                  <small>{tr("次微小行动", "small actions")}</small>
-                </div>
-                <div className="today-orbit">
-                  {orbitRippleKey > 0 && (
-                    <span className="orbit-ripple" key={orbitRippleKey} aria-hidden="true">
-                      <b />
-                      <b />
-                      <b />
-                    </span>
-                  )}
-                  <button
-                    className="orbit-core"
-                    type="button"
-                    aria-label={tr("点击栗子，播放涟漪", "Tap the chestnut for a ripple")}
-                    onClick={() => setOrbitRippleKey((current) => current + 1)}
-                  >
-                    🌰
-                  </button>
-                  <i aria-hidden="true" />
-                  <i aria-hidden="true" />
-                  <i aria-hidden="true" />
-                </div>
-                <div className="today-domains">
-                  {todayTotals.length ? (
-                    todayTotals.map((area) => (
-                      <span key={area.id}>
-                        {area.icon} {area.name} +{area.total}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="quiet">{tr("今天的成长从第一颗栗子开始", "Today starts with one small action")}</span>
-                  )}
-                </div>
-              </section>
+            <GrowthPage
+              active={tab === "growth"}
+              language={language}
+              locale={locale}
+              now={clockNow}
+              records={records}
+              weekRecords={weekRecords}
+              monthRecords={monthRecords}
+              growthLevels={growthLevels}
+              period={growthPeriod}
+              periodOptions={growthPeriodOptions}
+              activePeriod={activeGrowthPeriod}
+              activeRecords={activeGrowthRecords}
+              areas={areas}
+              setPeriod={setGrowthPeriod}
+              onOpenCalendar={openCalendar}
+              onOpenArea={setGrowthAreaDetailId}
+              tagsFor={tagsFor}
+            />
 
-              <section className="content-section today-actions-section">
-                <button
-                  className="temporary-action-add"
-                  type="button"
-                  onClick={openTemporaryActionEditor}
-                >
-                  <span aria-hidden="true">＋</span>
-                  <div>
-                    <strong>{tr("添加临时小事", "Add a temporary action")}</strong>
-                    <small>{tr("默认保留到今天结束", "Kept until the end of today by default")}</small>
-                  </div>
-                  <i aria-hidden="true">⏳</i>
-                </button>
-                <div
-                  className="action-filter-list"
-                  role="group"
-                  aria-label={tr("按成长领域筛选小事", "Filter actions by growth area")}
-                  onTouchStart={(event) => event.stopPropagation()}
-                  onTouchMove={(event) => event.stopPropagation()}
-                  onTouchEnd={(event) => event.stopPropagation()}
-                  onTouchCancel={(event) => event.stopPropagation()}
-                >
-                  <button
-                    className={activeActionAreaFilter === "all" ? "active" : ""}
-                    type="button"
-                    aria-pressed={activeActionAreaFilter === "all"}
-                    onClick={() => setActionAreaFilter("all")}
-                  >
-                    {tr("全部", "All")}
-                  </button>
-                  {areas.map((area) => (
-                    <button
-                      className={activeActionAreaFilter === area.id ? "active" : ""}
-                      type="button"
-                      key={area.id}
-                      aria-pressed={activeActionAreaFilter === area.id}
-                      onClick={() => setActionAreaFilter(area.id)}
-                    >
-                      <span aria-hidden="true">{area.icon}</span>
-                      {area.name}
-                    </button>
-                  ))}
-                </div>
-                <div className="quick-grid">
-                  {visibleTodayActions.map((action) => {
-                    const actionTags = tagsFor(action);
-                    const primaryTag = actionTags[0] || areas[0];
-                    const timeOption = actionTimeOptionFor(action);
-                    const timeAvailable = isActionAvailableNow(action, clockNow);
-                    const todayCount = todayRecords.filter(
-                      (record) => record.actionId === action.id,
-                    ).length;
-                    const justChecked = lastCheckedAction?.id === action.id;
-                    return (
-                      <button
-                        className={`quick-action ${todayCount ? "completed" : ""}${
-                          timeAvailable ? "" : " time-locked"
-                        }`}
-                        type="button"
-                        key={action.id}
-                        aria-label={
-                          `${
-                            action.repeatable === false
-                              ? `${action.name}，今天已记录 ${todayCount} 次，每天限一次`
-                              : `记录${action.name}，今天已记录 ${todayCount} 次，可重复记录`
-                          }${
-                            actionTimeWindowFor(action) === "anytime"
-                              ? ""
-                              : `，限${timeOption.label}${timeOption.range}`
-                          }`
-                        }
-                        onClick={() => handleQuickActionClick(action)}
-                        onContextMenu={(event) => {
-                          event.preventDefault();
-                          openRecordActionMenu(
-                            action,
-                            event.currentTarget.getBoundingClientRect(),
-                          );
-                        }}
-                        onPointerDown={(event) => startActionLongPress(action, event)}
-                        onPointerMove={moveActionLongPress}
-                        onPointerUp={finishActionLongPress}
-                        onPointerCancel={finishActionLongPress}
-                        onPointerLeave={finishActionLongPress}
-                      >
-                        <span className="action-icon" style={{ background: `${primaryTag.color}18` }}>
-                          {action.icon}
-                        </span>
-                        <strong>{action.name}</strong>
-                        <span className="action-badge-row" aria-hidden="true">
-                          {action.temporary && (
-                            <span className="action-temporary-badge">
-                              ⏳{" "}
-                              {action.expiresOn === localDay(clockNow)
-                                ? tr("今天", "Today")
-                                : tr(
-                                    `至 ${action.expiresOn?.slice(5).replace("-", "/")}`,
-                                    `Until ${action.expiresOn?.slice(5).replace("-", "/")}`,
-                                  )}
-                            </span>
-                          )}
-                          {actionTimeWindowFor(action) !== "anytime" && (
-                            <span className="action-time-badge">
-                              {timeOption.icon} {timeOption.label}
-                            </span>
-                          )}
-                          {Boolean(action.timerSeconds && action.timerSeconds > 0) && (
-                            <span className="action-timer-badge">
-                              ◷ {action.timerSeconds}s
-                            </span>
-                          )}
-                        </span>
-                        <span
-                          className={`check-control ${todayCount ? "checked" : ""} ${
-                            justChecked ? "just-checked" : ""
-                          }`}
-                          key={
-                            justChecked
-                              ? `${action.id}-${lastCheckedAction.token}`
-                              : `${action.id}-idle`
-                          }
-                          aria-hidden="true"
-                        >
-                          <i>✓</i>
-                          {todayCount > 1 && <small>×{todayCount}</small>}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                {!visibleTodayActions.length && (
-                  <div className="action-filter-empty">
-                    {tr("这个成长领域还没有关联的小事", "No actions in this growth area yet")}
-                  </div>
-                )}
-              </section>
-            </div>
-
-            <div className="screen tab-screen" data-tab="growth" aria-hidden={tab !== "growth"}>
-              <section className="page-heading growth-page-heading">
-                <button
-                  className="date-display"
-                  type="button"
-                  aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(locale, {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    weekday: "long",
-                  }).format(new Date())}`}
-                  onClick={openCalendar}
-                >
-                  <strong>
-                    {new Intl.DateTimeFormat(locale, { day: "2-digit" }).format(new Date())}
-                  </strong>
-                  <span>
-                    <b>
-                      {new Intl.DateTimeFormat(locale, {
-                        year: "numeric",
-                        month: "long",
-                      }).format(new Date())}
-                    </b>
-                    <small>
-                      {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(new Date())}
-                    </small>
-                  </span>
-                  <i className="date-display-chevron" aria-hidden="true">›</i>
-                </button>
-                <span className="overline">GROWTH OVERVIEW</span>
-                <h1>{tr("成长正在发生", "Growth in progress")}</h1>
-              </section>
-
-              <section className="growth-level-section">
-                <div className="growth-level-heading">
-                  <h2>{tr("领域等级", "Area levels")}</h2>
-                  <small>{tr("1 成长值 = 1 经验", "1 growth point = 1 XP")}</small>
-                </div>
-                <div
-                  className="growth-level-list"
-                  onTouchStart={(event) => event.stopPropagation()}
-                  onTouchMove={(event) => event.stopPropagation()}
-                  onTouchEnd={(event) => event.stopPropagation()}
-                  onTouchCancel={(event) => event.stopPropagation()}
-                >
-                  {growthLevels.map((area) => (
-                    <button
-                      className={`growth-level-card${area.isMax ? " max-level" : ""}`}
-                      type="button"
-                      key={`level-${area.id}`}
-                      aria-label={`${tr("查看", "View")} ${area.name}`}
-                      onClick={() => setGrowthAreaDetailId(area.id)}
-                    >
-                      <span
-                        className="growth-level-icon"
-                        style={{ background: `${area.color}18` }}
-                        aria-hidden="true"
-                      >
-                        {area.icon}
-                      </span>
-                      <div className="growth-level-copy">
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span style={{ color: area.color }}>Lv.{area.level}</span>
-                        </div>
-                        <span
-                          className="growth-level-track"
-                          role="progressbar"
-                          aria-label={`${area.name} ${tr("等级进度", "level progress")}`}
-                          aria-valuemin={0}
-                          aria-valuemax={
-                            area.isMax
-                              ? Math.max(area.experience, area.nextThreshold)
-                              : area.nextThreshold
-                          }
-                          aria-valuenow={area.experience}
-                        >
-                          <i
-                            style={{
-                              width: `${area.progress}%`,
-                              background: area.color,
-                            }}
-                          />
-                        </span>
-                        <small>
-                          {area.isMax
-                            ? tr(`${area.experience} 经验 · 满级`, `${area.experience} XP · Max`)
-                            : tr(
-                                `${area.experience} / ${area.nextThreshold}`,
-                                `${area.experience} / ${area.nextThreshold} XP`,
-                              )}
-                        </small>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <div className="stat-grid">
-                <article>
-                  <span>{tr("全部记录", "All records")}</span>
-                  <strong>{records.length}</strong>
-                  <small>{tr("次成长", "moments")}</small>
-                </article>
-                <article>
-                  <span>{tr("本周", "This week")}</span>
-                  <strong>{weekRecords.length}</strong>
-                  <small>{tr("次行动", "actions")}</small>
-                </article>
-                <article>
-                  <span>{tr("本月", "This month")}</span>
-                  <strong>{monthRecords.length}</strong>
-                  <small>{tr("次行动", "actions")}</small>
-                </article>
-              </div>
-
-              <section className="content-section growth-section">
-                <div className="growth-divider" aria-hidden="true" />
-                <div
-                  className="growth-period-tabs"
-                  role="tablist"
-                  aria-label={tr("选择进度周期", "Choose progress period")}
-                >
-                  {growthPeriodOptions.map((period) => (
-                    <button
-                      className={growthPeriod === period.id ? "active" : ""}
-                      type="button"
-                      role="tab"
-                      aria-selected={growthPeriod === period.id}
-                      aria-controls="growth-period-panel"
-                      id={`growth-period-${period.id}`}
-                      key={period.id}
-                      onClick={() => setGrowthPeriod(period.id)}
-                    >
-                      <span>{period.label}</span>
-                      <small>{period.count}</small>
-                    </button>
-                  ))}
-                </div>
-
-                <div
-                  className={`growth-progress-group period-progress-group ${growthPeriod}-progress-group`}
-                  id="growth-period-panel"
-                  role="tabpanel"
-                  aria-labelledby={`growth-period-${growthPeriod}`}
-                  key={growthPeriod}
-                >
-                  <div className="growth-progress-heading">
-                    <h2>
-                      {growthPeriod === "total"
-                        ? tr("总进度", "Total progress")
-                        : `${activeGrowthPeriod.label}${tr("进度", " progress")}`}
-                    </h2>
-                    <small>{activeGrowthPeriod.count} {tr("件小事", "actions")}</small>
-                  </div>
-                  <div className="growth-areas">
-                    {activeGrowthPeriod.totals.map((area) => (
-                      <button
-                        className="growth-area"
-                        type="button"
-                        key={`${growthPeriod}-${area.id}`}
-                        aria-label={`${tr("查看", "View")} ${area.name}`}
-                        onClick={() => setGrowthAreaDetailId(area.id)}
-                      >
-                        <span className="growth-area-icon" style={{ background: `${area.color}18` }}>
-                          {area.icon}
-                        </span>
-                        <div>
-                          <strong>{area.name}</strong>
-                          <span className="progress-track">
-                            <i
-                              style={{
-                                width: `${Math.max(
-                                  area.total ? 12 : 0,
-                                  (area.total / activeGrowthPeriod.maxTotal) * 100,
-                                )}%`,
-                                background: area.color,
-                              }}
-                            />
-                          </span>
-                        </div>
-                        <strong className="area-total">{area.total}</strong>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </section>
-
-              <section className="content-section timeline-section">
-                <div className="growth-divider" aria-hidden="true" />
-                {activeGrowthRecords.length ? (
-                  <div className="timeline" key={`timeline-${growthPeriod}`}>
-                    {activeGrowthRecords.slice(0, 12).map((record) => {
-                      const recordTags = tagsFor(record);
-                      const primaryTag = recordTags[0] || areas[0];
-                      return (
-                        <article key={record.id}>
-                          <i style={{ background: primaryTag.color }} />
-                          <div>
-                            <small>{formatRecordDate(record.createdAt)}</small>
-                            <strong>{record.icon} {record.actionName}</strong>
-                            <span className="timeline-tags">
-                              {recordTags.map((tag) => (
-                                <i key={tag.id} style={{ color: tag.color }}>
-                                  {tag.name} +{record.value}
-                                </i>
-                              ))}
-                            </span>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="empty-state compact">
-                    <p>
-                      {growthPeriod === "total"
-                        ? tr("你的长期成长轨迹，会从这里慢慢展开。", "Your growth history will unfold here.")
-                        : tr(
-                            `${activeGrowthPeriod.label}还没有留下小事记录。`,
-                            `No actions recorded for ${activeGrowthPeriod.label.toLowerCase()} yet.`,
-                          )}
-                    </p>
-                  </div>
-                )}
-              </section>
-            </div>
-
-            <div className="screen tab-screen" data-tab="profile" aria-hidden={tab !== "profile"}>
-              <section className="page-heading profile-page-heading">
-                <span className="overline">MY SPACE</span>
-                <div className="profile-heading-row">
-                  <h1>{tr("我的栗子", "My Chestnuts")}</h1>
-                  <button
-                    className={`profile-account-button ${account ? "" : "guest"}`}
-                    type="button"
-                    aria-label={
-                      account
-                        ? tr("编辑个人信息", "Edit profile")
-                        : tr("登录账号", "Sign in")
-                    }
-                    onClick={openProfileEditor}
-                  >
-                    <span aria-hidden="true">栗</span>
-                  </button>
-                  <button
-                    className="settings-entry-button"
-                    type="button"
-                    aria-label={tr("打开设置", "Open settings")}
-                    onClick={openSettings}
-                  >
-                    <span className="settings-sliders-icon" aria-hidden="true">
-                      <i><b /></i>
-                      <i><b /></i>
-                      <i><b /></i>
-                    </span>
-                  </button>
-                </div>
-              </section>
-
-              <section className="shell-bank" aria-labelledby="shell-bank-title">
-                <div className="shell-bank-top">
-                  <div className="shell-jar" aria-hidden="true">
-                    <span className="jar-lid" />
-                    <span className="jar-glass">
-                      {visibleShellCount === 0 && <small>等待第一枚</small>}
-                      {Array.from({ length: visibleShellCount }, (_, index) => {
-                        const isNewest = index === visibleShellCount - 1;
-                        return (
-                          <i
-                            className={isNewest ? "falling-shell" : ""}
-                            key={
-                              isNewest
-                                ? `newest-shell-${bankDropKey}`
-                                : `settled-shell-${index}`
-                            }
-                          >
-                            栗
-                          </i>
-                        );
-                      })}
-                    </span>
-                  </div>
-                  <div className="shell-balance">
-                    <span className="overline">栗壳储蓄罐</span>
-                    <h2 id="shell-bank-title">
-                      <strong>{shellBalance}</strong>
-                      <small>枚栗壳</small>
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="shell-progress-copy">
-                  <span>
-                    {nextReward
-                      ? `距离“${nextReward.name}”还差 ${nextReward.cost - shellBalance} 枚`
-                      : rewards.length
-                        ? "所有奖励档位都已解锁"
-                        : "添加一个想送给自己的奖励"}
-                  </span>
-                  <small>累计获得 {shellsEarned} 枚</small>
-                </div>
-                <span
-                  className="shell-progress-track"
-                  role="progressbar"
-                  aria-label={
-                    nextReward
-                      ? `下一档奖励进度：${Math.round(shellProgress)}%`
-                      : rewards.length
-                        ? "全部奖励已解锁"
-                        : "尚未设置奖励"
-                  }
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.round(shellProgress)}
-                >
-                  <i style={{ width: `${shellProgress}%` }} />
-                </span>
-
-                <div className="shell-rewards-inline">
-                  <div className="shell-rewards-heading">
-                    <span>给自己的奖励</span>
-                    <button type="button" onClick={() => setShowRewardManager(true)}>
-                      管理
-                    </button>
-                  </div>
-                {rewards.length ? (
-                  <div className="shell-reward-list">
-                    {rewards.map((reward) => {
-                      const available = shellBalance >= reward.cost;
-                      return (
-                        <button
-                          className={available ? "available" : ""}
-                          type="button"
-                          key={reward.id}
-                          onClick={() => requestReward(reward)}
-                        >
-                          <span aria-hidden="true">{reward.icon}</span>
-                          <strong>{reward.name}</strong>
-                          <small>
-                            {available ? `${reward.cost} 枚 · 兑换` : `还差 ${reward.cost - shellBalance}`}
-                          </small>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <button
-                    className="shell-reward-empty"
-                    type="button"
-                    onClick={() => setShowRewardManager(true)}
-                  >
-                    ＋ 添加一个奖励
-                  </button>
-                )}
-
-                {rewardClaims.length > 0 && (
-                  <details className="reward-history shell-reward-history">
-                    <summary>
-                      <span>最近兑换</span>
-                      <span aria-hidden="true">⌄</span>
-                    </summary>
-                    <div>
-                      {rewardClaims.slice(0, 5).map((claim) => (
-                        <article key={claim.id}>
-                          <span>{claim.icon}</span>
-                          <strong>{claim.rewardName}</strong>
-                          <small>{formatRecordDate(claim.createdAt)} · −{claim.cost} 栗壳</small>
-                        </article>
-                      ))}
-                    </div>
-                  </details>
-                )}
-                </div>
-              </section>
-
-              <section className="settings-block profile-actions">
-                <div className="settings-heading">
-                  <div>
-                    <span className="overline">行动管理</span>
-                    <h2>我的小事</h2>
-                  </div>
-                  <button type="button" onClick={() => setShowActionManager(true)}>编辑</button>
-                </div>
-
-                <div className="profile-action-time-groups">
-                  {profileActionGroups.map((group) => (
-                    <section className="profile-action-time-group" key={group.id}>
-                      <div className="profile-action-time-heading">
-                        <span aria-hidden="true">{group.icon}</span>
-                        <strong>{group.label}</strong>
-                        <small>{group.actions.length}</small>
-                      </div>
-                      <div className="tag-action-grid">
-                  {group.actions.map((action) => {
-                    const actionTags = tagsFor(action);
-                    const swipeState =
-                      profileActionSwipe?.id === action.id ? profileActionSwipe : null;
-                    const swipeOpen =
-                      swipeState?.offset === -PROFILE_ACTION_SWIPE_WIDTH;
-                    return (
-                      <div
-                        className="profile-action-swipe-row"
-                        key={action.id}
-                        onTouchStart={(event) => startProfileActionSwipe(action, event)}
-                        onTouchMove={moveProfileActionSwipe}
-                        onTouchEnd={finishProfileActionSwipe}
-                        onTouchCancel={cancelProfileActionSwipe}
-                      >
-                        <div
-                          className="profile-action-swipe-actions"
-                          aria-hidden={!swipeOpen}
-                        >
-                          <button
-                            className="edit"
-                            type="button"
-                            tabIndex={swipeOpen ? 0 : -1}
-                            onClick={() => {
-                              setProfileActionSwipe(null);
-                              openActionEditor(action);
-                            }}
-                          >
-                            <span aria-hidden="true">✎</span>
-                            编辑
-                          </button>
-                          <button
-                            className="delete"
-                            type="button"
-                            tabIndex={swipeOpen ? 0 : -1}
-                            onClick={() => {
-                              setProfileActionSwipe(null);
-                              requestActionDelete(action);
-                            }}
-                          >
-                            <span aria-hidden="true">×</span>
-                            删除
-                          </button>
-                        </div>
-                        <article
-                          className={`tag-action-card profile-action-card${
-                            swipeState?.dragging ? " is-swiping" : ""
-                          }`}
-                          style={{
-                            transform: `translate3d(${swipeState?.offset || 0}px, 0, 0)`,
-                          }}
-                          role="button"
-                          tabIndex={0}
-                          aria-haspopup="menu"
-                          aria-expanded={swipeOpen}
-                          aria-label={`向左滑动、长按或按回车管理${action.name}`}
-                          onPointerDown={(event) => startManageActionLongPress(action, event)}
-                          onPointerMove={moveActionLongPress}
-                          onPointerUp={finishActionLongPress}
-                          onPointerCancel={finishActionLongPress}
-                          onContextMenu={(event) => {
-                            event.preventDefault();
-                            openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
-                          }}
-                          onKeyDown={(event) => {
-                            if (event.key !== "Enter" && event.key !== " ") return;
-                            event.preventDefault();
-                            openManageActionMenu(action, event.currentTarget.getBoundingClientRect());
-                          }}
-                        >
-                          <div className="tag-action-summary">
-                            <span className="tag-action-icon">{action.icon}</span>
-                            <strong>{action.name}</strong>
-                            <span className="action-tag-list">
-                              {actionTags.map((tag) => (
-                                <small
-                                  key={tag.id}
-                                  style={{ color: tag.color, borderColor: `${tag.color}35` }}
-                                >
-                                  {tag.name} +{action.value}
-                                </small>
-                              ))}
-                              {action.temporary && (
-                                <small className="action-temporary-tag">
-                                  ⏳ 临时
-                                </small>
-                              )}
-                              <small className="action-shell-gain">
-                                <span aria-hidden="true">🌰</span>
-                                栗壳 +{shellValueFor(action)}
-                              </small>
-                              {action.repeatable === false && (
-                                <small>每日一次</small>
-                              )}
-                            </span>
-                          </div>
-                        </article>
-                      </div>
-                    );
-                  })}
-                      </div>
-                    </section>
-                  ))}
-                </div>
-              </section>
-
-              <section className="settings-block">
-                <div className="settings-heading">
-                  <div>
-                    <span className="overline">成长领域</span>
-                    <h2>成长领域</h2>
-                  </div>
-                  <button type="button" onClick={() => setShowAreaManager(true)}>编辑</button>
-                </div>
-                <div className="area-chip-list">
-                  {areas.map((area) => (
-                    <button
-                      type="button"
-                      key={area.id}
-                      style={{ borderColor: `${area.color}55` }}
-                      aria-label={`长按编辑成长领域${area.name}`}
-                      onPointerDown={(event) => startAreaLongPress(area, event)}
-                      onPointerMove={moveActionLongPress}
-                      onPointerUp={finishActionLongPress}
-                      onPointerCancel={finishActionLongPress}
-                      onContextMenu={(event) => {
-                        event.preventDefault();
-                        openAreaEditor(area);
-                      }}
-                      onKeyDown={(event) => {
-                        if (event.key !== "Enter" && event.key !== " ") return;
-                        event.preventDefault();
-                        openAreaEditor(area);
-                      }}
-                    >
-                      {area.icon} {area.name}
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-              <details className="settings-block philosophy">
-                <summary>
-                  <span className="philosophy-title">
-                    <i aria-hidden="true">○</i>
-                    <span>
-                      <strong>关于栗子小事</strong>
-                    </span>
-                  </span>
-                  <span className="summary-chevron" aria-hidden="true">⌄</span>
-                </summary>
-                <div className="philosophy-content">
-                  <blockquote>
-                    “成长不是由几个重大事件组成，而是由无数微小行动累积而成。”
-                  </blockquote>
-                  <ul>
-                    <li>记录成长，而不是记录失败</li>
-                    <li>默认展示已经做到的事情</li>
-                    <li>数据服务于回顾，而不是竞争</li>
-                  </ul>
-                </div>
-              </details>
-
-              <section className="settings-block data-settings">
-                <div>
-                  <strong>设备本地数据</strong>
-                  <small>当前共有 {records.length} 条成长记录</small>
-                </div>
-                <button type="button" onClick={resetData}>清空并重置</button>
-              </section>
-            </div>
+            <ProfilePage
+              active={tab === "profile"}
+              account={account}
+              areas={areas}
+              actions={actions}
+              records={records}
+              rewards={rewards}
+              rewardClaims={rewardClaims}
+              shellBalance={shellBalance}
+              shellsEarned={shellsEarned}
+              bankDropKey={bankDropKey}
+              profileActionSwipe={profileActionSwipe}
+              tr={tr}
+              tagsFor={tagsFor}
+              onOpenProfile={openProfileEditor}
+              onOpenSettings={openSettings}
+              onOpenRewardManager={() => setShowRewardManager(true)}
+              onRequestReward={requestReward}
+              onOpenActionManager={() => setShowActionManager(true)}
+              onEditAction={(action) => {
+                setProfileActionSwipe(null);
+                openActionEditor(action);
+              }}
+              onDeleteAction={(action) => {
+                setProfileActionSwipe(null);
+                requestActionDelete(action);
+              }}
+              onStartActionSwipe={startProfileActionSwipe}
+              onMoveActionSwipe={moveProfileActionSwipe}
+              onFinishActionSwipe={finishProfileActionSwipe}
+              onCancelActionSwipe={cancelProfileActionSwipe}
+              onStartActionLongPress={startManageActionLongPress}
+              onMoveLongPress={moveActionLongPress}
+              onFinishLongPress={finishActionLongPress}
+              onOpenActionMenu={openManageActionMenu}
+              onOpenAreaManager={() => setShowAreaManager(true)}
+              onStartAreaLongPress={startAreaLongPress}
+              onOpenAreaEditor={openAreaEditor}
+              onResetData={resetData}
+            />
               </div>
             </div>
           )}
         </div>
 
-        {!showCalendar && !showSettings && <nav className="bottom-nav" aria-label={tr("主要导航", "Main navigation")}>
-          {NAV_ITEMS.map((item) => (
-            <button
-              className={`${tab === item.id ? "active" : ""} ${
-                item.id === "today" ? "primary-tab" : ""
-              }`}
-              type="button"
-              key={item.id}
-              onClick={() => changeTab(item.id)}
-              aria-current={tab === item.id ? "page" : undefined}
-            >
-              <span aria-hidden="true">{item.icon}</span>
-              {language === "zh"
-                ? item.label
-                : item.id === "today"
-                  ? "Today"
-                  : item.id === "growth"
-                    ? "Growth"
-                    : "Me"}
-            </button>
-          ))}
-        </nav>}
+        {!showCalendar && !showSettings && (
+          <BottomNavigation
+            activeTab={tab}
+            language={language}
+            onChange={changeTab}
+          />
+        )}
       </section>
 
-      {toasts.length > 0 && (
-        <div className="toast-stack" aria-live="polite" aria-atomic="false">
-          {toasts.map((toast) => (
-            <div className={`toast ${toast.leaving ? "leaving" : ""}`} role="status" key={toast.id}>
-              <span
-                className={`toast-check ${toast.undone ? "undone" : ""}`}
-                aria-hidden="true"
-              >
-                {toast.undone ? "↶" : "✓"}
-              </span>
-              <span className="toast-copy">
-                <strong>{toast.title}</strong>
-                <small>{toast.message}</small>
-              </span>
-              {toast.undoRecordId && (
-                <button
-                  className="toast-undo"
-                  type="button"
-                  onClick={() => markToastUndone(toast.id, toast.undoRecordId!)}
-                >
-                  撤销
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <ToastStack toasts={toasts} onUndo={markToastUndone} />
 
       {showProfileEditor && account && (
         <div
@@ -4457,7 +2669,7 @@ export function CheckInApp() {
             onTouchEnd={finishEditorSheetSwipe}
             onTouchCancel={cancelEditorSheetSwipe}
           >
-            {modalDragHandle("area-editor", closeAreaEditor)}
+            {modalDragHandle("area-editor", () => closeAreaEditor())}
             <button
               className="close-button"
               type="button"

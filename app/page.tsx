@@ -1,5 +1,5 @@
-import { CheckInApp } from "./check-in-app";
+import { ChestnutApp } from "@/src/app/ChestnutApp";
 
 export default function Home() {
-  return <CheckInApp />;
+  return <ChestnutApp />;
 }
