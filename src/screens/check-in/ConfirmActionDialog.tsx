@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import type { ConfirmDialog } from "../../app/types";
+import { AppIcon } from "../../components/ui/AppIcon";
 
 type ConfirmActionDialogProps = {
   dialog: ConfirmDialog;
@@ -20,7 +21,7 @@ export function ConfirmActionDialog(props: ConfirmActionDialogProps) {
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <section className={modalClassName("confirm", `bottom-sheet confirm-sheet ${danger ? "danger-sheet" : ""}`)} style={modalStyle("confirm")} role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description" onClick={(event) => event.stopPropagation()}>
         {dragHandle("confirm", onImmediateClose)}
-        <span className="dialog-symbol" aria-hidden="true">{dialog.kind === "reset-data" ? "↺" : "−"}</span>
+        <span className="dialog-symbol" aria-hidden="true"><AppIcon name={dialog.kind === "reset-data" ? "undo" : "delete"} /></span>
         <span className="overline">{dialog.kind === "reset-data" ? "谨慎操作" : dialog.kind === "delete-reward" ? "整理奖励" : dialog.kind === "delete-area" ? "整理成长领域" : "整理微行动"}</span>
         <h2 id="confirm-title">{dialog.kind === "reset-data" ? "要重新开始吗？" : dialog.kind === "delete-reward" ? "删除这个奖励？" : dialog.kind === "delete-area" ? "删除这个成长领域？" : "删除这个微行动？"}</h2>
         <p id="confirm-description">{dialog.kind === "reset-data" ? "所有成长记录会被清空，微行动、成长领域和奖励清单将恢复默认状态。此操作无法撤销。" : dialog.kind === "delete-reward" ? `“${dialog.reward.name}”将从奖励清单中移除，过去的兑换记录仍会保留。` : dialog.kind === "delete-area" ? `“${dialog.area.name}”将从成长领域清单中移除，微行动和历史记录中的关联也会同步移除。` : `“${dialog.action.name}”将从你的微行动中移除，已经留下的成长记录仍会保留。`}</p>

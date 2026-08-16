@@ -5,13 +5,41 @@
 }
 
 :root {
-  --ink: #28231e;
-  --muted: #7e7469;
-  --paper: #ffffff;
-  --cream: #ffffff;
-  --cream-deep: #f3f1ee;
-  --chestnut: #6f3b27;
-  --chestnut-light: #c89072;
-  --leaf: #647452;
-  --line: #e9dfd1;
+  --ink: #352f2a;
+  --muted: #81776d;
+  --paper: #fffdfa;
+  --cream: #f7f2eb;
+  --cream-deep: #eee6dc;
+  --chestnut: #7a4a36;
+  --chestnut-light: #bd8b70;
+  --chestnut-soft: #efe2d8;
+  --leaf: #6f7c68;
+  --leaf-soft: #e7ece3;
+  --line: #e7ddd2;
+  --surface-card: #fffdf9;
+  --surface-raised: #fffcf7;
+  --surface-muted: #f3ece4;
+  --text-on-accent: #fffaf3;
+  --text-on-deep: #fffaf3;
+  --danger: #a35f55;
+  --danger-soft: #f6e6e2;
+  --backdrop: rgba(47, 39, 34, .32);
+  --radius-small: 10px;
+  --radius-control: 14px;
+  --radius-card: 20px;
+  --radius-modal: 28px;
+  --radius-pill: 999px;
+  --shadow-card: 0 8px 24px rgba(77, 55, 42, .07);
+  --shadow-floating: 0 12px 30px rgba(68, 48, 37, .12);
+  --shadow-modal: 0 24px 64px rgba(52, 39, 31, .18);
+  --font-body: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-display: STKaiti, KaiTi, serif;
+  --font-brand: STSong, Songti SC, serif;
+  --font-number: Georgia, serif;
+  --type-brand: 20px;
+  --type-page-title: 30px;
+  --type-card-title: 14px;
+  --type-body: 13px;
+  --type-caption: 11px;
+  --type-number: 28px;
 }

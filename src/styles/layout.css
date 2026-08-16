@@ -3,7 +3,7 @@
 
 html {
   min-height: 100%;
-  background: #fff;
+  background: var(--cream);
   touch-action: pan-x pan-y;
 }
 
@@ -13,25 +13,22 @@ body {
   touch-action: pan-x pan-y;
   color: var(--ink);
   background:
-    linear-gradient(
-      132deg,
-      transparent 0 49.55%,
-      rgba(111, 59, 39, .035) 49.7% 50.3%,
-      transparent 50.45%
-    ) 0 0 / 112px 112px,
-    linear-gradient(
-      48deg,
-      transparent 0 49.65%,
-      rgba(100, 116, 82, .025) 49.8% 50.2%,
-      transparent 50.35%
-    ) 16px 22px / 148px 148px,
-    #fff;
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    radial-gradient(circle at 18% 4%, rgba(189, 139, 112, .055), transparent 30rem),
+    linear-gradient(rgba(122, 74, 54, .018) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--cream);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
 button, input, select { font: inherit; }
 button { -webkit-tap-highlight-color: transparent; }
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid rgba(122, 74, 54, .42);
+  outline-offset: 2px;
+}
 
 .account-gate {
   display: grid;
@@ -51,11 +48,11 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 58px;
   height: 58px;
   place-items: center;
-  border-radius: 22px;
-  color: #fff8e9;
-  background: linear-gradient(145deg, #8d4c31, #572a1b);
-  box-shadow: 0 12px 30px rgba(111, 59, 39, .18);
-  font-family: STSong, Songti SC, serif;
+  border-radius: var(--radius-control);
+  color: var(--text-on-accent);
+  background: var(--chestnut);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-brand);
   font-size: 27px;
   animation: account-pulse 1.4s ease-in-out infinite;
 }
@@ -63,13 +60,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .login-card {
   position: relative;
   width: min(100%, 430px);
-  border: 1px solid rgba(111, 59, 39, .1);
-  border-radius: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-modal);
   padding: 28px;
-  background: rgba(255, 253, 248, .9);
-  box-shadow: 0 26px 90px rgba(69, 45, 30, .15);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-modal);
 }
 .login-modal-backdrop {
   position: fixed;
@@ -80,19 +75,18 @@ button { -webkit-tap-highlight-color: transparent; }
     max(72px, calc(env(safe-area-inset-top) + 58px))
     20px
     max(20px, env(safe-area-inset-bottom));
-  background: rgba(43, 32, 26, .34);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  backdrop-filter: blur(14px) saturate(120%);
+  background: var(--backdrop);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 .login-modal-backdrop .login-card {
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
-  border-color: rgba(255, 255, 255, .68);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, .76), rgba(255, 248, 237, .58)),
-    rgba(255, 253, 248, .5);
-  -webkit-backdrop-filter: blur(28px) saturate(145%);
-  backdrop-filter: blur(28px) saturate(145%);
+  border-color: var(--line);
+  background: rgba(255, 252, 247, .97);
+  box-shadow: var(--shadow-modal);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 .login-brand {
   display: flex;
@@ -104,24 +98,25 @@ button { -webkit-tap-highlight-color: transparent; }
   width: 45px;
   height: 45px;
   place-items: center;
-  border-radius: 17px;
-  color: #fff8e9;
-  background: linear-gradient(145deg, #8d4c31, #572a1b);
-  font-family: STSong, Songti SC, serif;
+  border-radius: var(--radius-control);
+  color: var(--text-on-accent);
+  background: var(--chestnut);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-brand);
   font-size: 22px;
 }
 .login-brand > div { display: grid; gap: 3px; }
 .login-brand strong {
-  font-family: STKaiti, KaiTi, serif;
+  font-family: var(--font-display);
   font-size: 19px;
   letter-spacing: .08em;
 }
-.login-brand small { color: var(--muted); font-size: 10px; }
+.login-brand small { color: var(--muted); font-size: var(--type-caption); }
 .login-heading { margin: 34px 0 20px; }
 .login-heading h1 {
   margin: 5px 0 0;
-  font-family: STKaiti, KaiTi, serif;
-  font-size: 30px;
+  font-family: var(--font-display);
+  font-size: var(--type-page-title);
   font-weight: 500;
 }
 .login-card label {
@@ -129,21 +124,23 @@ button { -webkit-tap-highlight-color: transparent; }
   gap: 7px;
   margin-top: 13px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--type-caption);
 }
 .login-card input {
   width: 100%;
+  min-height: 44px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-control);
   outline: none;
   padding: 13px 14px;
   color: var(--ink);
-  background: rgba(255, 255, 255, .76);
-  font-size: 13px;
+  background: var(--surface-card);
+  box-shadow: none;
+  font-size: var(--type-body);
 }
 .login-card input:focus {
-  border-color: #b99882;
-  box-shadow: 0 0 0 3px rgba(185, 152, 130, .11);
+  border-color: var(--chestnut-light);
+  box-shadow: 0 0 0 3px rgba(122, 74, 54, .09);
 }
 .login-error {
   margin: 10px 2px 0;
@@ -152,14 +149,15 @@ button { -webkit-tap-highlight-color: transparent; }
 }
 .login-button {
   width: 100%;
+  min-height: 44px;
   margin-top: 20px;
   border: 0;
-  border-radius: 15px;
+  border-radius: var(--radius-control);
   padding: 13px;
-  color: #fffaf0;
+  color: var(--text-on-accent);
   background: var(--chestnut);
-  box-shadow: 0 9px 22px rgba(111, 59, 39, .18);
-  font-size: 11px;
+  box-shadow: none;
+  font-size: var(--type-body);
   font-weight: 700;
   cursor: pointer;
 }
@@ -169,7 +167,7 @@ button { -webkit-tap-highlight-color: transparent; }
   margin-top: 13px;
   color: #a0958a;
   text-align: center;
-  font-size: 10px;
+  font-size: var(--type-caption);
 }
 
 .shell {
@@ -202,46 +200,37 @@ button { -webkit-tap-highlight-color: transparent; }
   top: max(42px, calc((100svh - 920px) / 2 + 18px));
   right: max(22px, calc((100vw - 500px) / 2 + 22px));
   display: grid;
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, .68);
-  border-radius: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
   padding: 0;
   color: var(--chestnut);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, .58), rgba(255, 248, 238, .25));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .82),
-    inset 0 -1px 0 rgba(111, 59, 39, .06),
-    0 9px 24px rgba(53, 38, 29, .14);
-  -webkit-backdrop-filter: blur(18px) saturate(145%);
-  backdrop-filter: blur(18px) saturate(145%);
-  font-size: 11px;
+  background: rgba(255, 252, 247, .92);
+  box-shadow: var(--shadow-floating);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  font-size: 19px;
   font-weight: 700;
   cursor: pointer;
   transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 .global-home-button span {
-  display: grid;
-  width: 21px;
-  height: 21px;
-  place-items: center;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, .28);
-  color: #fff9ef;
-  background: rgba(111, 59, 39, .82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2);
-  font-family: Georgia, serif;
-  font-size: 15px;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  box-shadow: none;
+  font-size: inherit;
   line-height: 1;
 }
 .global-home-button:active {
   transform: scale(.95);
-  background: rgba(255, 250, 242, .48);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .72),
-    0 3px 12px rgba(53, 38, 29, .12);
+  background: var(--surface-muted);
+  box-shadow: var(--shadow-card);
 }
 
 .app-frame {
@@ -251,23 +240,12 @@ button { -webkit-tap-highlight-color: transparent; }
   height: min(920px, calc(100svh - 48px));
   grid-template-rows: 1fr auto;
   overflow: hidden;
-  border: 1px solid rgba(111, 59, 39, 0.1);
-  border-radius: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-modal);
   background:
-    linear-gradient(
-      132deg,
-      transparent 0 49.55%,
-      rgba(111, 59, 39, .04) 49.7% 50.3%,
-      transparent 50.45%
-    ) 2px 0 / 112px 112px,
-    linear-gradient(
-      48deg,
-      transparent 0 49.65%,
-      rgba(100, 116, 82, .03) 49.8% 50.2%,
-      transparent 50.35%
-    ) 18px 22px / 148px 148px,
-    #fff;
-  box-shadow: 0 26px 90px rgba(49, 43, 38, .1);
+    linear-gradient(rgba(122, 74, 54, .014) 1px, transparent 1px) 0 0 / 28px 28px,
+    var(--cream);
+  box-shadow: var(--shadow-modal);
 }
 
 .app-scroll {
@@ -315,6 +293,6 @@ button { -webkit-tap-highlight-color: transparent; }
 
 .screen {
   min-height: 100%;
-  padding: 26px 22px 36px;
+  padding: 28px 22px 38px;
   animation: fade-in 220ms ease;
 }

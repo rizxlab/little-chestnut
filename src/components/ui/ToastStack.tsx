@@ -1,4 +1,5 @@
 import type { ToastState } from "../../app/types";
+import { AppIcon } from "./AppIcon";
 
 type ToastStackProps = {
   toasts: ToastState[];
@@ -12,7 +13,7 @@ export function ToastStack({ toasts, onUndo }: ToastStackProps) {
       {toasts.map((toast) => (
         <div className={`toast ${toast.leaving ? "leaving" : ""}`} role="status" key={toast.id}>
           <span className={`toast-check ${toast.undone ? "undone" : ""}`} aria-hidden="true">
-            {toast.undone ? "↶" : "✓"}
+            <AppIcon name={toast.undone ? "undo" : "check"} />
           </span>
           <span className="toast-copy">
             <strong>{toast.title}</strong>

@@ -1,4 +1,5 @@
 import type { CSSProperties, FormEvent, ReactNode } from "react";
+import { AppIcon } from "../../../components/ui/AppIcon";
 
 type LoginDialogProps = {
   username: string;
@@ -32,7 +33,7 @@ export function LoginDialog(props: LoginDialogProps) {
         onClick={(event) => event.stopPropagation()}
       >
         {dragHandle("login", onImmediateClose)}
-        <button className="close-button" type="button" aria-label={tr("关闭登录", "Close sign in")} onClick={onClose}>×</button>
+        <button className="close-button" type="button" aria-label={tr("关闭登录", "Close sign in")} onClick={onClose}><AppIcon name="close" /></button>
         <div className="login-brand"><span aria-hidden="true">栗</span><div><strong>{tr("栗子小事", "Little Chestnut")}</strong><small>{tr("登录后，继续积累自己的小事", "Sign in to continue your progress")}</small></div></div>
         <div className="login-heading"><span className="overline">WELCOME BACK</span><h1 id="login-title">{tr("欢迎回来", "Welcome back")}</h1></div>
         <label>{tr("账号", "Account")}<input value={username} onChange={(event) => onUsernameChange(event.target.value)} autoComplete="username" inputMode="numeric" placeholder={tr("请输入账号", "Enter account")} autoFocus /></label>

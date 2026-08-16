@@ -1,5 +1,6 @@
 import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
 
+import { AppIcon } from "../../../components/ui/AppIcon";
 import type { Account } from "../types";
 
 type ProfileEditorProps = {
@@ -58,7 +59,7 @@ export function ProfileEditor({
       >
         {dragHandle("profile-editor", onImmediateClose)}
         <button className="close-button" type="button" aria-label={tr("关闭个人信息", "Close profile")} onClick={onClose}>
-          ×
+          <AppIcon name="close" />
         </button>
         <span className="overline">{tr("个人资料", "PROFILE")}</span>
         <h2 id="profile-editor-title">{tr("编辑个人信息", "Edit profile")}</h2>

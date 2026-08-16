@@ -1,6 +1,7 @@
 import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
+import { AppIcon } from "../../../components/ui/AppIcon";
 import { REWARD_COST_OPTIONS, REWARD_ICON_OPTIONS } from "../constants";
 import type { Reward } from "../types";
 
@@ -60,7 +61,7 @@ export function RewardEditors(props: RewardEditorsProps) {
             onTouchCancel={onSwipeCancel}
           >
             {dragHandle("reward-editor", onImmediateCloseEditor)}
-            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseEditor}>×</button>
+            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseEditor}><AppIcon name="close" /></button>
             <span className="overline">{editingReward ? "编辑奖励" : "新的奖励"}</span>
             <h2>{editingReward ? "调整这份小期待" : "想把栗壳换成什么？"}</h2>
             <label>奖励名称<input value={draftName} onChange={(event) => onDraftNameChange(event.target.value)} placeholder="例如：看一场电影" /></label>
@@ -98,17 +99,17 @@ export function RewardEditors(props: RewardEditorsProps) {
             onTouchCancel={onSwipeCancel}
           >
             {dragHandle("reward-manager", onImmediateCloseManager)}
-            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseManager}>×</button>
+            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseManager}><AppIcon name="close" /></button>
             <span className="overline">给自己的奖励</span>
             <h2 id="reward-manager-title">奖励管理</h2>
             <button className="reward-manager-create" type="button" onClick={() => onOpenEditor()}>
-              <span aria-hidden="true">＋</span><div><strong>新建奖励</strong><small>添加一个新的栗壳目标</small></div>
+              <AppIcon name="add" /><div><strong>新建奖励</strong><small>添加一个新的栗壳目标</small></div>
             </button>
             <div className="reward-manager-list">
               {rewards.map((reward) => (
                 <div className="reward-manager-item" key={reward.id}>
                   <button className="reward-manager-edit" type="button" aria-label={`修改${reward.name}`} onClick={() => onOpenEditor(reward)}>
-                    <span aria-hidden="true">{reward.icon}</span><div><strong>{reward.name}</strong><small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small></div><i aria-hidden="true">›</i>
+                    <span aria-hidden="true">{reward.icon}</span><div><strong>{reward.name}</strong><small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small></div><AppIcon name="chevronRight" />
                   </button>
                   <button className="reward-manager-delete" type="button" aria-label={`删除${reward.name}`} onClick={() => onDelete(reward)}>删除</button>
                 </div>

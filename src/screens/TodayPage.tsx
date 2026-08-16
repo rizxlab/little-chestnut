@@ -6,6 +6,7 @@ import type { MicroAction } from "../features/tasks/types";
 import { actionTimeOptionFor, actionTimeWindowFor, isActionAvailableNow } from "../features/tasks/domain/task-rules";
 import { localDay } from "../features/statistics/domain/date-ranges";
 import { greeting } from "../shared/utils/presentation";
+import { AppIcon } from "../components/ui/AppIcon";
 
 type TodayPageProps = {
   active: boolean;
@@ -45,9 +46,9 @@ export function TodayPage(props: TodayPageProps) {
           <button className="date-display" type="button" aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(props.locale, { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(props.clockNow)}`} onClick={props.onOpenCalendar}>
             <strong>{new Intl.DateTimeFormat(props.locale, { day: "2-digit" }).format(props.clockNow)}</strong>
             <span><b>{new Intl.DateTimeFormat(props.locale, { year: "numeric", month: "long" }).format(props.clockNow)}</b><small>{new Intl.DateTimeFormat(props.locale, { weekday: "long" }).format(props.clockNow)}</small></span>
-            <i className="date-display-chevron" aria-hidden="true">›</i>
+            <AppIcon className="date-display-chevron" name="chevronRight" />
           </button>
-          <span className={`day-phase-icon ${isDaytime ? "day" : "night"}`} role="img" aria-label={tr(isDaytime ? "白天" : "夜晚", isDaytime ? "Daytime" : "Night")}>{isDaytime ? "☀️" : "🌙"}</span>
+          <span className={`day-phase-icon ${isDaytime ? "day" : "night"}`} role="img" aria-label={tr(isDaytime ? "白天" : "夜晚", isDaytime ? "Daytime" : "Night")}><AppIcon name={isDaytime ? "sun" : "moon"} /></span>
         </div>
         <h1>{greeting(props.language, props.clockNow)}{props.account ? `${props.language === "zh" ? "，" : ", "}${props.nickname.trim() || props.account.username}` : ""}</h1>
       </section>
@@ -66,7 +67,7 @@ export function TodayPage(props: TodayPageProps) {
       </section>
 
       <section className="content-section today-actions-section">
-        <button className="temporary-action-add" type="button" onClick={props.onAddTemporaryAction}><span aria-hidden="true">＋</span><div><strong>{tr("添加临时小事", "Add a temporary action")}</strong><small>{tr("默认保留到今天结束", "Kept until the end of today by default")}</small></div><i aria-hidden="true">⏳</i></button>
+        <button className="temporary-action-add" type="button" onClick={props.onAddTemporaryAction}><AppIcon name="add" /><div><strong>{tr("添加临时小事", "Add a temporary action")}</strong><small>{tr("默认保留到今天结束", "Kept until the end of today by default")}</small></div><i aria-hidden="true"><AppIcon name="timer" /></i></button>
         <div className="action-filter-list" role="group" aria-label={tr("按成长领域筛选小事", "Filter actions by growth area")} onTouchStart={(event) => event.stopPropagation()} onTouchMove={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()} onTouchCancel={(event) => event.stopPropagation()}>
           <button className={props.activeAreaFilter === "all" ? "active" : ""} type="button" aria-pressed={props.activeAreaFilter === "all"} onClick={() => props.setAreaFilter("all")}>{tr("全部", "All")}</button>
           {props.areas.map((area) => <button className={props.activeAreaFilter === area.id ? "active" : ""} type="button" key={area.id} aria-pressed={props.activeAreaFilter === area.id} onClick={() => props.setAreaFilter(area.id)}><span aria-hidden="true">{area.icon}</span>{area.name}</button>)}
@@ -84,11 +85,11 @@ export function TodayPage(props: TodayPageProps) {
                 <span className="action-icon" style={{ background: `${primaryTag.color}18` }}>{action.icon}</span>
                 <strong>{action.name}</strong>
                 <span className="action-badge-row" aria-hidden="true">
-                  {action.temporary && <span className="action-temporary-badge">⏳ {action.expiresOn === localDay(props.clockNow) ? tr("今天", "Today") : tr(`至 ${action.expiresOn?.slice(5).replace("-", "/")}`, `Until ${action.expiresOn?.slice(5).replace("-", "/")}`)}</span>}
+                  {action.temporary && <span className="action-temporary-badge"><AppIcon name="temporary" /> {action.expiresOn === localDay(props.clockNow) ? tr("今天", "Today") : tr(`至 ${action.expiresOn?.slice(5).replace("-", "/")}`, `Until ${action.expiresOn?.slice(5).replace("-", "/")}`)}</span>}
                   {actionTimeWindowFor(action) !== "anytime" && <span className="action-time-badge">{timeOption.icon} {timeOption.label}</span>}
-                  {Boolean(action.timerSeconds && action.timerSeconds > 0) && <span className="action-timer-badge">◷ {action.timerSeconds}s</span>}
+                  {Boolean(action.timerSeconds && action.timerSeconds > 0) && <span className="action-timer-badge"><AppIcon name="timer" /> {action.timerSeconds}s</span>}
                 </span>
-                <span className={`check-control ${todayCount ? "checked" : ""} ${justChecked ? "just-checked" : ""}`} key={justChecked ? `${action.id}-${props.lastCheckedAction?.token}` : `${action.id}-idle`} aria-hidden="true"><i>✓</i>{todayCount > 1 && <small>×{todayCount}</small>}</span>
+                <span className={`check-control ${todayCount ? "checked" : ""} ${justChecked ? "just-checked" : ""}`} key={justChecked ? `${action.id}-${props.lastCheckedAction?.token}` : `${action.id}-idle`} aria-hidden="true"><AppIcon className="check-mark" name="check" />{todayCount > 1 && <small>×{todayCount}</small>}</span>
               </button>
             );
           })}

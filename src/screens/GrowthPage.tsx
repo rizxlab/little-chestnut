@@ -3,6 +3,7 @@ import type { GrowthPeriod } from "../app/types";
 import type { GrowthArea, GrowthRecord } from "../features/growth/types";
 import type { Language } from "../features/settings/types";
 import { formatRecordDate } from "../features/statistics/domain/date-ranges";
+import { AppIcon } from "../components/ui/AppIcon";
 
 type GrowthTotal = GrowthArea & { total: number };
 type GrowthLevel = GrowthTotal & ReturnType<typeof import("../features/growth/domain/growth-rules").growthLevelFor>;
@@ -42,7 +43,7 @@ export function GrowthPage(props: GrowthPageProps) {
         <button className="date-display" type="button" aria-label={`${tr("打开日历", "Open calendar")}，${new Intl.DateTimeFormat(props.locale, { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(props.now)}`} onClick={props.onOpenCalendar}>
           <strong>{new Intl.DateTimeFormat(props.locale, { day: "2-digit" }).format(props.now)}</strong>
           <span><b>{new Intl.DateTimeFormat(props.locale, { year: "numeric", month: "long" }).format(props.now)}</b><small>{new Intl.DateTimeFormat(props.locale, { weekday: "long" }).format(props.now)}</small></span>
-          <i className="date-display-chevron" aria-hidden="true">›</i>
+          <AppIcon className="date-display-chevron" name="chevronRight" />
         </button>
         <span className="overline">GROWTH OVERVIEW</span><h1>{tr("成长正在发生", "Growth in progress")}</h1>
       </section>

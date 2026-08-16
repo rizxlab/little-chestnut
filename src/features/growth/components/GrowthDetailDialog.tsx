@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode, TouchEvent } from "react";
+import { AppIcon } from "../../../components/ui/AppIcon";
 
 import type { Language } from "../../settings/types";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor } from "../../tasks/domain/task-rules";
@@ -64,7 +65,7 @@ export function GrowthDetailDialog(props: GrowthDetailDialogProps) {
               aria-label={tr("关闭", "Close")}
               onClick={onClose}
             >
-              ×
+              <AppIcon name="close" />
             </button>
 
             <div
@@ -130,7 +131,7 @@ export function GrowthDetailDialog(props: GrowthDetailDialogProps) {
                 </div>
               ) : (
                 <div className="growth-area-detail-empty">
-                  <span aria-hidden="true">＋</span>
+                  <AppIcon name="add" />
                   <p>{tr("这个领域还没有关联的小事。", "No actions are linked to this area yet.")}</p>
                 </div>
               )}

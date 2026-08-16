@@ -29,9 +29,9 @@ export function CalendarPage(props: CalendarPageProps) {
       </section>
       <section className="calendar-card">
         <div className="calendar-toolbar">
-          <button type="button" aria-label="上一个月" onClick={() => props.onShiftMonth(-1)}>‹</button>
+          <button type="button" aria-label="上一个月" onClick={() => props.onShiftMonth(-1)}><AppIcon name="chevronLeft" /></button>
           <strong>{new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long" }).format(props.month)}</strong>
-          <button type="button" aria-label="下一个月" disabled={props.month.getFullYear() === now.getFullYear() && props.month.getMonth() === now.getMonth()} onClick={() => props.onShiftMonth(1)}>›</button>
+          <button type="button" aria-label="下一个月" disabled={props.month.getFullYear() === now.getFullYear() && props.month.getMonth() === now.getMonth()} onClick={() => props.onShiftMonth(1)}><AppIcon name="chevronRight" /></button>
         </div>
         <div className="calendar-weekdays" aria-hidden="true">{["日", "一", "二", "三", "四", "五", "六"].map((day) => <span key={day}>{day}</span>)}</div>
         <div className="calendar-grid">

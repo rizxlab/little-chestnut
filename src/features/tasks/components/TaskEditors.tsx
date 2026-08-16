@@ -1,6 +1,7 @@
 import type { CSSProperties, FormEvent, ReactNode } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
+import { AppIcon } from "../../../components/ui/AppIcon";
 import type { GrowthArea } from "../../growth/types";
 import { ACTION_ICON_OPTIONS, ACTION_TIME_OPTIONS, DEFAULT_ACTIONS } from "../constants";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../domain/task-rules";
@@ -55,7 +56,7 @@ export function TaskEditors(props: TaskEditorsProps) {
               aria-label="关闭"
               onClick={() => closeSecondaryModal("action-manager", () => setShowActionManager(false))}
             >
-              ×
+              <AppIcon name="close" />
             </button>
             <span className="overline">行动管理</span>
             <h2 id="action-manager-title">我的小事</h2>
@@ -64,7 +65,7 @@ export function TaskEditors(props: TaskEditorsProps) {
               type="button"
               onClick={() => openActionEditor()}
             >
-              <span aria-hidden="true">＋</span>
+              <AppIcon name="add" />
               <div>
                 <strong>新建小事</strong>
                 <small>添加一件想记录的小事</small>
@@ -98,7 +99,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                         {` · 栗壳 +${shellValueFor(action)}`}
                       </small>
                     </div>
-                    <i aria-hidden="true">›</i>
+                    <AppIcon name="chevronRight" />
                   </button>
                 );
               })}
@@ -120,7 +121,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                 aria-label={tr("返回原页面", "Back")}
                 onClick={closeActionEditor}
               >
-                <span aria-hidden="true">‹</span>
+                <AppIcon name="back" />
               </button>
               <span className="overline">
                 {draftTemporary
@@ -136,7 +137,7 @@ export function TaskEditors(props: TaskEditorsProps) {
             {draftTemporary && (
               <section className="temporary-action-settings">
                 <div className="temporary-action-settings-copy">
-                  <span aria-hidden="true">⏳</span>
+                  <AppIcon name="temporary" />
                   <div>
                     <strong>临时小事</strong>
                     <small>到期后只删除小事，打卡记录和栗壳会保留</small>
@@ -159,7 +160,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                         setDraftTemporaryDays((current) => Math.max(1, current - 1))
                       }
                     >
-                      −
+                      <AppIcon name="minus" />
                     </button>
                     <input
                       type="number"
@@ -181,7 +182,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                         setDraftTemporaryDays((current) => Math.min(30, current + 1))
                       }
                     >
-                      ＋
+                      <AppIcon name="add" />
                     </button>
                   </div>
                 </div>
@@ -196,7 +197,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                     type="button"
                     onClick={startCustomAction}
                   >
-                    <span aria-hidden="true">✦</span>
+                    <AppIcon name="sparkle" />
                     <strong>自定义</strong>
                   </button>
                   {DEFAULT_ACTIONS.map((action) => (
@@ -225,7 +226,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                   onClick={() => setShowActionIconPicker(true)}
                 >
                   <span aria-hidden="true">{draftIcon}</span>
-                  <small aria-hidden="true">⌄</small>
+                  <small aria-hidden="true"><AppIcon name="chevronDown" /></small>
                 </button>
                 <input
                   value={draftName}
@@ -305,7 +306,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                 aria-checked={draftRepeatable}
                 onClick={() => setDraftRepeatable((current) => !current)}
               >
-                <span aria-hidden="true">↻</span>
+                <AppIcon name="undo" />
                 <div>
                   <strong>当日可重复</strong>
                   <small>{draftRepeatable ? "可多次打卡" : "每天仅一次"}</small>
@@ -339,7 +340,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                 aria-checked={draftUsesTimer}
                 onClick={() => setDraftUsesTimer((current) => !current)}
               >
-                <span aria-hidden="true">◷</span>
+                <AppIcon name="timer" />
                 <div>
                   <strong>计时</strong>
                   <small>开始前会有 3 秒准备时间</small>
@@ -414,7 +415,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                       onClick={() => toggleDraftTag(area.id)}
                     >
                       {area.icon} {area.name}
-                      <span>{selected ? "✓" : "＋"}</span>
+                      <span>{selected ? <AppIcon name="check" /> : <AppIcon name="add" />}</span>
                     </button>
                   );
                 })}
@@ -466,7 +467,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                     aria-label="关闭图标选择"
                     onClick={() => setShowActionIconPicker(false)}
                   >
-                    ×
+                    <AppIcon name="close" />
                   </button>
                 </div>
                 <IconPicker

@@ -10,6 +10,7 @@ import { actionTimeWindowFor, shellValueFor } from "../features/tasks/domain/tas
 import type { MicroAction } from "../features/tasks/types";
 import type { Account } from "../features/profile/types";
 import { formatRecordDate } from "../features/statistics/domain/date-ranges";
+import { AppIcon } from "../components/ui/AppIcon";
 
 type ProfileActionSwipe = {
   id: string;
@@ -120,9 +121,7 @@ export function ProfilePage({
             aria-label={tr("打开设置", "Open settings")}
             onClick={onOpenSettings}
           >
-            <span className="settings-sliders-icon" aria-hidden="true">
-              <i><b /></i><i><b /></i><i><b /></i>
-            </span>
+            <AppIcon name="settings" />
           </button>
         </div>
       </section>
@@ -190,12 +189,12 @@ export function ProfilePage({
               })}
             </div>
           ) : (
-            <button className="shell-reward-empty" type="button" onClick={onOpenRewardManager}>＋ 添加一个奖励</button>
+            <button className="shell-reward-empty" type="button" onClick={onOpenRewardManager}><AppIcon name="add" /> 添加一个奖励</button>
           )}
 
           {rewardClaims.length > 0 && (
             <details className="reward-history shell-reward-history">
-              <summary><span>最近兑换</span><span aria-hidden="true">⌄</span></summary>
+              <summary><span>最近兑换</span><AppIcon name="chevronDown" /></summary>
               <div>
                 {rewardClaims.slice(0, 5).map((claim) => (
                   <article key={claim.id}>
@@ -237,10 +236,10 @@ export function ProfilePage({
                     >
                       <div className="profile-action-swipe-actions" aria-hidden={!swipeOpen}>
                         <button className="edit" type="button" tabIndex={swipeOpen ? 0 : -1} onClick={() => onEditAction(action)}>
-                          <span aria-hidden="true">✎</span>编辑
+                          <AppIcon name="edit" />编辑
                         </button>
                         <button className="delete" type="button" tabIndex={swipeOpen ? 0 : -1} onClick={() => onDeleteAction(action)}>
-                          <span aria-hidden="true">×</span>删除
+                          <AppIcon name="delete" />删除
                         </button>
                       </div>
                       <article
@@ -272,7 +271,7 @@ export function ProfilePage({
                             {actionTags.map((tag) => (
                               <small key={tag.id} style={{ color: tag.color, borderColor: `${tag.color}35` }}>{tag.name} +{action.value}</small>
                             ))}
-                            {action.temporary && <small className="action-temporary-tag">⏳ 临时</small>}
+                            {action.temporary && <small className="action-temporary-tag"><AppIcon name="temporary" /> 临时</small>}
                             <small className="action-shell-gain"><span aria-hidden="true">🌰</span>栗壳 +{shellValueFor(action)}</small>
                             {action.repeatable === false && <small>每日一次</small>}
                           </span>
@@ -318,12 +317,12 @@ export function ProfilePage({
 
       <details className="settings-block philosophy">
         <summary>
-          <span className="philosophy-title"><i aria-hidden="true">○</i><span><strong>关于栗子小事</strong></span></span>
-          <span className="summary-chevron" aria-hidden="true">⌄</span>
+          <span className="philosophy-title"><AppIcon name="sparkle" /><span><strong>关于栗子小事</strong></span></span>
+          <AppIcon className="summary-chevron" name="chevronDown" />
         </summary>
         <div className="philosophy-content">
           <blockquote>“成长不是由几个重大事件组成，而是由无数微小行动累积而成。”</blockquote>
-          <ul><li>记录成长，而不是记录失败</li><li>默认展示已经做到的事情</li><li>数据服务于回顾，而不是竞争</li></ul>
+          <ul><li><AppIcon name="check" />记录成长，而不是记录失败</li><li><AppIcon name="check" />默认展示已经做到的事情</li><li><AppIcon name="check" />数据服务于回顾，而不是竞争</li></ul>
         </div>
       </details>
 

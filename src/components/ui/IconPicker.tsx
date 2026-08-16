@@ -1,3 +1,5 @@
+import { AppIcon } from "./AppIcon";
+
 type IconPickerProps = {
   label: string;
   value: string;
@@ -21,7 +23,7 @@ export function IconPicker({ label, value, options, onChange }: IconPickerProps)
             onClick={() => onChange(icon)}
           >
             {icon}
-            {value === icon && <span aria-hidden="true">✓</span>}
+            {value === icon && <AppIcon name="check" />}
           </button>
         ))}
       </div>

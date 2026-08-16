@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import type { MicroAction, TimerPhase } from "../types";
+import { AppIcon } from "../../../components/ui/AppIcon";
 
 type TimerDialogProps = {
   action: MicroAction;
@@ -43,12 +44,12 @@ export function TimerDialog(props: TimerDialogProps) {
         onClick={(event) => event.stopPropagation()}
       >
         {phase !== "success" && dragHandle("timer", onImmediateClose)}
-        {phase !== "success" && <button className="close-button" type="button" aria-label={tr("关闭计时", "Close timer")} onClick={onClose}>×</button>}
+        {phase !== "success" && <button className="close-button" type="button" aria-label={tr("关闭计时", "Close timer")} onClick={onClose}><AppIcon name="close" /></button>}
         <span className="overline">{phase === "success" ? tr("完成", "COMPLETE") : phase === "preparing" ? tr("准备一下", "GET READY") : phase === "running" ? tr("正在计时", "IN PROGRESS") : tr("计时小事", "TIMED ACTION")}</span>
         <div className={`timer-clock ${phase}${ringResetting ? " timer-ring-reset" : ""}`} style={ringStyle}>
           {phase === "success" && <span className="timer-success-burst" aria-hidden="true"><b /><b /><b /><b /><b /><b /></span>}
           <div>
-            {phase === "success" ? <span className="timer-success-check" aria-hidden="true">✓</span> : <><span className="timer-phase-icon" aria-hidden="true">{phase === "preparing" ? tr("预备", "READY") : action.icon}</span><span className="timer-countdown-value"><strong>{secondsLeft}</strong><small>{tr("秒", "sec")}</small></span></>}
+            {phase === "success" ? <span className="timer-success-check" aria-hidden="true"><AppIcon name="check" /></span> : <><span className="timer-phase-icon" aria-hidden="true">{phase === "preparing" ? tr("预备", "READY") : action.icon}</span><span className="timer-countdown-value"><strong>{secondsLeft}</strong><small>{tr("秒", "sec")}</small></span></>}
           </div>
         </div>
         <h2 id="timer-title">{phase === "success" ? tr("打卡成功", "Check-in complete") : phase === "preparing" ? tr("准备开始", "Get ready") : action.name}</h2>
@@ -58,7 +59,7 @@ export function TimerDialog(props: TimerDialogProps) {
         {phase === "idle" && (
           <div className="timer-duration-picker">
             <span>{tr("选择时长", "Duration")}</span>
-            <div><button type="button" aria-label={tr("减少一档时长", "Decrease duration")} disabled={multiplier === 1} onClick={() => onMultiplierChange(-1)}>−</button><strong><span className="timer-duration-value"><b>{duration}</b><small>{tr("秒", "sec")}</small></span><em>× {multiplier} {tr("次", "check-ins")}</em></strong><button type="button" aria-label={tr("增加一档时长", "Increase duration")} disabled={multiplier === 60 || action.repeatable === false} onClick={() => onMultiplierChange(1)}>+</button></div>
+            <div><button type="button" aria-label={tr("减少一档时长", "Decrease duration")} disabled={multiplier === 1} onClick={() => onMultiplierChange(-1)}><AppIcon name="minus" /></button><strong><span className="timer-duration-value"><b>{duration}</b><small>{tr("秒", "sec")}</small></span><em>× {multiplier} {tr("次", "check-ins")}</em></strong><button type="button" aria-label={tr("增加一档时长", "Increase duration")} disabled={multiplier === 60 || action.repeatable === false} onClick={() => onMultiplierChange(1)}><AppIcon name="add" /></button></div>
             <small>{tr(action.repeatable === false ? "此小事每天仅可完成一次" : `每档增加 ${action.timerSeconds || 1} 秒，完成后按倍数记录`, action.repeatable === false ? "This action can be completed once per day" : `Each step adds ${action.timerSeconds || 1} seconds and one check-in`)}</small>
           </div>
         )}

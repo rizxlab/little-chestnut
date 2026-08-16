@@ -1,6 +1,7 @@
 import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
+import { AppIcon } from "../../../components/ui/AppIcon";
 import { AREA_COLORS, AREA_ICON_OPTIONS } from "../constants";
 import type { GrowthArea } from "../types";
 
@@ -62,11 +63,11 @@ export function GrowthEditors(props: GrowthEditorsProps) {
             onTouchCancel={onSwipeCancel}
           >
             {dragHandle("area-manager", onImmediateCloseManager)}
-            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseManager}>×</button>
+            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseManager}><AppIcon name="close" /></button>
             <span className="overline">成长领域</span>
             <h2 id="area-manager-title">领域管理</h2>
             <button className="action-manager-create" type="button" onClick={() => onOpenEditor()}>
-              <span aria-hidden="true">＋</span>
+              <AppIcon name="add" />
               <div><strong>新建领域</strong><small>添加一个新的成长方向</small></div>
             </button>
             <div className="action-manager-list">
@@ -74,7 +75,7 @@ export function GrowthEditors(props: GrowthEditorsProps) {
                 <button type="button" key={area.id} aria-label={`修改${area.name}`} onClick={() => onOpenEditor(area)}>
                   <span aria-hidden="true" style={{ color: area.color, background: `${area.color}18` }}>{area.icon}</span>
                   <div><strong>{area.name}</strong><small>{actionCountFor(area.id)} 个微行动使用</small></div>
-                  <i aria-hidden="true">›</i>
+                  <AppIcon name="chevronRight" />
                 </button>
               ))}
             </div>
@@ -97,7 +98,7 @@ export function GrowthEditors(props: GrowthEditorsProps) {
             onTouchCancel={onSwipeCancel}
           >
             {dragHandle("area-editor", onImmediateCloseEditor)}
-            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseEditor}>×</button>
+            <button className="close-button" type="button" aria-label="关闭" onClick={onCloseEditor}><AppIcon name="close" /></button>
             <span className="overline">{editingArea ? "编辑成长领域" : "新的成长领域"}</span>
             <h2>{editingArea ? "调整这个成长方向" : "你还想积累什么？"}</h2>
             <p className="sheet-description">{editingArea ? "修改后，所有关联微行动和历史记录会同步显示新名称。" : "创建一个成长领域，再关联到一个或多个微行动。"}</p>
@@ -108,7 +109,7 @@ export function GrowthEditors(props: GrowthEditorsProps) {
               <div>
                 {AREA_COLORS.map((color) => (
                   <button className={draftColor === color ? "selected" : ""} type="button" key={color} aria-label={`选择颜色 ${color}`} aria-pressed={draftColor === color} style={{ background: color }} onClick={() => onDraftColorChange(color)}>
-                    {draftColor === color && <span aria-hidden="true">✓</span>}
+                    {draftColor === color && <AppIcon name="check" />}
                   </button>
                 ))}
               </div>
