@@ -1,4 +1,4 @@
-import { GUEST_STORAGE_KEY, SAMPLE_HISTORY_KEY, STORAGE_KEY } from "../../app/constants";
+import { GUEST_STORAGE_KEY, STORAGE_KEY } from "../../app/constants";
 import type { AppDataSnapshot } from "./app-data";
 
 function readJson(key: string): unknown {
@@ -10,12 +10,11 @@ function readJson(key: string): unknown {
 }
 
 export function readAccountFallback(username: string) {
-  return readJson(`${STORAGE_KEY}:${username}`)
-    ?? (username === "123456" ? readJson(STORAGE_KEY) : null);
+  return readJson(`${STORAGE_KEY}:${username}`);
 }
 
 export function readGuestData() {
-  return readJson(GUEST_STORAGE_KEY) ?? readJson(STORAGE_KEY);
+  return readJson(GUEST_STORAGE_KEY);
 }
 
 export function saveBrowserData(
@@ -26,12 +25,4 @@ export function saveBrowserData(
     accountUsername ? `${STORAGE_KEY}:${accountUsername}` : GUEST_STORAGE_KEY,
     JSON.stringify(data),
   );
-}
-
-export function hasSeededSampleHistory(username: string) {
-  return localStorage.getItem(`${SAMPLE_HISTORY_KEY}:${username}`) === "done";
-}
-
-export function markSampleHistorySeeded(username: string) {
-  localStorage.setItem(`${SAMPLE_HISTORY_KEY}:${username}`, "done");
 }

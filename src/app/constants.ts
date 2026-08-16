@@ -1,8 +1,7 @@
 import type { Tab } from "./types";
 
-export const STORAGE_KEY = "lizi-growth-v2";
+export const STORAGE_KEY = "lizi-growth-v3";
 export const GUEST_STORAGE_KEY = `${STORAGE_KEY}:guest`;
-export const SAMPLE_HISTORY_KEY = "lizi-sample-history-v1";
 export const DEFAULT_CARD_MILESTONE_FIRST = 5;
 export const DEFAULT_CARD_MILESTONE_SECOND = 10;
 

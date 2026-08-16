@@ -19,7 +19,6 @@ export function useAppDataState() {
   const [areas, setAreas] = useState<GrowthArea[]>(DEFAULT_AREAS);
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
-  const [seedSampleHistory, setSeedSampleHistory] = useState(true);
   const [language, setLanguage] = useState<Language>("zh");
   const [theme, setTheme] = useState<Theme>("light");
   const [cardMilestoneFirst, setCardMilestoneFirst] = useState(
@@ -42,8 +41,6 @@ export function useAppDataState() {
     setActions,
     records,
     setRecords,
-    seedSampleHistory,
-    setSeedSampleHistory,
     language,
     setLanguage,
     theme,

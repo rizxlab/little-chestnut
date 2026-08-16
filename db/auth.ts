@@ -1,5 +1,3 @@
-import { env } from "cloudflare:workers";
-
 const COOKIE_NAME = "lizi_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 
@@ -16,7 +14,8 @@ export type SessionUser = {
   username: string;
 };
 
-function getRawDb(): D1Database {
+async function getRawDb(): Promise<D1Database> {
+  const { env } = await import("cloudflare:workers");
   if (!env.DB) throw new Error("Database is unavailable");
   return env.DB;
 }
@@ -87,7 +86,8 @@ export function isSameOrigin(request: Request) {
 }
 
 export async function verifyCredentials(username: string, password: string) {
-  const user = await getRawDb()
+  const db = await getRawDb();
+  const user = await db
     .prepare(
       `SELECT id, username, password_hash, password_salt, password_iterations
        FROM users
@@ -111,7 +111,7 @@ export async function createSession(userId: number) {
   const token = bytesToHex(tokenBytes);
   const sessionId = await sha256(token);
   const expiresAt = new Date(Date.now() + SESSION_SECONDS * 1000).toISOString();
-  const db = getRawDb();
+  const db = await getRawDb();
   await db.batch([
     db.prepare("DELETE FROM sessions WHERE expires_at <= ?").bind(new Date().toISOString()),
     db
@@ -128,7 +128,8 @@ export async function getSessionUser(request: Request): Promise<SessionUser | nu
   const token = sessionTokenFrom(request);
   if (!token) return null;
   const sessionId = await sha256(token);
-  const row = await getRawDb()
+  const db = await getRawDb();
+  const row = await db
     .prepare(
       `SELECT users.id, users.username
        FROM sessions
@@ -143,7 +144,8 @@ export async function getSessionUser(request: Request): Promise<SessionUser | nu
 export async function deleteSession(request: Request) {
   const token = sessionTokenFrom(request);
   if (token) {
-    await getRawDb()
+    const db = await getRawDb();
+    await db
       .prepare("DELETE FROM sessions WHERE id = ?")
       .bind(await sha256(token))
       .run();
@@ -151,6 +153,6 @@ export async function deleteSession(request: Request) {
   return `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
 }
 
-export function getAccountDb() {
+export async function getAccountDb() {
   return getRawDb();
 }

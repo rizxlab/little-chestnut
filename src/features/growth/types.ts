@@ -17,8 +17,6 @@ export type GrowthRecord = {
   actionName: string;
   icon: string;
   tagIds: string[];
-  /** @deprecated Kept only while migrating pre-tag records. */
-  areaId?: string;
   value: number;
   shellValue?: number;
   source: GrowthSource;

@@ -1,5 +1,19 @@
-const CACHE_NAME = "lizi-growth-v145";
+const CACHE_NAME = "lizi-static-v146";
 const APP_SHELL = ["/", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/og.png"];
+const STATIC_DESTINATIONS = new Set(["style", "script", "image", "font", "manifest"]);
+
+function canCache(response) {
+  return response.ok && response.type === "basic";
+}
+
+async function fetchAndCache(request) {
+  const response = await fetch(request);
+  if (canCache(response)) {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, response.clone());
+  }
+  return response;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -20,13 +34,23 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) {
+    return;
+  }
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetchAndCache(event.request).catch(
+        () => caches.match(event.request).then((cached) => cached || caches.match("/")),
+      ),
+    );
+    return;
+  }
+
+  if (!STATIC_DESTINATIONS.has(event.request.destination)) return;
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/"))),
+    caches.match(event.request).then((cached) => cached || fetchAndCache(event.request)),
   );
 });

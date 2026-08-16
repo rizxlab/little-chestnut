@@ -40,7 +40,7 @@ import { useGrowthEditorState } from "../features/growth/store/useGrowthEditorSt
 import { isToday, localDay, recordsForMonth, recordsForToday, recordsForWeek } from "../features/statistics/domain/date-ranges";
 import { getSessionAccount, loginAccount, logoutAccount, readAccountData, writeAccountData } from "../services/api/account-api";
 import { createAppDataSnapshot, normalizeAppData } from "../services/persistence/app-data";
-import { hasSeededSampleHistory, markSampleHistorySeeded, readAccountFallback, readGuestData, saveBrowserData } from "../services/persistence/browser-storage";
+import { readAccountFallback, readGuestData, saveBrowserData } from "../services/persistence/browser-storage";
 import { createRuntimeId, runtimeNow } from "../shared/utils/runtime";
 import { useAppDataState } from "../stores/useAppDataState";
 import { useAuthState } from "../stores/useAuthState";
@@ -117,8 +117,6 @@ export function CheckInPage() {
     setActions,
     records,
     setRecords,
-    seedSampleHistory,
-    setSeedSampleHistory,
     language,
     setLanguage,
     theme,
@@ -218,11 +216,8 @@ export function CheckInPage() {
   } | null>(null);
   const modalAnimationTimerRef = useRef<number | null>(null);
 
-  function applyAccountData(value: unknown, username: string) {
-    const data = normalizeAppData(value, {
-      sampleHistoryAlreadySeeded: hasSeededSampleHistory(username),
-    });
-    setSeedSampleHistory(data.seedSampleHistory);
+  function applyAccountData(value: unknown) {
+    const data = normalizeAppData(value);
     setAreas(data.areas);
     setActions(data.actions);
     setRecords(data.records);
@@ -235,7 +230,6 @@ export function CheckInPage() {
     setTheme(data.preferences.theme);
     setCardMilestoneFirst(data.preferences.cardMilestoneFirst);
     setCardMilestoneSecond(data.preferences.cardMilestoneSecond);
-    if (data.didSeedSampleHistory) markSampleHistorySeeded(username);
   }
 
   async function hydrateAccount(nextAccount: Account) {
@@ -243,14 +237,14 @@ export function CheckInPage() {
     setServerHydrated(false);
     const serverData = await readAccountData();
     const fallback = readAccountFallback(nextAccount.username);
-    applyAccountData(serverData ?? fallback, nextAccount.username);
+    applyAccountData(serverData ?? fallback);
     setAccount(nextAccount);
     setReady(true);
     setServerHydrated(true);
   }
 
   function hydrateGuest() {
-    applyAccountData(readGuestData(), "guest");
+    applyAccountData(readGuestData());
     setNickname("");
     setAccount(null);
     setReady(true);
@@ -266,7 +260,6 @@ export function CheckInPage() {
       shellsEarned,
       rewards,
       rewardClaims,
-      seedSampleHistory,
       profile: { nickname },
       preferences: {
         language,
@@ -287,7 +280,6 @@ export function CheckInPage() {
       records,
       rewardClaims,
       rewards,
-      seedSampleHistory,
       shellBalance,
       shellsEarned,
       theme,
@@ -315,7 +307,7 @@ export function CheckInPage() {
     })();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js");
+      void navigator.serviceWorker.register("/sw.js").catch(() => null);
     }
 
     return () => {
@@ -332,7 +324,7 @@ export function CheckInPage() {
     saveBrowserData(account?.username ?? null, persistedData);
     if (!account || !serverHydrated) return;
     const timer = window.setTimeout(() => {
-      void writeAccountData(persistedData);
+      void writeAccountData(persistedData).catch(() => null);
     }, 320);
     return () => window.clearTimeout(timer);
   }, [account, persistedData, ready, serverHydrated]);
@@ -470,7 +462,7 @@ export function CheckInPage() {
     ];
   }, [calendarMonth]);
 
-  function tagsFor(value: { tagIds?: string[]; areaId?: string }) {
+  function tagsFor(value: { tagIds?: string[] }) {
     return normalizedTagIds(value)
       .map((id) => areas.find((area) => area.id === id))
       .filter((area): area is Area => Boolean(area));
@@ -1597,14 +1589,12 @@ export function CheckInPage() {
       setActions((current) =>
         current.map((action) => ({
           ...action,
-          areaId: action.areaId === areaId ? undefined : action.areaId,
           tagIds: normalizedTagIds(action).filter((tagId) => tagId !== areaId),
         })),
       );
       setRecords((current) =>
         current.map((record) => ({
           ...record,
-          areaId: record.areaId === areaId ? undefined : record.areaId,
           tagIds: normalizedTagIds(record).filter((tagId) => tagId !== areaId),
         })),
       );

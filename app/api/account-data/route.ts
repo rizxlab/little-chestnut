@@ -6,7 +6,8 @@ export async function GET(request: Request) {
   const user = await getSessionUser(request);
   if (!user) return Response.json({ error: "请先登录" }, { status: 401 });
 
-  const row = await getAccountDb()
+  const db = await getAccountDb();
+  const row = await db
     .prepare("SELECT data_json FROM account_data WHERE user_id = ?")
     .bind(user.id)
     .first<{ data_json: string }>();
@@ -35,7 +36,8 @@ export async function PUT(request: Request) {
     return Response.json({ error: "账号数据过大" }, { status: 413 });
   }
 
-  await getAccountDb()
+  const db = await getAccountDb();
+  await db
     .prepare(
       `INSERT INTO account_data (user_id, data_json, updated_at)
        VALUES (?, ?, CURRENT_TIMESTAMP)

@@ -337,9 +337,6 @@ button { -webkit-tap-highlight-color: transparent; }
   padding: 26px 22px 36px;
   animation: fade-in 220ms ease;
 }
-.screen.from-right { animation: page-from-right 260ms ease; }
-.screen.from-left { animation: page-from-left 260ms ease; }
-
 .welcome { padding: 2px 2px 20px; }
 .welcome-meta {
   display: flex;
@@ -816,15 +813,6 @@ button { -webkit-tap-highlight-color: transparent; }
   font-family: STKaiti, KaiTi, serif;
   font-size: 21px;
   font-weight: 600;
-}
-.section-title-row.simple-title-row {
-  align-items: center;
-  margin-bottom: 13px;
-}
-.section-title-row.simple-title-row h2 {
-  margin: 0;
-  font-size: 25px;
-  line-height: 1.2;
 }
 .section-title-row > button, .settings-heading button {
   border: 0;
@@ -1582,29 +1570,6 @@ button { -webkit-tap-highlight-color: transparent; }
   font-weight: 700;
 }
 .shell-gain-tag span { font-size: 10px; }
-.primary-add {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 12px;
-  border: 1px dashed #cdb8a5;
-  border-radius: 18px;
-  padding: 15px 17px;
-  color: var(--chestnut);
-  text-align: left;
-  background: #fffaf1;
-  cursor: pointer;
-}
-.primary-add span {
-  display: grid;
-  width: 31px;
-  height: 31px;
-  place-items: center;
-  border-radius: 10px;
-  color: white;
-  background: var(--chestnut);
-}
-
 .action-tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -1737,33 +1702,6 @@ button { -webkit-tap-highlight-color: transparent; }
 .action-shell-gain span {
   margin-right: 2px;
 }
-.row-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 0 14px 9px;
-}
-.row-actions button {
-  border: 0;
-  padding: 2px;
-  color: #9b8d80;
-  background: transparent;
-  font-size: 10px;
-  cursor: pointer;
-}
-.tag-action-card .row-actions {
-  border-top: 1px solid rgba(233, 223, 209, .72);
-  padding-top: 8px;
-}
-.tag-action-card .row-actions button:first-child {
-  color: var(--chestnut);
-  font-weight: 700;
-}
-.tag-action-card .row-actions.single-action button {
-  color: #985a50;
-  font-weight: 400;
-}
-
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2465,80 +2403,6 @@ button { -webkit-tap-highlight-color: transparent; }
   color: rgba(255, 248, 235, .45);
 }
 
-.reward-section { padding-top: 26px; }
-.reward-section-heading > button {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 7px 10px;
-  color: var(--chestnut);
-  background: #fffaf2;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.reward-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.reward-grid article {
-  display: grid;
-  grid-template-columns: 38px 1fr;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: 19px;
-  padding: 13px;
-  background: rgba(255, 253, 248, .74);
-}
-.reward-grid article.available {
-  border-color: rgba(111, 59, 39, .23);
-  background: #fffaf1;
-  box-shadow: 0 8px 21px rgba(77, 50, 33, .07);
-}
-.reward-icon {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 13px;
-  background: #f2e9dd;
-  font-size: 19px;
-}
-.reward-grid article.available .reward-icon { background: #f7e2c7; }
-.reward-grid article > div { min-width: 0; }
-.reward-grid strong { display: block; font-size: 11px; }
-.reward-grid p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.5;
-}
-.reward-card-controls {
-  grid-column: 1 / 3;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 7px;
-}
-.reward-card-controls button {
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  padding: 8px;
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.reward-redeem-button {
-  color: #9a8d80;
-  background: #f6f0e7;
-}
-.reward-redeem-button.ready {
-  border-color: transparent;
-  color: #fffaf0;
-  background: var(--chestnut);
-  box-shadow: 0 6px 15px rgba(111, 59, 39, .16);
-}
-.reward-card-controls button:active,
-.reward-section-heading > button:active,
 .reward-empty:active { transform: scale(.97); }
 .reward-empty {
   display: grid;
@@ -3026,9 +2890,6 @@ button { -webkit-tap-highlight-color: transparent; }
   cursor: pointer;
 }
 .profile-editor-logout:active { opacity: .64; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.area-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
-.reward-form-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; }
 .icon-picker {
   border: 0;
   margin: 17px 0 0;
@@ -3163,20 +3024,6 @@ button { -webkit-tap-highlight-color: transparent; }
   color: var(--muted);
   font-size: 10px;
   line-height: 1;
-}
-.action-icon-panel {
-  margin-top: 8px;
-  border: 1px solid var(--line);
-  border-radius: 17px;
-  padding: 11px;
-  background: rgba(255, 253, 249, .78);
-  animation: action-icon-panel-in 180ms ease;
-}
-.action-icon-panel .icon-picker {
-  margin: 0;
-}
-.action-icon-panel .icon-picker legend {
-  margin-bottom: 8px;
 }
 .action-shell-stepper {
   display: flex;
@@ -4351,14 +4198,6 @@ button { -webkit-tap-highlight-color: transparent; }
   color: #fffaf2 !important;
   background: var(--chestnut) !important;
 }
-.timer-cancel-button {
-  border: 0;
-  padding: 9px 14px;
-  color: var(--muted);
-  background: transparent;
-  font-size: 10px;
-  cursor: pointer;
-}
 .timer-skip-button {
   border-color: rgba(111, 59, 39, .22) !important;
   color: var(--chestnut) !important;
@@ -4601,9 +4440,7 @@ html[data-theme="dark"] .settings-entry-button,
 html[data-theme="dark"] .profile-account-button,
 html[data-theme="dark"] .settings-back,
 html[data-theme="dark"] .calendar-back,
-html[data-theme="dark"] .reward-section-heading > button,
 html[data-theme="dark"] .settings-heading button,
-html[data-theme="dark"] .row-actions button,
 html[data-theme="dark"] .dialog-button.secondary {
   border-color: var(--line);
   color: #e4a27d;
@@ -4637,7 +4474,6 @@ html[data-theme="dark"] .settings-panel,
 html[data-theme="dark"] .settings-block,
 html[data-theme="dark"] .day-phase-icon,
 html[data-theme="dark"] .calendar-card,
-html[data-theme="dark"] .reward-grid article,
 html[data-theme="dark"] .reward-history,
 html[data-theme="dark"] .tag-action-card,
 html[data-theme="dark"] .bottom-sheet,
@@ -4646,8 +4482,7 @@ html[data-theme="dark"] .login-card {
   color: var(--ink);
   background: rgba(28, 32, 38, .92);
 }
-html[data-theme="dark"] .quick-action.completed,
-html[data-theme="dark"] .reward-grid article.available {
+html[data-theme="dark"] .quick-action.completed {
   border-color: rgba(215, 154, 121, .35);
   background: #2b2d32;
 }
@@ -4741,7 +4576,6 @@ html[data-theme="dark"] .calendar-record-list .action-tag-list i.shell-gain-tag 
 }
 html[data-theme="dark"] .action-icon,
 html[data-theme="dark"] .record-icon,
-html[data-theme="dark"] .reward-icon,
 html[data-theme="dark"] .settings-option-icon,
 html[data-theme="dark"] .tag-action-icon,
 html[data-theme="dark"] .timer-editor-setting > button > span,
@@ -4792,7 +4626,6 @@ html[data-theme="dark"] .action-icon-dialog-heading > button {
 }
 html[data-theme="dark"] .action-preset-picker button,
 html[data-theme="dark"] .action-name-control .action-icon-trigger,
-html[data-theme="dark"] .action-icon-panel,
 html[data-theme="dark"] .action-shell-stepper,
 html[data-theme="dark"] .temporary-action-settings,
 html[data-theme="dark"] .action-time-setting button {
@@ -4905,7 +4738,6 @@ html[data-theme="dark"] .reward-backdrop .reward-cost-preview {
 html[data-theme="dark"] .settings-segmented,
 html[data-theme="dark"] .theme-choice-grid button,
 html[data-theme="dark"] .reward-cost-preview,
-html[data-theme="dark"] .reward-redeem-button,
 html[data-theme="dark"] .data-settings,
 html[data-theme="dark"] .empty-state {
   border-color: var(--line);
@@ -4976,9 +4808,6 @@ html[data-theme="dark"] .settings-heading h2 { color: #e2a582; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
 @keyframes page-from-right {
   from { opacity: 0; transform: translateX(28px); }
-}
-@keyframes page-from-left {
-  from { opacity: 0; transform: translateX(-28px); }
 }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(18px) scale(.92); }

@@ -1,8 +1,8 @@
 import type { Language } from "../../settings/types";
-import { AREA_INTRODUCTIONS, GROWTH_LEVEL_THRESHOLDS, LEGACY_AREA_ID_MAP, MAX_GROWTH_LEVEL } from "../constants";
+import { AREA_INTRODUCTIONS, GROWTH_LEVEL_THRESHOLDS, MAX_GROWTH_LEVEL } from "../constants";
 import type { GrowthArea, GrowthRecord } from "../types";
 
-type TaggedEntity = { tagIds?: string[]; areaId?: string };
+type TaggedEntity = { tagIds?: string[] };
 
 export function growthLevelFor(experience: number) {
   const safeExperience = Math.max(0, Math.floor(experience));
@@ -39,14 +39,7 @@ export function areaIntroduction(area: GrowthArea, language: Language) {
 }
 
 export function normalizedTagIds(value: TaggedEntity) {
-  if (value.tagIds?.length) return value.tagIds;
-  return value.areaId ? [value.areaId] : [];
-}
-
-export function migratedTagIds(value: TaggedEntity) {
-  return Array.from(
-    new Set(normalizedTagIds(value).map((id) => LEGACY_AREA_ID_MAP[id] || id)),
-  );
+  return value.tagIds?.length ? Array.from(new Set(value.tagIds)) : [];
 }
 
 export function growthTotals(areas: GrowthArea[], records: GrowthRecord[]) {

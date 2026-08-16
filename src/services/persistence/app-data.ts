@@ -1,6 +1,6 @@
 import { DEFAULT_CARD_MILESTONE_FIRST, DEFAULT_CARD_MILESTONE_SECOND } from "../../app/constants";
-import { AREA_SCHEMA_VERSION, DEFAULT_AREAS, LEGACY_DEFAULT_AREA_IDS } from "../../features/growth/constants";
-import { migratedTagIds, normalizedTagIds } from "../../features/growth/domain/growth-rules";
+import { DEFAULT_AREAS } from "../../features/growth/constants";
+import { normalizedTagIds } from "../../features/growth/domain/growth-rules";
 import type { GrowthArea, GrowthRecord } from "../../features/growth/types";
 import { DEFAULT_REWARDS } from "../../features/rewards/constants";
 import type { Reward, RewardClaim } from "../../features/rewards/types";
@@ -9,7 +9,6 @@ import { DEFAULT_ACTIONS } from "../../features/tasks/constants";
 import { actionTimeWindowFor, isTemporaryActionExpired, shellValueFor, temporaryActionDays } from "../../features/tasks/domain/task-rules";
 import type { MicroAction } from "../../features/tasks/types";
 import { milestoneThreshold } from "../../shared/utils/presentation";
-import { buildSampleRecords } from "../migrations/sample-history";
 
 export type AppDataSnapshot = {
   schemaVersion: number;
@@ -20,8 +19,6 @@ export type AppDataSnapshot = {
   shellsEarned: number;
   rewards: Reward[];
   rewardClaims: RewardClaim[];
-  areaSchemaVersion: number;
-  seedSampleHistory: boolean;
   profile: { nickname: string };
   preferences: {
     language: Language;
@@ -31,12 +28,8 @@ export type AppDataSnapshot = {
   };
 };
 
-export type AppDataInput = Omit<AppDataSnapshot, "schemaVersion" | "areaSchemaVersion"> & {
+export type AppDataInput = Omit<AppDataSnapshot, "schemaVersion"> & {
   accountUsername?: string | null;
-};
-
-export type HydratedAppData = AppDataSnapshot & {
-  didSeedSampleHistory: boolean;
 };
 
 export function createAppDataSnapshot(input: AppDataInput): AppDataSnapshot {
@@ -49,8 +42,6 @@ export function createAppDataSnapshot(input: AppDataInput): AppDataSnapshot {
     shellsEarned: input.shellsEarned,
     rewards: input.rewards,
     rewardClaims: input.rewardClaims,
-    areaSchemaVersion: AREA_SCHEMA_VERSION,
-    seedSampleHistory: input.seedSampleHistory,
     profile: {
       nickname: input.accountUsername ? input.profile.nickname.trim() : "",
     },
@@ -60,45 +51,24 @@ export function createAppDataSnapshot(input: AppDataInput): AppDataSnapshot {
 
 export function normalizeAppData(
   value: unknown,
-  options: { sampleHistoryAlreadySeeded: boolean },
-): HydratedAppData {
+): AppDataSnapshot {
   const stored = value && typeof value === "object"
     ? value as Record<string, unknown>
     : null;
-  const allowsSampleHistory = stored?.seedSampleHistory !== false;
   const storedAreas = Array.isArray(stored?.areas) ? stored.areas as GrowthArea[] : [];
-  const usesCurrentAreaSchema = stored?.areaSchemaVersion === AREA_SCHEMA_VERSION;
-  const customStoredAreas = storedAreas.filter(
-    (area) => !LEGACY_DEFAULT_AREA_IDS.has(area.id)
-      && !DEFAULT_AREAS.some((defaultArea) => defaultArea.id === area.id),
-  );
-  const areas = storedAreas.length
-    ? usesCurrentAreaSchema
-      ? [
-          ...storedAreas,
-          ...DEFAULT_AREAS.filter(
-            (defaultArea) => !storedAreas.some((area) => area.id === defaultArea.id),
-          ),
-        ]
-      : [...DEFAULT_AREAS, ...customStoredAreas]
-    : DEFAULT_AREAS;
+  const areas = storedAreas.length ? storedAreas : DEFAULT_AREAS;
 
   const storedActions = Array.isArray(stored?.actions)
     ? stored.actions as MicroAction[]
     : [];
   const actions = storedActions.length
-    ? storedActions.map((action) => {
+      ? storedActions.map((action) => {
         const defaultAction = DEFAULT_ACTIONS.find((item) => item.id === action.id);
-        const isLegacyStretch = action.id === "stretch" && action.name === "拉伸 5 秒";
         return {
           ...action,
-          name: isLegacyStretch ? defaultAction?.name || action.name : action.name,
-          icon: isLegacyStretch ? defaultAction?.icon || action.icon : action.icon,
-          tagIds: migratedTagIds(
-            action.tagIds?.length
-              ? action
-              : { ...action, tagIds: defaultAction?.tagIds || normalizedTagIds(action) },
-          ),
+          tagIds: normalizedTagIds(action).length
+            ? normalizedTagIds(action)
+            : defaultAction?.tagIds || [],
           shellValue: shellValueFor(action),
           repeatable: action.repeatable !== false,
           timeWindow: actionTimeWindowFor(action),
@@ -114,18 +84,11 @@ export function normalizeAppData(
   const storedRecords = Array.isArray(stored?.records)
     ? (stored.records as GrowthRecord[]).map((record) => ({
         ...record,
-        tagIds: migratedTagIds(record),
+        tagIds: normalizedTagIds(record),
         shellValue: shellValueFor(record),
       }))
     : [];
-  const existingRecordIds = new Set(storedRecords.map((record) => record.id));
-  const shouldSeedHistory = allowsSampleHistory && !options.sampleHistoryAlreadySeeded;
-  const records = [
-    ...storedRecords,
-    ...(shouldSeedHistory
-      ? buildSampleRecords().filter((record) => !existingRecordIds.has(record.id))
-      : []),
-  ];
+  const records = storedRecords;
   const earnedFromRecords = records.reduce(
     (total, record) => total + shellValueFor(record),
     0,
@@ -158,8 +121,6 @@ export function normalizeAppData(
     rewardClaims: Array.isArray(stored?.rewardClaims)
       ? stored.rewardClaims as RewardClaim[]
       : [],
-    areaSchemaVersion: AREA_SCHEMA_VERSION,
-    seedSampleHistory: allowsSampleHistory,
     profile: {
       nickname: typeof profile?.nickname === "string" ? profile.nickname.slice(0, 16) : "",
     },
@@ -174,6 +135,5 @@ export function normalizeAppData(
         99,
       ),
     },
-    didSeedSampleHistory: shouldSeedHistory,
   };
 }

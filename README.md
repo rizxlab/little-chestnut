@@ -33,7 +33,7 @@ npm run dev
 
 ```bash
 npm run lint
-npx tsc --noEmit --incremental false
+npm run typecheck
 npm test
 ```
 
@@ -54,7 +54,8 @@ npm test
 
 详细边界见 [`src/ARCHITECTURE.md`](src/ARCHITECTURE.md)。
 
-## 数据兼容
+## 数据基线
 
-当前版本继续兼容原有 `lizi-growth-v2` 本地数据和 D1 账户 JSON。新的
-`schemaVersion` 用于后续增量迁移，避免一次性重建或丢失历史记录。
+当前测试版本使用 `lizi-growth-v3` 浏览器存储和一套从零开始的 D1 schema。
+后续需要改变持久化格式时，请提升 `schemaVersion` 并添加明确的数据迁移。
+初始迁移不会创建账号；测试账号需要在对应环境中单独配置。

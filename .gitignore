@@ -13,6 +13,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -37,6 +39,10 @@ yarn-error.log*
 
 # typescript
 next-env.d.ts
+*.tsbuildinfo
+
+# tool caches
+.eslintcache
 /dist/
 /.wrangler/
 /outputs/

@@ -53,6 +53,10 @@ test("ships valid PWA metadata and an explicit cache version", async () => {
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.start_url, "/");
   assert.ok(Array.isArray(manifest.icons) && manifest.icons.length >= 2);
-  assert.match(serviceWorker, /const CACHE_NAME = "lizi-growth-v\d+"/);
+  assert.match(serviceWorker, /const CACHE_NAME = "lizi-static-v\d+"/);
   assert.match(serviceWorker, /self\.addEventListener\("fetch"/);
+  assert.match(serviceWorker, /url\.pathname\.startsWith\("\/api\/"\)/);
+  assert.match(serviceWorker, /STATIC_DESTINATIONS/);
+  assert.match(serviceWorker, /response\.ok && response\.type === "basic"/);
+  assert.doesNotMatch(serviceWorker, /cache\.put\(event\.request/);
 });

@@ -50,18 +50,5 @@ export const AREA_COLORS = [
   "#5f8065", "#56748a", "#8a6478", "#78698f", "#a37845", "#9b6a62", "#527d86",
 ];
 
-export const AREA_SCHEMA_VERSION = 3;
-export const LEGACY_DEFAULT_AREA_IDS = new Set([
-  "health", "body", "learn", "create", "mind", "life",
-]);
-export const LEGACY_AREA_ID_MAP: Record<string, string> = {
-  health: "body",
-  body: "body",
-  learn: "wisdom",
-  create: "create",
-  mind: "soul",
-  life: "explore",
-};
-
 export const GROWTH_LEVEL_THRESHOLDS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 320];
 export const MAX_GROWTH_LEVEL = GROWTH_LEVEL_THRESHOLDS.length;
