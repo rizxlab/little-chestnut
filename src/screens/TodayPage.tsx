@@ -1,5 +1,5 @@
 import type { Dispatch, PointerEvent, SetStateAction } from "react";
-import type { Account } from "../features/user/types";
+import type { Account } from "../features/profile/types";
 import type { Language } from "../features/settings/types";
 import type { GrowthArea, GrowthRecord } from "../features/growth/types";
 import type { MicroAction } from "../features/tasks/types";

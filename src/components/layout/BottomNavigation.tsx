@@ -1,6 +1,7 @@
 import { NAV_ITEMS } from "../../app/constants";
 import type { Tab } from "../../app/types";
 import type { Language } from "../../features/settings/types";
+import { AppIcon } from "../ui/AppIcon";
 
 type BottomNavigationProps = {
   activeTab: Tab;
@@ -25,7 +26,7 @@ export function BottomNavigation({
           onClick={() => onChange(item.id)}
           aria-current={activeTab === item.id ? "page" : undefined}
         >
-          <span aria-hidden="true">{item.icon}</span>
+          <AppIcon name={item.icon} />
           {language === "zh"
             ? item.label
             : item.id === "today"

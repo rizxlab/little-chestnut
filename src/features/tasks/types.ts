@@ -1,4 +1,5 @@
 export type ActionTimeWindow = "morning" | "noon" | "evening" | "anytime";
+export type TimerPhase = "idle" | "preparing" | "running" | "success";
 
 export type MicroAction = {
   id: string;

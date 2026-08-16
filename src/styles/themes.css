@@ -1,0 +1,397 @@
+html[data-theme="dark"] {
+  --ink: #f2f4f7;
+  --muted: #9da5b0;
+  --paper: #181b20;
+  --cream: #101216;
+  --cream-deep: #252930;
+  --chestnut: #d49472;
+  --chestnut-light: #e1a684;
+  --leaf: #8ea385;
+  --line: #30353d;
+  color-scheme: dark;
+  background: #0b0d10;
+}
+html[data-theme="dark"] body {
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 10% 8%, rgba(70, 78, 91, .26), transparent 28rem),
+    linear-gradient(145deg, #13161b 0%, #090b0e 100%);
+}
+html[data-theme="dark"] .app-frame {
+  border-color: rgba(255, 255, 255, .07);
+  background: rgba(22, 25, 30, .98);
+  box-shadow: 0 26px 90px rgba(0, 0, 0, .36);
+}
+html[data-theme="dark"] .bottom-nav {
+  border-color: var(--line);
+  background: rgba(24, 27, 32, .92);
+}
+html[data-theme="dark"] .global-home-button,
+html[data-theme="dark"] .settings-entry-button,
+html[data-theme="dark"] .profile-account-button,
+html[data-theme="dark"] .settings-back,
+html[data-theme="dark"] .calendar-back,
+html[data-theme="dark"] .settings-heading button,
+html[data-theme="dark"] .dialog-button.secondary {
+  border-color: var(--line);
+  color: #e4a27d;
+  background: #252930;
+}
+html[data-theme="dark"] .global-home-button {
+  border-color: rgba(255, 255, 255, .18);
+  color: #f2f4f7;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, .16), rgba(38, 43, 51, .26));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .2),
+    inset 0 -1px 0 rgba(0, 0, 0, .12),
+    0 9px 24px rgba(0, 0, 0, .28);
+}
+html[data-theme="dark"] .global-home-button span {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(212, 148, 114, .78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+html[data-theme="dark"] .global-home-button:active {
+  background: rgba(46, 51, 60, .5);
+}
+html[data-theme="dark"] .profile-account-button:not(.guest) {
+  border-color: rgba(255, 255, 255, .18);
+  color: #fff8ef;
+  background: var(--chestnut);
+}
+html[data-theme="dark"] .quick-action,
+html[data-theme="dark"] .settings-panel,
+html[data-theme="dark"] .settings-block,
+html[data-theme="dark"] .day-phase-icon,
+html[data-theme="dark"] .calendar-card,
+html[data-theme="dark"] .reward-history,
+html[data-theme="dark"] .tag-action-card,
+html[data-theme="dark"] .bottom-sheet,
+html[data-theme="dark"] .login-card {
+  border-color: var(--line);
+  color: var(--ink);
+  background: rgba(28, 32, 38, .92);
+}
+html[data-theme="dark"] .quick-action.completed {
+  border-color: rgba(215, 154, 121, .35);
+  background: #2b2d32;
+}
+html[data-theme="dark"] .quick-action.time-locked {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(23, 26, 31, .72);
+}
+html[data-theme="dark"] .action-filter-list button {
+  border-color: var(--line);
+  color: var(--muted);
+  background: rgba(28, 32, 38, .78);
+}
+html[data-theme="dark"] .action-filter-list button.active {
+  border-color: rgba(215, 154, 121, .38);
+  color: #1a1d22;
+  background: #d79a79;
+}
+html[data-theme="dark"] .action-filter-empty {
+  border-color: var(--line);
+  background: rgba(28, 32, 38, .6);
+}
+html[data-theme="dark"] .temporary-action-add {
+  border-color: rgba(225, 173, 140, .25);
+  color: #f2c1a2;
+  background:
+    linear-gradient(135deg, rgba(45, 42, 40, .9), rgba(30, 33, 39, .82));
+}
+html[data-theme="dark"] .today-progress-group .growth-area {
+  border-color: var(--line);
+  background:
+    linear-gradient(135deg, rgba(48, 53, 62, .72), rgba(28, 32, 38, .74)),
+    var(--paper);
+}
+html[data-theme="dark"] .growth-level-card {
+  border-color: var(--line);
+  background:
+    linear-gradient(135deg, rgba(39, 44, 52, .86), rgba(25, 29, 35, .78)),
+    var(--paper);
+}
+html[data-theme="dark"] .growth-level-track {
+  background: rgba(255, 255, 255, .08);
+}
+html[data-theme="dark"] .growth-level-card.max-level {
+  border-color: rgba(222, 173, 97, .24);
+  background:
+    radial-gradient(circle at 90% 12%, rgba(221, 166, 77, .12), transparent 72px),
+    linear-gradient(135deg, #302d2a, #25272b);
+}
+html[data-theme="dark"] .growth-area-detail-hero,
+html[data-theme="dark"] .growth-area-detail-stats > span,
+html[data-theme="dark"] .growth-area-detail-list article {
+  border-color: var(--line);
+  background-color: rgba(35, 39, 46, .86);
+}
+html[data-theme="dark"] .growth-area-detail-list article > span,
+html[data-theme="dark"] .growth-area-detail-heading small {
+  background: rgba(255, 255, 255, .07);
+}
+html[data-theme="dark"] .week-progress-group .growth-progress-heading h2 { color: #a8bd9c; }
+html[data-theme="dark"] .month-progress-group .growth-progress-heading h2 { color: #b8a9cf; }
+html[data-theme="dark"] .growth-period-tabs {
+  border-color: var(--line);
+  background: rgba(17, 20, 25, .64);
+}
+html[data-theme="dark"] .growth-period-tabs button.active {
+  color: #f1d3bd;
+  background: rgba(48, 53, 62, .94);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, .2);
+}
+html[data-theme="dark"] .growth-period-tabs button small {
+  background: rgba(255, 255, 255, .07);
+}
+html[data-theme="dark"] .growth-period-tabs button.active small {
+  color: #1b1e24;
+  background: #d79a79;
+}
+html[data-theme="dark"] .reward-manager-edit {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #1d2026;
+}
+html[data-theme="dark"] .reward-manager-delete {
+  border-color: rgba(220, 132, 119, .22);
+  color: #e4a198;
+  background: rgba(89, 47, 42, .45);
+}
+html[data-theme="dark"] .calendar-record-list .action-tag-list i.shell-gain-tag {
+  border-color: rgba(225, 173, 140, .28);
+  color: #efbf85;
+  background: rgba(111, 72, 39, .42);
+}
+html[data-theme="dark"] .action-icon,
+html[data-theme="dark"] .record-icon,
+html[data-theme="dark"] .settings-option-icon,
+html[data-theme="dark"] .tag-action-icon,
+html[data-theme="dark"] .timer-editor-setting > button > span,
+html[data-theme="dark"] .record-action-popover button > span {
+  background: #292d34 !important;
+}
+html[data-theme="dark"] .timer-editor-setting > button {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #171a1f;
+}
+html[data-theme="dark"] .timer-duration-editor {
+  border-color: var(--line);
+  background: rgba(23, 26, 31, .9);
+}
+html[data-theme="dark"] .action-editor .timer-duration-slider input[type="range"]::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(
+      90deg,
+      var(--chestnut) var(--timer-slider-progress),
+      #3a3f47 var(--timer-slider-progress)
+    );
+}
+html[data-theme="dark"] .action-editor .timer-duration-slider input[type="range"]::-webkit-slider-thumb {
+  border-color: #252930;
+}
+html[data-theme="dark"] .action-editor .timer-duration-slider input[type="range"]::-moz-range-track {
+  background: #3a3f47;
+}
+html[data-theme="dark"] .action-editor .timer-duration-slider input[type="range"]::-moz-range-thumb {
+  border-color: #252930;
+}
+html[data-theme="dark"] .icon-picker button {
+  border-color: var(--line);
+  background: rgba(24, 27, 32, .78);
+}
+html[data-theme="dark"] .action-icon-dialog {
+  border-color: rgba(255, 255, 255, .12);
+  background: rgba(28, 32, 38, .95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .08),
+    0 24px 58px rgba(0, 0, 0, .42);
+}
+html[data-theme="dark"] .action-icon-dialog-heading > button {
+  border-color: var(--line);
+  color: var(--muted);
+  background: #292d34;
+}
+html[data-theme="dark"] .action-preset-picker button,
+html[data-theme="dark"] .action-name-control .action-icon-trigger,
+html[data-theme="dark"] .action-shell-stepper,
+html[data-theme="dark"] .temporary-action-settings,
+html[data-theme="dark"] .action-time-setting button {
+  border-color: var(--line);
+  color: var(--ink);
+  background: rgba(24, 27, 32, .78);
+}
+html[data-theme="dark"] .action-shell-stepper > div:first-child > span,
+html[data-theme="dark"] .action-shell-stepper button,
+html[data-theme="dark"] .temporary-duration-control button,
+html[data-theme="dark"] .action-editor .temporary-duration-control input {
+  border-color: var(--line);
+  background: #292d34;
+}
+html[data-theme="dark"] .action-preset-picker button.selected {
+  border-color: rgba(225, 173, 140, .42);
+  color: #efbd9d;
+  background: #343037;
+}
+html[data-theme="dark"] .action-time-setting button.selected {
+  border-color: rgba(225, 173, 140, .42);
+  color: #efbd9d;
+  background: #343037;
+}
+html[data-theme="dark"] .icon-picker button.selected {
+  border-color: rgba(225, 173, 140, .45);
+  background: #343037;
+}
+html[data-theme="dark"] .timer-editor-setting > button.enabled {
+  border-color: rgba(225, 173, 140, .36);
+  background: #2b2d32;
+}
+html[data-theme="dark"] .action-manager-list > button {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #171a1f;
+}
+html[data-theme="dark"] .action-manager-create {
+  border-color: rgba(225, 173, 140, .36);
+  color: #f2c1a2;
+  background: #2b2d32;
+}
+html[data-theme="dark"] .timer-clock > div {
+  border-color: var(--line);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(192, 124, 89, .15), transparent 44px),
+    var(--paper);
+  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, .03);
+}
+html[data-theme="dark"] .timer-backdrop .timer-sheet {
+  border-color: rgba(255, 255, 255, .13);
+  background:
+    linear-gradient(145deg, rgba(53, 59, 69, .72), rgba(26, 30, 36, .62)),
+    rgba(28, 32, 38, .56);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .1),
+    0 24px 65px rgba(0, 0, 0, .43);
+}
+html[data-theme="dark"] .timer-backdrop .timer-sheet.timer-phase-preparing {
+  border-color: rgba(171, 183, 207, .2);
+  background:
+    linear-gradient(145deg, rgba(56, 63, 78, .76), rgba(27, 31, 39, .64)),
+    rgba(29, 34, 43, .58);
+}
+html[data-theme="dark"] .timer-clock.preparing > div {
+  border-color: rgba(171, 183, 207, .16);
+  background:
+    radial-gradient(circle at 50% 16%, rgba(129, 145, 177, .18), transparent 42px),
+    #171b23;
+}
+html[data-theme="dark"] .timer-clock.preparing strong { color: #c5cee0; }
+html[data-theme="dark"] .timer-clock.preparing .timer-phase-icon,
+html[data-theme="dark"] .timer-clock.preparing small,
+html[data-theme="dark"] .timer-sheet.timer-phase-preparing > .overline {
+  color: #aab5ca;
+}
+html[data-theme="dark"] .timer-clock.success > div {
+  border-color: rgba(133, 175, 124, .2);
+  background:
+    radial-gradient(circle at 50% 35%, rgba(105, 151, 95, .2), transparent 58px),
+    rgba(30, 37, 28, .86);
+}
+html[data-theme="dark"] .timer-skip-button {
+  border-color: rgba(225, 173, 140, .24) !important;
+  color: #efb99a !important;
+  background: rgba(52, 55, 63, .62) !important;
+}
+html[data-theme="dark"] .timer-duration-picker button {
+  border-color: rgba(255, 255, 255, .1);
+  background: rgba(20, 23, 28, .52);
+}
+html[data-theme="dark"] .record-action-popover {
+  border-color: var(--line);
+  background: rgba(28, 32, 38, .92);
+}
+html[data-theme="dark"] .reward-backdrop .reward-sheet {
+  border-color: rgba(255, 255, 255, .12);
+  background:
+    linear-gradient(145deg, rgba(53, 59, 69, .72), rgba(26, 30, 36, .6)),
+    rgba(28, 32, 38, .54);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .09),
+    0 24px 65px rgba(0, 0, 0, .42);
+}
+html[data-theme="dark"] .reward-backdrop .reward-cost-preview {
+  border-color: rgba(255, 255, 255, .08);
+  background: rgba(16, 18, 22, .46);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+html[data-theme="dark"] .settings-segmented,
+html[data-theme="dark"] .theme-choice-grid button,
+html[data-theme="dark"] .reward-cost-preview,
+html[data-theme="dark"] .data-settings,
+html[data-theme="dark"] .empty-state {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #171a1f;
+}
+html[data-theme="dark"] .settings-segmented button.selected,
+html[data-theme="dark"] .theme-choice-grid button.selected {
+  border-color: rgba(225, 173, 140, .48);
+  color: #f2c1a2;
+  background: #302d33;
+}
+html[data-theme="dark"] .milestone-threshold-row {
+  border-color: var(--line);
+  background: #171a1f;
+}
+html[data-theme="dark"] .milestone-threshold-row button,
+html[data-theme="dark"] .milestone-threshold-row input {
+  border-color: var(--line);
+  color: #f2c1a2;
+  background: #292d34;
+}
+html[data-theme="dark"] .reward-cost-options button,
+html[data-theme="dark"] .reward-editor .reward-cost-custom {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #171a1f;
+}
+html[data-theme="dark"] .reward-cost-options button.selected {
+  border-color: rgba(225, 173, 140, .42);
+  color: #efbd9d;
+  background: #343037;
+}
+html[data-theme="dark"] .action-editor input,
+html[data-theme="dark"] .area-editor input,
+html[data-theme="dark"] .reward-editor input,
+html[data-theme="dark"] .profile-editor input,
+html[data-theme="dark"] .login-card input {
+  border-color: var(--line);
+  color: var(--ink);
+  background: #12151a;
+}
+html[data-theme="dark"] .reward-editor .reward-cost-custom input {
+  background: transparent;
+}
+html[data-theme="dark"] .toast {
+  border-color: rgba(255, 255, 255, .16);
+  background: linear-gradient(135deg, rgba(53, 59, 68, .74), rgba(22, 25, 30, .66));
+}
+html[data-theme="dark"] .toast-copy strong,
+html[data-theme="dark"] .toast-copy small { color: #edf0f4; }
+html[data-theme="dark"] .tag-action-summary .action-tag-list small.action-shell-gain {
+  border-color: rgba(229, 170, 111, .3);
+  color: #efbd8d;
+  background: rgba(203, 132, 68, .13);
+}
+html[data-theme="dark"] .modal-backdrop { background: rgba(0, 0, 0, .58); }
+html[data-theme="dark"] .modal-drag-handle span {
+  background: rgba(210, 216, 224, .3);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .08);
+}
+html[data-theme="dark"] .calendar-grid button { color: var(--muted); }
+html[data-theme="dark"] .calendar-grid button.selected { color: #17191d; }
+html[data-theme="dark"] .check-control small { border-color: #242830; }
+html[data-theme="dark"] .section-title-row h2,
+html[data-theme="dark"] .settings-heading h2 { color: #e2a582; }

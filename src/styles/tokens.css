@@ -1,0 +1,17 @@
+@property --timer-progress {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+:root {
+  --ink: #28231e;
+  --muted: #7e7469;
+  --paper: #ffffff;
+  --cream: #ffffff;
+  --cream-deep: #f3f1ee;
+  --chestnut: #6f3b27;
+  --chestnut-light: #c89072;
+  --leaf: #647452;
+  --line: #e9dfd1;
+}

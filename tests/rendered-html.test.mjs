@@ -18,11 +18,12 @@ test("builds the Little Chestnut Things application shell", async () => {
 });
 
 test("keeps routes, product composition, persistence, and page UI separated", async () => {
-  const [page, composition, productPage, browserStorage, accountApi, architecture] =
+  const [page, composition, productPage, workspace, browserStorage, accountApi, architecture] =
     await Promise.all([
       readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
       readFile(new URL("../src/app/ChestnutApp.tsx", import.meta.url), "utf8"),
       readFile(new URL("../src/screens/CheckInPage.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../src/screens/check-in/CheckInWorkspace.tsx", import.meta.url), "utf8"),
       readFile(new URL("../src/services/persistence/browser-storage.ts", import.meta.url), "utf8"),
       readFile(new URL("../src/services/api/account-api.ts", import.meta.url), "utf8"),
       readFile(new URL("../src/ARCHITECTURE.md", import.meta.url), "utf8"),
@@ -31,9 +32,13 @@ test("keeps routes, product composition, persistence, and page UI separated", as
   assert.match(page, /src\/app\/ChestnutApp/);
   assert.doesNotMatch(page, /pages|localStorage|fetch\(/);
   assert.match(composition, /screens\/CheckInPage/);
-  assert.match(productPage, /useAppDataState/);
-  assert.doesNotMatch(productPage, /localStorage\./);
-  assert.doesNotMatch(productPage, /fetch\("\/api\/account-data/);
+  assert.match(productPage, /CheckInWorkspace/);
+  assert.match(workspace, /useAppDataState/);
+  assert.match(workspace, /useAccountSync/);
+  assert.match(workspace, /useTimer/);
+  assert.match(workspace, /useGesture/);
+  assert.doesNotMatch(workspace, /localStorage\./);
+  assert.doesNotMatch(workspace, /fetch\("\/api\/account-data/);
   assert.match(browserStorage, /saveBrowserData/);
   assert.match(accountApi, /writeAccountData/);
   assert.match(architecture, /screens\/CheckInPage\.tsx/);

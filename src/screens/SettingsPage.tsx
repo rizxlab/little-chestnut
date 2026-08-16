@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { Language, Theme } from "../features/settings/types";
 import { milestoneThreshold } from "../shared/utils/presentation";
+import { AppIcon } from "../components/ui/AppIcon";
 
 type SettingsPageProps = {
   language: Language;
@@ -21,7 +22,7 @@ export function SettingsPage(props: SettingsPageProps) {
     <div className="screen settings-screen">
       <section className="settings-page-heading">
         <button className="settings-back" type="button" aria-label={tr("返回我的页面", "Back to profile")} onClick={props.onClose}>
-          <span aria-hidden="true">‹</span>
+          <AppIcon name="back" />
         </button>
         <span className="overline">SETTINGS</span>
         <h1>{tr("设置", "Settings")}</h1>

@@ -20,11 +20,6 @@ export function useTaskEditorState() {
   const [draftTimeWindow, setDraftTimeWindow] = useState<ActionTimeWindow>("anytime");
   const [draftUsesTimer, setDraftUsesTimer] = useState(false);
   const [draftTimerSeconds, setDraftTimerSeconds] = useState(5);
-  const [timerAction, setTimerAction] = useState<MicroAction | null>(null);
-  const [timerPhase, setTimerPhase] = useState<"idle" | "preparing" | "running" | "success">("idle");
-  const [timerSecondsLeft, setTimerSecondsLeft] = useState(0);
-  const [timerMultiplier, setTimerMultiplier] = useState(1);
-  const [timerRingResetting, setTimerRingResetting] = useState(false);
 
   return {
     editingAction, setEditingAction,
@@ -43,10 +38,5 @@ export function useTaskEditorState() {
     draftTimeWindow, setDraftTimeWindow,
     draftUsesTimer, setDraftUsesTimer,
     draftTimerSeconds, setDraftTimerSeconds,
-    timerAction, setTimerAction,
-    timerPhase, setTimerPhase,
-    timerSecondsLeft, setTimerSecondsLeft,
-    timerMultiplier, setTimerMultiplier,
-    timerRingResetting, setTimerRingResetting,
   };
 }

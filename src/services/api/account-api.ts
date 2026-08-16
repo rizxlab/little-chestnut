@@ -1,4 +1,4 @@
-import type { Account } from "../../features/user/types";
+import type { Account } from "../../features/profile/types";
 import type { AppDataSnapshot } from "../persistence/app-data";
 
 async function readResponseError(response: Response, fallback: string) {

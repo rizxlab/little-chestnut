@@ -8,7 +8,7 @@ import type { Reward, RewardClaim } from "../features/rewards/types";
 import { PROFILE_ACTION_SWIPE_WIDTH, PROFILE_ACTION_TIME_GROUPS } from "../features/tasks/constants";
 import { actionTimeWindowFor, shellValueFor } from "../features/tasks/domain/task-rules";
 import type { MicroAction } from "../features/tasks/types";
-import type { Account } from "../features/user/types";
+import type { Account } from "../features/profile/types";
 import { formatRecordDate } from "../features/statistics/domain/date-ranges";
 
 type ProfileActionSwipe = {

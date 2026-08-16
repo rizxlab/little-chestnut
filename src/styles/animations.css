@@ -1,0 +1,76 @@
+@keyframes fade-in { from { opacity: 0; transform: translateY(4px); } }
+@keyframes page-from-right {
+  from { opacity: 0; transform: translateX(28px); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(18px) scale(.92); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(-14px) scale(.96); }
+}
+@keyframes toast-ring {
+  from { opacity: .9; transform: scale(.55); }
+  to { opacity: 0; transform: scale(1.45); }
+}
+@keyframes account-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+@keyframes sheet-up { from { opacity: 0; transform: translateY(24px); } }
+@keyframes secondary-modal-slide-in {
+  from {
+    opacity: .18;
+    transform: translate3d(0, calc(100% + 90px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, var(--modal-drag-y, 0px), 0);
+  }
+}
+@keyframes secondary-modal-slide-out {
+  from {
+    opacity: 1;
+    transform: translate3d(0, var(--modal-drag-y, 0px), 0);
+  }
+  to {
+    opacity: .12;
+    transform: translate3d(0, calc(100% + 90px), 0);
+  }
+}
+@keyframes check-bounce {
+  0% { transform: scale(.72); }
+  55% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+@keyframes action-icon-panel-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes orbit-ripple-out {
+  0% { opacity: .78; transform: scale(.72); }
+  70% { opacity: .22; }
+  100% { opacity: 0; transform: scale(3.35); }
+}
+@keyframes today-card-shimmer {
+  0%, 18% { left: -48%; }
+  58%, 100% { left: 122%; }
+}
+@keyframes today-orbit-breathe {
+  0%, 100% { opacity: .65; transform: scale(.97); }
+  50% { opacity: 1; transform: scale(1.045); }
+}
+@keyframes today-core-glow {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .36), 0 0 17px rgba(255, 186, 71, .22); }
+  50% { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .46), 0 0 30px rgba(255, 191, 77, .45); }
+}
+@keyframes today-star-pulse {
+  0%, 100% { opacity: .2; transform: scale(.68); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+@keyframes shell-drop {
+  0% { opacity: 0; transform: translateY(-112px) rotate(-18deg) scale(.72); }
+  62% { opacity: 1; transform: translateY(7px) rotate(7deg) scale(1); }
+  78% { transform: translateY(-5px) rotate(-4deg) scale(1); }
+  90% { transform: translateY(2px) rotate(2deg) scale(1); }
+  100% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}

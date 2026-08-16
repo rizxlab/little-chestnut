@@ -1,6 +1,7 @@
 import type { GrowthArea, GrowthRecord } from "../features/growth/types";
 import { formatRecordDate, localDay } from "../features/statistics/domain/date-ranges";
 import { shellValueFor } from "../features/tasks/domain/task-rules";
+import { AppIcon } from "../components/ui/AppIcon";
 
 type CalendarCell = { date: Date; key: string } | null;
 
@@ -22,7 +23,7 @@ export function CalendarPage(props: CalendarPageProps) {
     <div className="screen calendar-screen">
       <section className="calendar-heading">
         <div className="calendar-heading-actions">
-          <button className="calendar-back" type="button" aria-label="返回今日页面" onClick={props.onClose}><span aria-hidden="true">‹</span></button>
+          <button className="calendar-back" type="button" aria-label="返回今日页面" onClick={props.onClose}><AppIcon name="back" /></button>
         </div>
         <span className="overline">CALENDAR</span><h1>日历记录</h1><p>回看过去发生的小事，每一次都算成长。</p>
       </section>

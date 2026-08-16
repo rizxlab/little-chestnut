@@ -8,13 +8,12 @@
 ```text
 src
 ├── app             应用组合入口、Provider 与运行配置
-├── screens         页面级组合组件（不触发 Pages Router）
+├── screens         路由级页面与工作区组合组件（不触发 Pages Router）
 ├── features        按业务领域组织的功能模块
 ├── components      跨领域复用的 UI 与布局组件
-├── stores          跨模块状态组合
 ├── services        API、持久化、同步与数据迁移
 ├── shared          通用类型、Hook、常量与纯工具函数
-├── styles          全局变量、主题、基础样式和动画
+├── styles          按布局、页面、组件、弹层、主题和动画拆分的样式；CSS variables 是视觉 Token 的唯一来源
 ```
 
 ## 业务模块
@@ -26,8 +25,8 @@ src
 - `shells`：栗壳获取、消费、余额和流水。
 - `rewards`：奖励项目与兑换记录。
 - `statistics`：今日、本周、本月、日历及趋势聚合。
-- `auth`：登录、会话和账号数据归属。
-- `user`：用户资料。
+- `account`：登录、会话、账号数据归属与同步。
+- `profile`：用户资料。
 - `settings`：语言、主题和产品偏好。
 
 ## 依赖规则
@@ -38,10 +37,12 @@ src
 4. `components` 不依赖具体业务数据结构。
 5. `services` 隔离浏览器存储、网络请求和未来的云同步实现。
 6. `shared` 只包含无业务副作用的通用代码。
-7. 页面只通过各功能模块的公开类型、规则、Store 和服务访问业务能力。
+7. 页面只通过各功能模块的公开类型、规则、Hook 和服务访问业务能力。
 
 ## 当前状态
 
-`screens/CheckInPage.tsx` 负责产品页面编排；业务类型、规则、数据读写和
-领域状态已经迁入各自模块。`app/ChestnutApp.tsx` 提供稳定入口。后续新增
-功能应直接进入对应 `features`，不再向页面文件添加可复用业务规则。
+`screens/CheckInPage.tsx` 是稳定的路由级组合入口；现有产品工作区位于
+`screens/check-in/CheckInWorkspace.tsx`。账号同步、计时和手势生命周期已分别
+迁入 `features/account`、`features/tasks` 和 `shared/hooks`，个人资料、成长领域、
+奖励与登录编辑器也已迁入相应 feature。`app/ChestnutApp.tsx` 提供稳定入口。
+后续新增功能应直接进入对应 `features`，不再向工作区文件添加可复用规则或视图。
