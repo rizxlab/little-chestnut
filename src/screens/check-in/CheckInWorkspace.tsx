@@ -455,7 +455,7 @@ export function CheckInWorkspace() {
     const claim = createRewardClaim(pendingReward);
     setShellBalance((current) => spendShells(current, pendingReward.cost));
     setRewardClaims((current) => [claim, ...current]);
-    showToast(`${pendingReward.icon} ${pendingReward.name}，现在就去享受吧`, "奖励已兑换");
+    showToast(`${pendingReward.name}，现在就去享受吧`, "奖励已兑换");
     closeSecondaryModal("reward-confirm", () => setPendingReward(null));
   }
 

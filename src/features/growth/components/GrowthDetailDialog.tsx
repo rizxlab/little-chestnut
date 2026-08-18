@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode, TouchEvent } from "react";
 import { AppIcon } from "../../../components/ui/AppIcon";
+import { ContentIcon } from "../../../components/ui/ContentIcon";
 
 import type { Language } from "../../settings/types";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor } from "../../tasks/domain/task-rules";
@@ -76,10 +77,10 @@ export function GrowthDetailDialog(props: GrowthDetailDialogProps) {
             >
               <span
                 className="growth-area-detail-icon"
-                style={{ background: `${growthAreaDetail.color}20` }}
+                style={{ color: growthAreaDetail.color, background: `${growthAreaDetail.color}20` }}
                 aria-hidden="true"
               >
-                {growthAreaDetail.icon}
+                <ContentIcon value={growthAreaDetail.icon} />
               </span>
               <div>
                 <span className="overline">{tr("成长领域", "Growth area")}</span>
@@ -114,7 +115,7 @@ export function GrowthDetailDialog(props: GrowthDetailDialogProps) {
                     const timeOption = actionTimeOptionFor(action);
                     return (
                       <article key={`area-detail-${action.id}`}>
-                        <span aria-hidden="true">{action.icon}</span>
+                        <span aria-hidden="true" style={{ color: growthAreaDetail.color }}><ContentIcon value={action.icon} /></span>
                         <div>
                           <strong>{action.name}</strong>
                           <small>

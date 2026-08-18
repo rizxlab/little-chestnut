@@ -2,6 +2,7 @@ import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
 import { AppIcon } from "../../../components/ui/AppIcon";
+import { ContentIcon } from "../../../components/ui/ContentIcon";
 import { AREA_COLORS, AREA_ICON_OPTIONS } from "../constants";
 import type { GrowthArea } from "../types";
 
@@ -73,7 +74,7 @@ export function GrowthEditors(props: GrowthEditorsProps) {
             <div className="action-manager-list">
               {areas.map((area) => (
                 <button type="button" key={area.id} aria-label={`修改${area.name}`} onClick={() => onOpenEditor(area)}>
-                  <span aria-hidden="true" style={{ color: area.color, background: `${area.color}18` }}>{area.icon}</span>
+                  <span aria-hidden="true" style={{ color: area.color, background: `${area.color}18` }}><ContentIcon value={area.icon} /></span>
                   <div><strong>{area.name}</strong><small>{actionCountFor(area.id)} 个微行动使用</small></div>
                   <AppIcon name="chevronRight" />
                 </button>

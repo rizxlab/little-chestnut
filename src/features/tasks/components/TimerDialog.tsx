@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import type { MicroAction, TimerPhase } from "../types";
 import { AppIcon } from "../../../components/ui/AppIcon";
+import { ContentIcon } from "../../../components/ui/ContentIcon";
 
 type TimerDialogProps = {
   action: MicroAction;
@@ -49,7 +50,7 @@ export function TimerDialog(props: TimerDialogProps) {
         <div className={`timer-clock ${phase}${ringResetting ? " timer-ring-reset" : ""}`} style={ringStyle}>
           {phase === "success" && <span className="timer-success-burst" aria-hidden="true"><b /><b /><b /><b /><b /><b /></span>}
           <div>
-            {phase === "success" ? <span className="timer-success-check" aria-hidden="true"><AppIcon name="check" /></span> : <><span className="timer-phase-icon" aria-hidden="true">{phase === "preparing" ? tr("预备", "READY") : action.icon}</span><span className="timer-countdown-value"><strong>{secondsLeft}</strong><small>{tr("秒", "sec")}</small></span></>}
+            {phase === "success" ? <span className="timer-success-check" aria-hidden="true"><AppIcon name="check" /></span> : <><span className="timer-phase-icon" aria-hidden="true">{phase === "preparing" ? tr("预备", "READY") : <ContentIcon value={action.icon} />}</span><span className="timer-countdown-value"><strong>{secondsLeft}</strong><small>{tr("秒", "sec")}</small></span></>}
           </div>
         </div>
         <h2 id="timer-title">{phase === "success" ? tr("打卡成功", "Check-in complete") : phase === "preparing" ? tr("准备开始", "Get ready") : action.name}</h2>

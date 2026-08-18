@@ -2,6 +2,7 @@ import type { GrowthArea, GrowthRecord } from "../features/growth/types";
 import { formatRecordDate, localDay } from "../features/statistics/domain/date-ranges";
 import { shellValueFor } from "../features/tasks/domain/task-rules";
 import { AppIcon } from "../components/ui/AppIcon";
+import { ContentIcon } from "../components/ui/ContentIcon";
 
 type CalendarCell = { date: Date; key: string } | null;
 
@@ -47,7 +48,7 @@ export function CalendarPage(props: CalendarPageProps) {
         {props.selectedRecords.length ? (
           <div className="calendar-record-list">
             {props.selectedRecords.map((record) => (
-              <article key={record.id}><span className="record-icon">{record.icon}</span><div><strong>{record.actionName}</strong><small>{formatRecordDate(record.createdAt)} · {record.source}</small><span className="action-tag-list">
+              <article key={record.id}><span className="record-icon"><ContentIcon value={record.icon} /></span><div><strong>{record.actionName}</strong><small>{formatRecordDate(record.createdAt)} · {record.source}</small><span className="action-tag-list">
                 {props.tagsFor(record).map((tag) => <i key={tag.id} style={{ color: tag.color, borderColor: `${tag.color}35` }}>{tag.name} +{record.value}</i>)}
                 <i className="shell-gain-tag"><span aria-hidden="true">🌰</span>栗壳 +{shellValueFor(record)}</i>
               </span></div></article>

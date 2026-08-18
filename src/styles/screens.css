@@ -393,6 +393,7 @@
   font-weight: 700;
 }
 .action-filter-list button:active { transform: scale(.96); }
+.action-filter-list .content-icon { font-size: 13px; }
 .action-filter-empty {
   border: 1px dashed var(--line);
   border-radius: 17px;
@@ -482,7 +483,7 @@
   grid-row: 1;
   place-items: center;
   border-radius: var(--radius-control);
-  font-size: 20px;
+  font-size: 22px;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 .quick-action strong {
@@ -598,6 +599,7 @@
   place-items: center;
   border-radius: 13px;
   background: #f5eee3;
+  font-size: 18px;
 }
 
 .empty-state {
@@ -1253,7 +1255,7 @@
   place-items: center;
   border-radius: 11px;
   background: #f4ecdf;
-  font-size: 16px;
+  font-size: 18px;
 }
 .tag-action-summary > strong {
   overflow: hidden;
@@ -1423,6 +1425,7 @@
   height: 40px;
   place-items: center;
   border-radius: 13px;
+  font-size: 18px;
 }
 .growth-area > div { display: grid; gap: 8px; }
 .growth-area > div strong { font-size: 11px; }
@@ -1487,7 +1490,7 @@
   height: 27px;
   place-items: center;
   border-radius: 9px;
-  font-size: 13px;
+  font-size: 15px;
 }
 .growth-level-copy {
   display: grid;

@@ -2,6 +2,7 @@ import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
 import { AppIcon } from "../../../components/ui/AppIcon";
+import { ContentIcon } from "../../../components/ui/ContentIcon";
 import { REWARD_COST_OPTIONS, REWARD_ICON_OPTIONS } from "../constants";
 import type { Reward } from "../types";
 
@@ -109,7 +110,7 @@ export function RewardEditors(props: RewardEditorsProps) {
               {rewards.map((reward) => (
                 <div className="reward-manager-item" key={reward.id}>
                   <button className="reward-manager-edit" type="button" aria-label={`修改${reward.name}`} onClick={() => onOpenEditor(reward)}>
-                    <span aria-hidden="true">{reward.icon}</span><div><strong>{reward.name}</strong><small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small></div><AppIcon name="chevronRight" />
+                    <ContentIcon value={reward.icon} /><div><strong>{reward.name}</strong><small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small></div><AppIcon name="chevronRight" />
                   </button>
                   <button className="reward-manager-delete" type="button" aria-label={`删除${reward.name}`} onClick={() => onDelete(reward)}>删除</button>
                 </div>

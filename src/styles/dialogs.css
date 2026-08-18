@@ -190,7 +190,7 @@
   background: #f7eadb;
   box-shadow: 0 0 0 2px rgba(111, 59, 39, .08);
 }
-.icon-picker button span {
+.icon-picker button > .app-icon:not(.content-icon) {
   position: absolute;
   right: 3px;
   bottom: 3px;

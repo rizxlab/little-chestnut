@@ -11,6 +11,7 @@ import type { MicroAction } from "../features/tasks/types";
 import type { Account } from "../features/profile/types";
 import { formatRecordDate } from "../features/statistics/domain/date-ranges";
 import { AppIcon } from "../components/ui/AppIcon";
+import { ContentIcon } from "../components/ui/ContentIcon";
 
 type ProfileActionSwipe = {
   id: string;
@@ -181,7 +182,7 @@ export function ProfilePage({
                 const available = shellBalance >= reward.cost;
                 return (
                   <button className={available ? "available" : ""} type="button" key={reward.id} onClick={() => onRequestReward(reward)}>
-                    <span aria-hidden="true">{reward.icon}</span>
+                    <ContentIcon value={reward.icon} />
                     <strong>{reward.name}</strong>
                     <small>{available ? `${reward.cost} 枚 · 兑换` : `还差 ${reward.cost - shellBalance}`}</small>
                   </button>
@@ -198,7 +199,7 @@ export function ProfilePage({
               <div>
                 {rewardClaims.slice(0, 5).map((claim) => (
                   <article key={claim.id}>
-                    <span>{claim.icon}</span>
+                    <ContentIcon value={claim.icon} />
                     <strong>{claim.rewardName}</strong>
                     <small>{formatRecordDate(claim.createdAt)} · −{claim.cost} 栗壳</small>
                   </article>
@@ -218,7 +219,7 @@ export function ProfilePage({
           {actionGroups.map((group) => (
             <section className="profile-action-time-group" key={group.id}>
               <div className="profile-action-time-heading">
-                <span aria-hidden="true">{group.icon}</span><strong>{group.label}</strong><small>{group.actions.length}</small>
+                <ContentIcon value={group.icon} /><strong>{group.label}</strong><small>{group.actions.length}</small>
               </div>
               <div className="tag-action-grid">
                 {group.actions.map((action) => {
@@ -265,7 +266,7 @@ export function ProfilePage({
                         }}
                       >
                         <div className="tag-action-summary">
-                          <span className="tag-action-icon">{action.icon}</span>
+                          <span className="tag-action-icon" style={{ color: actionTags[0]?.color }}><ContentIcon value={action.icon} /></span>
                           <strong>{action.name}</strong>
                           <span className="action-tag-list">
                             {actionTags.map((tag) => (
@@ -309,7 +310,7 @@ export function ProfilePage({
                 onOpenAreaEditor(area);
               }}
             >
-              {area.icon} {area.name}
+              <ContentIcon value={area.icon} style={{ color: area.color }} /> {area.name}
             </button>
           ))}
         </div>

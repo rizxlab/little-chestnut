@@ -2,6 +2,7 @@ import type { CSSProperties, FormEvent, ReactNode } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
 import { AppIcon } from "../../../components/ui/AppIcon";
+import { ContentIcon } from "../../../components/ui/ContentIcon";
 import type { GrowthArea } from "../../growth/types";
 import { ACTION_ICON_OPTIONS, ACTION_TIME_OPTIONS, DEFAULT_ACTIONS } from "../constants";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../domain/task-rules";
@@ -81,7 +82,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                     aria-label={`修改${action.name}`}
                     onClick={() => openActionEditor(action)}
                   >
-                    <span aria-hidden="true">{action.icon}</span>
+                    <ContentIcon value={action.icon} />
                     <div>
                       <strong>{action.name}</strong>
                       <small>
@@ -207,7 +208,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                       key={action.id}
                       onClick={() => applyActionPreset(action)}
                     >
-                      <span aria-hidden="true">{action.icon}</span>
+                      <ContentIcon value={action.icon} />
                       <strong>{action.name}</strong>
                     </button>
                   ))}
@@ -225,7 +226,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                   aria-haspopup="dialog"
                   onClick={() => setShowActionIconPicker(true)}
                 >
-                  <span aria-hidden="true">{draftIcon}</span>
+                  <ContentIcon value={draftIcon} />
                   <small aria-hidden="true"><AppIcon name="chevronDown" /></small>
                 </button>
                 <input
@@ -237,7 +238,7 @@ export function TaskEditors(props: TaskEditorsProps) {
             </label>
             <div className="action-shell-stepper action-growth-stepper">
               <div>
-                <span aria-hidden="true">🌱</span>
+                <ContentIcon value="🌱" />
                 <strong>成长值</strong>
               </div>
               <div role="group" aria-label="调整每次完成获得的成长值">
@@ -325,7 +326,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                     aria-pressed={draftTimeWindow === option.id}
                     onClick={() => setDraftTimeWindow(option.id)}
                   >
-                    <span aria-hidden="true">{option.icon}</span>
+                    <ContentIcon value={option.icon} />
                     <strong>{option.label}</strong>
                     <small>{option.range}</small>
                   </button>
@@ -414,7 +415,7 @@ export function TaskEditors(props: TaskEditorsProps) {
                       style={selected ? { borderColor: area.color, color: area.color } : undefined}
                       onClick={() => toggleDraftTag(area.id)}
                     >
-                      {area.icon} {area.name}
+                      <ContentIcon value={area.icon} style={{ color: area.color }} /> {area.name}
                       <span>{selected ? <AppIcon name="check" /> : <AppIcon name="add" />}</span>
                     </button>
                   );
