@@ -23,7 +23,7 @@
 需要 Node.js 22.13 或更高版本。
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -35,9 +35,19 @@ npm run dev
 npm run lint
 npm run typecheck
 npm test
+npm run build
 ```
 
 `npm test` 会先完成生产构建，再检查产品入口、目录边界和 PWA 元数据。
+
+## Cloudflare 部署
+
+```bash
+npm run deploy
+```
+
+D1 migration 和 Worker deploy 必须分开执行。`npm run deploy` 只构建并部署 Worker，
+不会自动执行数据库 migration。
 
 ## 目录说明
 
