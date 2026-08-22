@@ -169,6 +169,16 @@ summary:focus-visible {
   text-align: center;
   font-size: var(--type-caption);
 }
+.login-mode-button {
+  border: 0;
+  padding: 0;
+  color: var(--chestnut);
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.login-mode-button:disabled { opacity: .45; cursor: default; }
 
 .shell {
   position: relative;

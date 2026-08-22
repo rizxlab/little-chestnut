@@ -124,16 +124,22 @@ export function CheckInWorkspace() {
   const {
     account,
     authReady,
+    authMode,
+    changeAuthMode,
     loginUsername,
     setLoginUsername,
     loginPassword,
     setLoginPassword,
+    confirmPassword,
+    setConfirmPassword,
     loginError,
-    setLoginError,
     loginPending,
+    registerError,
+    registerPending,
     showLogin,
     setShowLogin,
     login,
+    register,
     logout,
   } = useAccountSync(appDataState);
   const {
@@ -288,6 +294,12 @@ export function CheckInWorkspace() {
 
   async function handleLogin(event: FormEvent) {
     if (await login(event)) {
+      closeSecondaryModal("login", () => setShowLogin(false));
+    }
+  }
+
+  async function handleRegister(event: FormEvent) {
+    if (await register(event)) {
       closeSecondaryModal("login", () => setShowLogin(false));
     }
   }
@@ -806,7 +818,7 @@ export function CheckInWorkspace() {
 
   function openProfileEditor() {
     if (!account) {
-      setLoginError("");
+      changeAuthMode("login");
       setShowLogin(true);
       return;
     }
@@ -1319,16 +1331,20 @@ export function CheckInWorkspace() {
 
       {showLogin && (
         <LoginDialog
+          mode={authMode}
           username={loginUsername}
           password={loginPassword}
-          error={loginError}
-          pending={loginPending}
+          confirmPassword={confirmPassword}
+          error={authMode === "register" ? registerError : loginError}
+          pending={authMode === "register" ? registerPending : loginPending}
           tr={tr}
           onUsernameChange={setLoginUsername}
           onPasswordChange={setLoginPassword}
+          onConfirmPasswordChange={setConfirmPassword}
+          onModeChange={changeAuthMode}
           onClose={() => closeSecondaryModal("login", () => setShowLogin(false))}
           onImmediateClose={() => setShowLogin(false)}
-          onSubmit={handleLogin}
+          onSubmit={authMode === "register" ? handleRegister : handleLogin}
           modalClassName={modalMotionClass}
           modalStyle={modalMotionStyle}
           dragHandle={modalDragHandle}

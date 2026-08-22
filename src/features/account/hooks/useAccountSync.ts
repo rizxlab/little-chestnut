@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 
 import type { Account } from "../../profile/types";
-import { getSessionAccount, loginAccount, logoutAccount, readAccountData, writeAccountData } from "../../../services/api/account-api";
+import { getSessionAccount, loginAccount, logoutAccount, readAccountData, registerAccount, writeAccountData } from "../../../services/api/account-api";
 import { createAppDataSnapshot, normalizeAppData } from "../../../services/persistence/app-data";
 import { readAccountFallback, readGuestData, saveBrowserData } from "../../../services/persistence/browser-storage";
 import type { useAppDataState } from "../../../stores/useAppDataState";
@@ -16,10 +16,14 @@ export function useAccountSync(data: AppDataState) {
   const [authReady, setAuthReady] = useState(false);
   const [serverHydrated, setServerHydrated] = useState(false);
   const [ready, setReady] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginPending, setLoginPending] = useState(false);
+  const [registerError, setRegisterError] = useState("");
+  const [registerPending, setRegisterPending] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
   function applyAccountData(value: unknown) {
@@ -140,6 +144,41 @@ export function useAccountSync(data: AppDataState) {
     }
   }
 
+  async function register(event: FormEvent) {
+    event.preventDefault();
+    if (!loginUsername.trim() || !loginPassword) return false;
+    if (loginPassword !== confirmPassword) {
+      setRegisterError("两次输入的密码不一致");
+      return false;
+    }
+    setRegisterPending(true);
+    setRegisterError("");
+    try {
+      const nextAccount = await registerAccount(
+        loginUsername.trim(),
+        loginPassword,
+        confirmPassword,
+      );
+      await hydrateAccount(nextAccount);
+      setLoginPassword("");
+      setConfirmPassword("");
+      return true;
+    } catch (error) {
+      setRegisterError(error instanceof Error ? error.message : "暂时无法创建账号");
+      return false;
+    } finally {
+      setRegisterPending(false);
+    }
+  }
+
+  function changeAuthMode(mode: "login" | "register") {
+    setAuthMode(mode);
+    setLoginError("");
+    setRegisterError("");
+    setLoginPassword("");
+    setConfirmPassword("");
+  }
+
   async function logout() {
     if (account && serverHydrated) {
       await writeAccountData(persistedData).catch(() => null);
@@ -153,16 +192,23 @@ export function useAccountSync(data: AppDataState) {
   return {
     account,
     authReady,
+    authMode,
+    changeAuthMode,
     loginUsername,
     setLoginUsername,
     loginPassword,
     setLoginPassword,
+    confirmPassword,
+    setConfirmPassword,
     loginError,
     setLoginError,
     loginPending,
+    registerError,
+    registerPending,
     showLogin,
     setShowLogin,
     login,
+    register,
     logout,
   };
 }

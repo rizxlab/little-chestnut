@@ -31,6 +31,25 @@ export async function loginAccount(username: string, password: string) {
   return result.account;
 }
 
+export async function registerAccount(
+  username: string,
+  password: string,
+  confirmPassword: string,
+) {
+  const response = await fetch("/api/auth/register", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password, confirmPassword }),
+  });
+  if (!response.ok) {
+    throw new Error(await readResponseError(response, "暂时无法创建账号"));
+  }
+  const result = await response.json() as { account?: Account };
+  if (!result.account) throw new Error("暂时无法创建账号");
+  return result.account;
+}
+
 export async function logoutAccount() {
   await fetch("/api/auth/logout", {
     method: "POST",
