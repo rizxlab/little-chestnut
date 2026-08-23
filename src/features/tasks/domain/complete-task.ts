@@ -14,7 +14,6 @@ export function completeTask(
   options: {
     count: number;
     source: GrowthSource;
-    tagIds: string[];
     timestamp?: number;
   },
 ): TaskCompletionResult {
@@ -28,8 +27,6 @@ export function completeTask(
     actionId: action.id,
     actionName: action.name,
     icon: action.icon,
-    tagIds: options.tagIds,
-    value: action.value,
     shellValue,
     source: options.source,
     createdAt: new Date(timestamp + index).toISOString(),

@@ -1,18 +1,13 @@
-import { DEFAULT_CARD_MILESTONE_FIRST, DEFAULT_CARD_MILESTONE_SECOND } from "../../app/constants";
-import { DEFAULT_AREAS } from "../../features/growth/constants";
-import { normalizedTagIds } from "../../features/growth/domain/growth-rules";
-import type { GrowthArea, GrowthRecord } from "../../features/growth/types";
+import type { GrowthRecord } from "../../features/growth/types";
 import { DEFAULT_REWARDS } from "../../features/rewards/constants";
 import type { Reward, RewardClaim } from "../../features/rewards/types";
 import type { AppPreferences, Language, Theme } from "../../features/settings/types";
 import { DEFAULT_ACTIONS } from "../../features/tasks/constants";
 import { actionTimeWindowFor, isTemporaryActionExpired, shellValueFor, temporaryActionDays } from "../../features/tasks/domain/task-rules";
 import type { MicroAction } from "../../features/tasks/types";
-import { milestoneThreshold } from "../../shared/utils/presentation";
 
 export type AppDataSnapshot = {
   schemaVersion: number;
-  areas: GrowthArea[];
   actions: MicroAction[];
   records: GrowthRecord[];
   shellBalance: number;
@@ -23,8 +18,6 @@ export type AppDataSnapshot = {
   preferences: {
     language: Language;
     theme: Theme;
-    cardMilestoneFirst: number;
-    cardMilestoneSecond: number;
   };
 };
 
@@ -34,8 +27,7 @@ export type AppDataInput = Omit<AppDataSnapshot, "schemaVersion"> & {
 
 export function createAppDataSnapshot(input: AppDataInput): AppDataSnapshot {
   return {
-    schemaVersion: 1,
-    areas: input.areas,
+    schemaVersion: 2,
     actions: input.actions,
     records: input.records,
     shellBalance: input.shellBalance,
@@ -55,23 +47,25 @@ export function normalizeAppData(
   const stored = value && typeof value === "object"
     ? value as Record<string, unknown>
     : null;
-  const storedAreas = Array.isArray(stored?.areas) ? stored.areas as GrowthArea[] : [];
-  const areas = storedAreas.length ? storedAreas : DEFAULT_AREAS;
-
   const storedActions = Array.isArray(stored?.actions)
     ? stored.actions as MicroAction[]
     : [];
   const actions = storedActions.length
       ? storedActions.map((action) => {
         const defaultAction = DEFAULT_ACTIONS.find((item) => item.id === action.id);
+        const actionWithoutGrowth = { ...action } as MicroAction & {
+          tagIds?: unknown;
+          value?: unknown;
+        };
+        delete actionWithoutGrowth.tagIds;
+        delete actionWithoutGrowth.value;
         return {
-          ...action,
-          tagIds: normalizedTagIds(action).length
-            ? normalizedTagIds(action)
-            : defaultAction?.tagIds || [],
+          ...actionWithoutGrowth,
           shellValue: shellValueFor(action),
           repeatable: action.repeatable !== false,
-          timeWindow: actionTimeWindowFor(action),
+          timeWindow: actionTimeWindowFor({
+            timeWindow: action.timeWindow ?? defaultAction?.timeWindow,
+          }),
           timerSeconds: action.timerSeconds ?? defaultAction?.timerSeconds,
           temporary: action.temporary === true,
           temporaryDays: action.temporary
@@ -82,11 +76,18 @@ export function normalizeAppData(
     : DEFAULT_ACTIONS;
 
   const storedRecords = Array.isArray(stored?.records)
-    ? (stored.records as GrowthRecord[]).map((record) => ({
-        ...record,
-        tagIds: normalizedTagIds(record),
-        shellValue: shellValueFor(record),
-      }))
+    ? (stored.records as GrowthRecord[]).map((record) => {
+        const recordWithoutGrowth = { ...record } as GrowthRecord & {
+          tagIds?: unknown;
+          value?: unknown;
+        };
+        delete recordWithoutGrowth.tagIds;
+        delete recordWithoutGrowth.value;
+        return {
+          ...recordWithoutGrowth,
+          shellValue: shellValueFor(record),
+        };
+      })
     : [];
   const records = storedRecords;
   const earnedFromRecords = records.reduce(
@@ -99,16 +100,8 @@ export function normalizeAppData(
   const profile = stored?.profile && typeof stored.profile === "object"
     ? stored.profile as { nickname?: string }
     : null;
-  const cardMilestoneFirst = milestoneThreshold(
-    preferences?.cardMilestoneFirst,
-    DEFAULT_CARD_MILESTONE_FIRST,
-    1,
-    98,
-  );
-
   return {
-    schemaVersion: 1,
-    areas,
+    schemaVersion: 2,
     actions,
     records,
     shellBalance: typeof stored?.shellBalance === "number"
@@ -127,13 +120,6 @@ export function normalizeAppData(
     preferences: {
       language: preferences?.language === "en" ? "en" : "zh",
       theme: preferences?.theme === "dark" ? "dark" : "light",
-      cardMilestoneFirst,
-      cardMilestoneSecond: milestoneThreshold(
-        preferences?.cardMilestoneSecond,
-        DEFAULT_CARD_MILESTONE_SECOND,
-        cardMilestoneFirst + 1,
-        99,
-      ),
     },
   };
 }

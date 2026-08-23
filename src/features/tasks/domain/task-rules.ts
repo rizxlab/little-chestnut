@@ -1,6 +1,13 @@
 import { ACTION_TIME_OPTIONS } from "../constants";
 import type { ActionTimeWindow, MicroAction } from "../types";
-import { localDay } from "../../statistics/domain/date-ranges";
+import { activityDay, localDay } from "../../statistics/domain/date-ranges";
+
+const TODAY_TIME_ORDER: Record<ActionTimeWindow, number> = {
+  anytime: 0,
+  morning: 1,
+  noon: 2,
+  evening: 3,
+};
 
 export function actionTimeWindowFor(
   action?: Pick<MicroAction, "timeWindow"> | null,
@@ -22,25 +29,12 @@ export function actionsInTimeOrder(actions: readonly MicroAction[]) {
   return actions
     .map((action, originalIndex) => ({ action, originalIndex }))
     .sort((first, second) => {
-      const firstTimeIndex = ACTION_TIME_OPTIONS.findIndex(
-        (option) => option.id === actionTimeWindowFor(first.action),
-      );
-      const secondTimeIndex = ACTION_TIME_OPTIONS.findIndex(
-        (option) => option.id === actionTimeWindowFor(second.action),
-      );
+      const firstTimeIndex = TODAY_TIME_ORDER[actionTimeWindowFor(first.action)];
+      const secondTimeIndex = TODAY_TIME_ORDER[actionTimeWindowFor(second.action)];
       return firstTimeIndex - secondTimeIndex
         || first.originalIndex - second.originalIndex;
     })
     .map(({ action }) => action);
-}
-
-export function isActionAvailableNow(action: MicroAction, now = new Date()) {
-  const timeWindow = actionTimeWindowFor(action);
-  const hour = now.getHours();
-  if (timeWindow === "morning") return hour >= 5 && hour < 12;
-  if (timeWindow === "noon") return hour >= 12 && hour < 18;
-  if (timeWindow === "evening") return hour >= 18 || hour < 5;
-  return true;
 }
 
 export function temporaryActionDays(value: unknown) {
@@ -52,7 +46,7 @@ export function temporaryActionDays(value: unknown) {
 }
 
 export function temporaryExpirationDay(days: number, start = new Date()) {
-  const expirationDay = new Date(start);
+  const expirationDay = new Date(`${activityDay(start)}T12:00:00`);
   expirationDay.setDate(
     expirationDay.getDate() + temporaryActionDays(days) - 1,
   );
@@ -66,7 +60,7 @@ export function isTemporaryActionExpired(
   return Boolean(
     action.temporary
     && action.expiresOn
-    && action.expiresOn < localDay(now),
+    && action.expiresOn < activityDay(now),
   );
 }
 

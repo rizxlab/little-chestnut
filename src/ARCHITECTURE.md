@@ -21,7 +21,7 @@ src
 `features` 将按以下领域逐步建立：
 
 - `tasks`：小事定义、完成、撤销、计时和有效期。
-- `growth`：成长领域、成长值、经验和等级。
+- `growth`：小事完成记录及其来源类型。
 - `shells`：栗壳获取、消费、余额和流水。
 - `rewards`：奖励项目与兑换记录。
 - `statistics`：今日、本周、本月、日历及趋势聚合。
@@ -43,6 +43,6 @@ src
 
 `screens/CheckInPage.tsx` 是稳定的路由级组合入口；现有产品工作区位于
 `screens/check-in/CheckInWorkspace.tsx`。账号同步、计时和手势生命周期已分别
-迁入 `features/account`、`features/tasks` 和 `shared/hooks`，个人资料、成长领域、
-奖励与登录编辑器也已迁入相应 feature。`app/ChestnutApp.tsx` 提供稳定入口。
+迁入 `features/account`、`features/tasks` 和 `shared/hooks`，个人资料、奖励与登录
+编辑器也已迁入相应 feature。`app/ChestnutApp.tsx` 提供稳定入口。
 后续新增功能应直接进入对应 `features`，不再向工作区文件添加可复用规则或视图。

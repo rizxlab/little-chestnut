@@ -28,7 +28,6 @@ export function useAccountSync(data: AppDataState) {
 
   function applyAccountData(value: unknown) {
     const next = normalizeAppData(value);
-    data.setAreas(next.areas);
     data.setActions(next.actions);
     data.setRecords(next.records);
     data.setShellBalance(next.shellBalance);
@@ -38,8 +37,6 @@ export function useAccountSync(data: AppDataState) {
     data.setNickname(next.profile.nickname);
     data.setLanguage(next.preferences.language);
     data.setTheme(next.preferences.theme);
-    data.setCardMilestoneFirst(next.preferences.cardMilestoneFirst);
-    data.setCardMilestoneSecond(next.preferences.cardMilestoneSecond);
   }
 
   async function hydrateAccount(nextAccount: Account) {
@@ -63,7 +60,6 @@ export function useAccountSync(data: AppDataState) {
 
   const persistedData = useMemo(
     () => createAppDataSnapshot({
-      areas: data.areas,
       actions: data.actions,
       records: data.records,
       shellBalance: data.shellBalance,
@@ -74,17 +70,12 @@ export function useAccountSync(data: AppDataState) {
       preferences: {
         language: data.language,
         theme: data.theme,
-        cardMilestoneFirst: data.cardMilestoneFirst,
-        cardMilestoneSecond: data.cardMilestoneSecond,
       },
       accountUsername: account?.username,
     }),
     [
       account?.username,
       data.actions,
-      data.areas,
-      data.cardMilestoneFirst,
-      data.cardMilestoneSecond,
       data.language,
       data.nickname,
       data.records,

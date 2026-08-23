@@ -3,18 +3,30 @@ import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 test("uses a fresh browser storage namespace without legacy fallbacks", async () => {
-  const [constants, browserStorage, appData, growthRules] = await Promise.all([
+  const [constants, browserStorage, appData] = await Promise.all([
     readFile(new URL("../src/app/constants.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/services/persistence/browser-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/services/persistence/app-data.ts", import.meta.url), "utf8"),
-    readFile(new URL("../src/features/growth/domain/growth-rules.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(constants, /STORAGE_KEY = "lizi-growth-v3"/);
   assert.doesNotMatch(constants, /SAMPLE_HISTORY/);
   assert.doesNotMatch(browserStorage, /123456|readJson\(STORAGE_KEY\)|sample/i);
-  assert.doesNotMatch(appData, /areaSchemaVersion|seedSampleHistory|LEGACY_|migratedTagIds/);
-  assert.doesNotMatch(growthRules, /areaId|LEGACY_|migratedTagIds/);
+  assert.doesNotMatch(appData, /areaSchemaVersion|seedSampleHistory|LEGACY_|migratedTagIds|DEFAULT_AREAS|normalizedTagIds/);
+});
+
+test("removes growth areas, scores, experience, and levels from the product", async () => {
+  const files = await Promise.all([
+    readFile(new URL("../src/screens/check-in/CheckInWorkspace.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/screens/GrowthPage.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/tasks/types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/features/growth/types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/services/persistence/app-data.ts", import.meta.url), "utf8"),
+  ]);
+  const productSource = files.join("\n");
+
+  assert.doesNotMatch(productSource, /GrowthArea|DEFAULT_AREAS|growthLevelFor|tagIds:|value: number|Lv\.|领域等级|成长值|领域经验/);
+  assert.match(productSource, /schemaVersion: 2/);
 });
 
 test("ships one credential-free initial D1 migration", async () => {
@@ -45,6 +57,11 @@ test("removes confirmed starter assets and retired source modules", async () => 
     "../db/index.ts",
     "../src/features/shells/types.ts",
     "../src/services/migrations/sample-history.ts",
+    "../src/features/growth/constants.ts",
+    "../src/features/growth/domain/growth-rules.ts",
+    "../src/features/growth/hooks/useGrowthEditorState.ts",
+    "../src/features/growth/components/GrowthEditors.tsx",
+    "../src/features/growth/components/GrowthDetailDialog.tsx",
   ];
 
   await Promise.all(

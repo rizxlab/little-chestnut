@@ -1,16 +1,5 @@
 import type { Language } from "../../features/settings/types";
 
-export function milestoneThreshold(
-  value: unknown,
-  fallback: number,
-  min = 1,
-  max = 99,
-) {
-  const numericValue = Number(value);
-  const candidate = Number.isFinite(numericValue) ? numericValue : fallback;
-  return Math.min(max, Math.max(min, Math.round(candidate)));
-}
-
 export function greeting(language: Language, now = new Date()) {
   const hour = now.getHours();
   if (language === "en") {

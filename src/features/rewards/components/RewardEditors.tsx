@@ -1,4 +1,5 @@
-import type { CSSProperties, FormEvent, ReactNode, TouchEvent } from "react";
+import { useState } from "react";
+import type { CSSProperties, FormEvent, PointerEvent, ReactNode, TouchEvent } from "react";
 
 import { IconPicker } from "../../../components/ui/IconPicker";
 import { AppIcon } from "../../../components/ui/AppIcon";
@@ -26,6 +27,7 @@ type RewardEditorsProps = {
   onDraftCostChange: (value: number) => void;
   onSave: (event: FormEvent) => void;
   onDelete: (reward: Reward) => void;
+  onReorder: (sourceId: string, targetId: string) => void;
   modalClassName: (key: string, baseClassName: string) => string;
   modalStyle: (key: string) => CSSProperties;
   dragHandle: (key: string, close: () => void) => ReactNode;
@@ -41,9 +43,41 @@ export function RewardEditors(props: RewardEditorsProps) {
     draftDescription, draftIcon, draftCost, onCloseEditor,
     onImmediateCloseEditor, onCloseManager, onImmediateCloseManager,
     onOpenEditor, onDraftNameChange, onDraftDescriptionChange,
-    onDraftIconChange, onDraftCostChange, onSave, onDelete, modalClassName,
+    onDraftIconChange, onDraftCostChange, onSave, onDelete, onReorder, modalClassName,
     modalStyle, dragHandle, onSwipeStart, onSwipeMove, onSwipeEnd, onSwipeCancel,
   } = props;
+  const [draggingRewardId, setDraggingRewardId] = useState<string | null>(null);
+
+  function startRewardDrag(rewardId: string, event: PointerEvent<HTMLButtonElement>) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDraggingRewardId(rewardId);
+  }
+
+  function moveRewardDrag(event: PointerEvent<HTMLButtonElement>) {
+    if (!draggingRewardId) return;
+    event.preventDefault();
+    const target = document
+      .elementFromPoint(event.clientX, event.clientY)
+      ?.closest<HTMLElement>("[data-reward-id]");
+    const targetId = target?.dataset.rewardId;
+    if (targetId && targetId !== draggingRewardId) onReorder(draggingRewardId, targetId);
+  }
+
+  function finishRewardDrag(event: PointerEvent<HTMLButtonElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setDraggingRewardId(null);
+  }
+
+  function moveRewardWithKeyboard(rewardId: string, direction: -1 | 1) {
+    const index = rewards.findIndex((reward) => reward.id === rewardId);
+    const target = rewards[index + direction];
+    if (target) onReorder(rewardId, target.id);
+  }
 
   return (
     <>
@@ -106,9 +140,32 @@ export function RewardEditors(props: RewardEditorsProps) {
             <button className="reward-manager-create" type="button" onClick={() => onOpenEditor()}>
               <AppIcon name="add" /><div><strong>新建奖励</strong><small>添加一个新的栗壳目标</small></div>
             </button>
+            {rewards.length > 1 && <p className="reward-manager-order-hint">拖动左侧把手调整顺序，排在前面的奖励会优先显示为目标</p>}
             <div className="reward-manager-list">
               {rewards.map((reward) => (
-                <div className="reward-manager-item" key={reward.id}>
+                <div className={`reward-manager-item${draggingRewardId === reward.id ? " is-dragging" : ""}`} key={reward.id} data-reward-id={reward.id}>
+                  <button
+                    className="reward-manager-drag"
+                    type="button"
+                    aria-label={`拖动调整${reward.name}的顺序`}
+                    title="拖动调整顺序"
+                    onPointerDown={(event) => startRewardDrag(reward.id, event)}
+                    onPointerMove={moveRewardDrag}
+                    onPointerUp={finishRewardDrag}
+                    onPointerCancel={finishRewardDrag}
+                    onLostPointerCapture={() => setDraggingRewardId(null)}
+                    onTouchStart={(event) => event.stopPropagation()}
+                    onTouchMove={(event) => event.stopPropagation()}
+                    onTouchEnd={(event) => event.stopPropagation()}
+                    onTouchCancel={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => {
+                      if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
+                      event.preventDefault();
+                      moveRewardWithKeyboard(reward.id, event.key === "ArrowUp" ? -1 : 1);
+                    }}
+                  >
+                    <span /><span /><span />
+                  </button>
                   <button className="reward-manager-edit" type="button" aria-label={`修改${reward.name}`} onClick={() => onOpenEditor(reward)}>
                     <ContentIcon value={reward.icon} /><div><strong>{reward.name}</strong><small>{reward.cost} 栗壳{reward.description ? ` · ${reward.description}` : ""}</small></div><AppIcon name="chevronRight" />
                   </button>

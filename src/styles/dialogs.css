@@ -80,7 +80,7 @@
   font-size: 18px;
   cursor: pointer;
 }
-.action-editor h2, .action-manager h2, .area-editor h2, .reward-editor h2, .reward-manager h2, .profile-editor h2, .confirm-sheet h2, .reward-sheet h2 {
+.action-editor h2, .action-manager h2, .reward-editor h2, .reward-manager h2, .profile-editor h2, .confirm-sheet h2, .reward-sheet h2 {
   margin: 6px 28px 20px 0;
   color: var(--ink);
   font-family: var(--font-display);
@@ -88,14 +88,14 @@
   font-weight: 600;
   line-height: 1.25;
 }
-.action-editor label, .area-editor label, .reward-editor label, .profile-editor label {
+.action-editor label, .reward-editor label, .profile-editor label {
   display: grid;
   gap: 7px;
   margin-top: 13px;
   color: var(--muted);
   font-size: var(--type-caption);
 }
-.action-editor input, .action-editor select, .area-editor input, .reward-editor input, .profile-editor input {
+.action-editor input, .action-editor select, .reward-editor input, .profile-editor input {
   width: 100%;
   border: 1px solid var(--line);
   min-height: 44px;
@@ -107,7 +107,7 @@
   box-shadow: none;
   font-size: var(--type-body);
 }
-.action-editor input:focus, .action-editor select:focus, .area-editor input:focus, .reward-editor input:focus, .profile-editor input:focus {
+.action-editor input:focus, .action-editor select:focus, .reward-editor input:focus, .profile-editor input:focus {
   border-color: var(--chestnut-light);
   box-shadow: 0 0 0 3px rgba(122, 74, 54, .09);
   scroll-margin-block: 110px 190px;
@@ -348,16 +348,6 @@
   font-size: 20px;
   font-weight: 600;
 }
-.action-growth-stepper {
-  border-color: rgba(95, 128, 101, .18);
-  background: rgba(247, 251, 245, .82);
-}
-.action-growth-stepper > div:first-child > span {
-  background: rgba(95, 128, 101, .13);
-}
-.action-growth-stepper output {
-  color: #5f8065;
-}
 .temporary-action-settings {
   display: grid;
   gap: 11px;
@@ -448,12 +438,6 @@
 .temporary-duration-control input::-webkit-outer-spin-button {
   margin: 0;
   appearance: none;
-}
-.temporary-growth-note {
-  margin: 7px 2px 0;
-  color: #8d745e;
-  font-size: 10px;
-  line-height: 1.55;
 }
 .action-editor {
   min-height: min(680px, calc(100dvh - 90px));
@@ -582,45 +566,9 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .action-editor:focus,
-.area-editor:focus,
 .reward-editor:focus {
   outline: none;
 }
-.area-editor {
-  min-height: min(680px, calc(100dvh - 90px));
-  max-height: calc(100dvh - 90px);
-  overflow-y: auto;
-  padding-bottom: max(28px, env(safe-area-inset-bottom));
-  overscroll-behavior: contain;
-}
-.area-color-fieldset {
-  border: 0;
-  margin: 16px 0 0;
-  padding: 0;
-}
-.area-color-fieldset legend {
-  margin-bottom: 9px;
-  color: var(--muted);
-  font-size: 10px;
-}
-.area-color-fieldset > div { display: flex; flex-wrap: wrap; gap: 9px; }
-.area-color-fieldset button {
-  display: grid;
-  width: 31px;
-  height: 31px;
-  place-items: center;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 0;
-  color: #fff;
-  box-shadow: 0 4px 11px rgba(57, 39, 29, .09);
-  cursor: pointer;
-}
-.area-color-fieldset button.selected {
-  border-color: var(--surface-card);
-  box-shadow: 0 0 0 2px var(--chestnut), 0 4px 11px rgba(57, 39, 29, .12);
-}
-.area-color-fieldset button span { font-size: 12px; font-weight: 800; }
 .timer-editor-setting { display: grid; gap: 2px; margin-top: 14px; }
 .timer-editor-setting > button {
   display: grid;
@@ -1007,11 +955,46 @@
   gap: 8px;
   margin-top: 9px;
 }
+.reward-manager-order-hint {
+  margin: 10px 2px -1px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
 .reward-manager-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 48px;
-  gap: 8px;
+  grid-template-columns: 30px minmax(0, 1fr) 48px;
+  gap: 6px;
   align-items: stretch;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.reward-manager-item.is-dragging {
+  z-index: 1;
+  opacity: .72;
+  transform: scale(.985);
+}
+.reward-manager-drag {
+  display: grid;
+  min-height: 64px;
+  grid-template-columns: 3px;
+  grid-auto-rows: 3px;
+  gap: 4px;
+  place-content: center;
+  border: 0;
+  padding: 0;
+  color: #aa9a8b;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+.reward-manager-drag:active { cursor: grabbing; }
+.reward-manager-drag > span {
+  display: block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 7px 0 currentColor;
 }
 .reward-manager-edit > .app-icon,
 .action-manager-list > button > .app-icon {
@@ -1044,8 +1027,7 @@
 .action-manager-create:active,
 .action-manager-list > button:active { transform: scale(.98); }
 .delete-action-button,
-.delete-reward-button,
-.delete-area-button {
+.delete-reward-button {
   width: 100%;
   border: 0;
   padding: 13px 8px 3px;
@@ -1055,36 +1037,6 @@
   font-size: 10px;
   cursor: pointer;
 }
-.tag-fieldset {
-  display: grid;
-  gap: 8px;
-  border: 0;
-  margin: 16px 0 0;
-  padding: 0;
-}
-.tag-fieldset legend {
-  margin-bottom: 8px;
-  color: var(--muted);
-  font-size: 10px;
-}
-.tag-fieldset legend small { color: #aaa097; font-size: 10px; }
-.tag-picker { display: flex; flex-wrap: wrap; gap: 7px; }
-.tag-picker button {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-pill);
-  padding: 8px 10px;
-  color: #81766c;
-  background: var(--surface-card);
-  font-size: 10px;
-  cursor: pointer;
-}
-.tag-picker button span { color: #aaa097; font-size: 10px; }
-.tag-picker button.selected { background: #fff9ef; box-shadow: 0 5px 14px rgba(71,46,30,.06); }
-.tag-picker button.selected span { color: currentColor; }
-.field-hint { color: var(--danger); font-size: 10px; }
 .sheet-description {
   margin: -8px 0 4px;
   color: var(--muted);
@@ -1626,7 +1578,6 @@
 /* Keep secondary information comfortably readable on a phone. */
 .login-brand small,
 .login-note,
-.date-display small,
 .calendar-weekdays span,
 .calendar-record-list article > div > small,
 .calendar-record-list .action-tag-list i,
@@ -1636,8 +1587,6 @@
   font-size: var(--type-caption);
 }
 .overline { font-size: 11px; }
-.date-display b { font-size: 11px; }
-.action-filter-list button,
 .action-filter-empty,
 .stat-grid span,
 .stat-grid small,
@@ -1648,7 +1597,6 @@
   font-size: var(--type-caption);
 }
 .bottom-nav button.primary-tab { font-size: 11px; }
-.growth-area > div strong,
 .tag-action-summary > strong {
   font-size: 12px;
 }
@@ -1671,15 +1619,13 @@
 .profile-editor-account small {
   font-size: 10px;
 }
-.data-settings small,
-.field-hint { font-size: var(--type-caption); }
+.data-settings small { font-size: var(--type-caption); }
 
 /* Shared selectable control surfaces. */
 .icon-picker button,
 .action-preset-picker button,
 .action-time-setting button,
 .reward-cost-options button,
-.tag-picker button,
 .action-manager-list > button,
 .reward-manager-edit,
 .reward-manager-delete,
@@ -1698,7 +1644,6 @@
 .action-preset-picker button.selected,
 .action-time-setting button.selected,
 .reward-cost-options button.selected,
-.tag-picker button.selected,
 .timer-editor-setting > button.enabled {
   border-color: rgba(122, 74, 54, .26);
   color: var(--chestnut);

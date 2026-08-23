@@ -6,8 +6,6 @@ export type MicroAction = {
   name: string;
   description?: string;
   icon: string;
-  tagIds: string[];
-  value: number;
   shellValue?: number;
   repeatable: boolean;
   timeWindow?: ActionTimeWindow;

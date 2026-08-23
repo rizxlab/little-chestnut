@@ -3,7 +3,6 @@ import type { CSSProperties, FormEvent, ReactNode } from "react";
 import { IconPicker } from "../../../components/ui/IconPicker";
 import { AppIcon } from "../../../components/ui/AppIcon";
 import { ContentIcon } from "../../../components/ui/ContentIcon";
-import type { GrowthArea } from "../../growth/types";
 import { ACTION_ICON_OPTIONS, ACTION_TIME_OPTIONS, DEFAULT_ACTIONS } from "../constants";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../domain/task-rules";
 import { useTaskEditorState } from "../hooks/useTaskEditorState";
@@ -12,12 +11,10 @@ import type { MicroAction } from "../types";
 type TaskEditorsProps = {
   state: ReturnType<typeof useTaskEditorState>;
   actions: MicroAction[];
-  areas: GrowthArea[];
   safeTimerSeconds: number;
   timerSliderMax: number;
   timerSliderProgress: number;
   tr: (chinese: string, english: string) => string;
-  tagsFor: (action: MicroAction) => GrowthArea[];
   closeSecondaryModal: (key: string, close: () => void) => void;
   modalClassName: (key: string, baseClassName: string) => string;
   modalStyle: (key: string) => CSSProperties;
@@ -26,14 +23,13 @@ type TaskEditorsProps = {
   onCloseEditor: () => void;
   onApplyPreset: (action: MicroAction) => void;
   onStartCustom: () => void;
-  onToggleTag: (tagId: string) => void;
   onSave: (event: FormEvent) => void;
   onDelete: (action: MicroAction) => void;
 };
 
 export function TaskEditors(props: TaskEditorsProps) {
-  const { state, actions, areas, safeTimerSeconds: safeDraftTimerSeconds, timerSliderMax, timerSliderProgress, tr, tagsFor, closeSecondaryModal, modalClassName: modalMotionClass, modalStyle: modalMotionStyle, dragHandle: modalDragHandle, onOpenEditor: openActionEditor, onCloseEditor: closeActionEditor, onApplyPreset: applyActionPreset, onStartCustom: startCustomAction, onToggleTag: toggleDraftTag, onSave: saveAction, onDelete: deleteAction } = props;
-  const { editingAction, showActionManager, setShowActionManager, showActionEditor, draftName, setDraftName, draftIcon, setDraftIcon, draftPresetId, showActionIconPicker, setShowActionIconPicker, draftTags, draftValue, setDraftValue, draftShellValue, setDraftShellValue, draftRepeatable, setDraftRepeatable, draftTemporary, draftTemporaryDays, setDraftTemporaryDays, draftTimeWindow, setDraftTimeWindow, draftUsesTimer, setDraftUsesTimer, draftTimerSeconds, setDraftTimerSeconds } = state;
+  const { state, actions, safeTimerSeconds: safeDraftTimerSeconds, timerSliderMax, timerSliderProgress, tr, closeSecondaryModal, modalClassName: modalMotionClass, modalStyle: modalMotionStyle, dragHandle: modalDragHandle, onOpenEditor: openActionEditor, onCloseEditor: closeActionEditor, onApplyPreset: applyActionPreset, onStartCustom: startCustomAction, onSave: saveAction, onDelete: deleteAction } = props;
+  const { editingAction, showActionManager, setShowActionManager, showActionEditor, draftName, setDraftName, draftIcon, setDraftIcon, draftPresetId, showActionIconPicker, setShowActionIconPicker, draftShellValue, setDraftShellValue, draftRepeatable, setDraftRepeatable, draftTemporary, draftTemporaryDays, setDraftTemporaryDays, draftTimeWindow, setDraftTimeWindow, draftUsesTimer, setDraftUsesTimer, draftTimerSeconds, setDraftTimerSeconds } = state;
   return (
     <>
       {showActionManager && (
@@ -73,9 +69,7 @@ export function TaskEditors(props: TaskEditorsProps) {
               </div>
             </button>
             <div className="action-manager-list">
-              {actions.map((action) => {
-                const actionTags = tagsFor(action);
-                return (
+              {actions.map((action) => (
                   <button
                     type="button"
                     key={action.id}
@@ -86,9 +80,9 @@ export function TaskEditors(props: TaskEditorsProps) {
                     <div>
                       <strong>{action.name}</strong>
                       <small>
-                        {actionTags.map((tag) => tag.name).join(" · ")}
+                        {`栗壳 +${shellValueFor(action)}`}
                         {action.temporary
-                          ? `${actionTags.length ? " · " : ""}临时至 ${
+                          ? ` · 临时至 ${
                               action.expiresOn?.slice(5).replace("-", "/") || "今天"
                             }`
                           : ""}
@@ -97,13 +91,11 @@ export function TaskEditors(props: TaskEditorsProps) {
                         {actionTimeWindowFor(action) !== "anytime"
                           ? ` · ${actionTimeOptionFor(action).label}`
                           : ""}
-                        {` · 栗壳 +${shellValueFor(action)}`}
                       </small>
                     </div>
                     <AppIcon name="chevronRight" />
                   </button>
-                );
-              })}
+              ))}
             </div>
           </section>
         </div>
@@ -236,40 +228,6 @@ export function TaskEditors(props: TaskEditorsProps) {
                 />
               </div>
             </label>
-            <div className="action-shell-stepper action-growth-stepper">
-              <div>
-                <ContentIcon value="🌱" />
-                <strong>成长值</strong>
-              </div>
-              <div role="group" aria-label="调整每次完成获得的成长值">
-                <button
-                  type="button"
-                  disabled={draftValue <= 1}
-                  aria-label="成长值减一"
-                  onClick={() =>
-                    setDraftValue((current) => Math.max(1, current - 1))
-                  }
-                >
-                  −1
-                </button>
-                <output aria-live="polite">+{draftValue}</output>
-                <button
-                  type="button"
-                  disabled={draftValue >= 10}
-                  aria-label="成长值加一"
-                  onClick={() =>
-                    setDraftValue((current) => Math.min(10, current + 1))
-                  }
-                >
-                  +1
-                </button>
-              </div>
-            </div>
-            {draftTemporary && !draftTags.length && (
-              <p className="temporary-growth-note">
-                当前不关联成长领域，因此不会增加成长值或领域经验。
-              </p>
-            )}
             <div className="action-shell-stepper">
               <div>
                 <span aria-hidden="true">🌰</span>
@@ -316,7 +274,7 @@ export function TaskEditors(props: TaskEditorsProps) {
               </button>
             </div>
             <fieldset className="action-time-setting">
-              <legend>可打卡时段</legend>
+              <legend>提醒时段（不限制打卡）</legend>
               <div>
                 {ACTION_TIME_OPTIONS.map((option) => (
                   <button
@@ -399,39 +357,10 @@ export function TaskEditors(props: TaskEditorsProps) {
                 </div>
               )}
             </div>
-            <fieldset className="tag-fieldset">
-              <legend>
-                成长领域 <small>{draftTemporary ? "可不选" : "可多选"}</small>
-              </legend>
-              <div className="tag-picker">
-                {areas.map((area) => {
-                  const selected = draftTags.includes(area.id);
-                  return (
-                    <button
-                      className={selected ? "selected" : ""}
-                      type="button"
-                      key={area.id}
-                      aria-pressed={selected}
-                      style={selected ? { borderColor: area.color, color: area.color } : undefined}
-                      onClick={() => toggleDraftTag(area.id)}
-                    >
-                      <ContentIcon value={area.icon} style={{ color: area.color }} /> {area.name}
-                      <span>{selected ? <AppIcon name="check" /> : <AppIcon name="add" />}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {!draftTags.length && !draftTemporary && (
-                <small className="field-hint">至少选择一个成长领域</small>
-              )}
-            </fieldset>
             <button
               className="save-button"
               type="submit"
-              disabled={
-                !draftName.trim()
-                || (!draftTemporary && !draftTags.length)
-              }
+              disabled={!draftName.trim()}
             >
               {editingAction ? "保存修改" : "加入我的小事"}
             </button>

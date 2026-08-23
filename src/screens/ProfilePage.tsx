@@ -3,15 +3,16 @@ import type {
   TouchEvent as ReactTouchEvent,
 } from "react";
 
-import type { GrowthArea, GrowthRecord } from "../features/growth/types";
+import type { GrowthRecord } from "../features/growth/types";
 import type { Reward, RewardClaim } from "../features/rewards/types";
+import { prioritizedLockedReward } from "../features/rewards/domain/reward-order";
 import { PROFILE_ACTION_SWIPE_WIDTH, PROFILE_ACTION_TIME_GROUPS } from "../features/tasks/constants";
 import { actionTimeWindowFor, shellValueFor } from "../features/tasks/domain/task-rules";
 import type { MicroAction } from "../features/tasks/types";
 import type { Account } from "../features/profile/types";
 import { formatRecordDate } from "../features/statistics/domain/date-ranges";
 import { AppIcon } from "../components/ui/AppIcon";
-import { ContentIcon } from "../components/ui/ContentIcon";
+import { ContentIcon, contentIconColor } from "../components/ui/ContentIcon";
 
 type ProfileActionSwipe = {
   id: string;
@@ -22,7 +23,6 @@ type ProfileActionSwipe = {
 type ProfilePageProps = {
   active: boolean;
   account: Account | null;
-  areas: GrowthArea[];
   actions: MicroAction[];
   records: GrowthRecord[];
   rewards: Reward[];
@@ -32,7 +32,6 @@ type ProfilePageProps = {
   bankDropKey: number;
   profileActionSwipe: ProfileActionSwipe;
   tr: (chinese: string, english: string) => string;
-  tagsFor: (action: MicroAction) => GrowthArea[];
   onOpenProfile: () => void;
   onOpenSettings: () => void;
   onOpenRewardManager: () => void;
@@ -48,16 +47,12 @@ type ProfilePageProps = {
   onMoveLongPress: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onFinishLongPress: () => void;
   onOpenActionMenu: (action: MicroAction, rect: DOMRect) => void;
-  onOpenAreaManager: () => void;
-  onStartAreaLongPress: (area: GrowthArea, event: ReactPointerEvent<HTMLButtonElement>) => void;
-  onOpenAreaEditor: (area: GrowthArea) => void;
   onResetData: () => void;
 };
 
 export function ProfilePage({
   active,
   account,
-  areas,
   actions,
   records,
   rewards,
@@ -67,7 +62,6 @@ export function ProfilePage({
   bankDropKey,
   profileActionSwipe,
   tr,
-  tagsFor,
   onOpenProfile,
   onOpenSettings,
   onOpenRewardManager,
@@ -83,14 +77,9 @@ export function ProfilePage({
   onMoveLongPress,
   onFinishLongPress,
   onOpenActionMenu,
-  onOpenAreaManager,
-  onStartAreaLongPress,
-  onOpenAreaEditor,
   onResetData,
 }: ProfilePageProps) {
-  const nextReward = [...rewards]
-    .filter((reward) => reward.cost > shellBalance)
-    .sort((first, second) => first.cost - second.cost)[0];
+  const nextReward = prioritizedLockedReward(rewards, shellBalance);
   const shellProgress = nextReward
     ? Math.min(100, (shellBalance / nextReward.cost) * 100)
     : rewards.length
@@ -223,7 +212,6 @@ export function ProfilePage({
               </div>
               <div className="tag-action-grid">
                 {group.actions.map((action) => {
-                  const actionTags = tagsFor(action);
                   const swipeState = profileActionSwipe?.id === action.id ? profileActionSwipe : null;
                   const swipeOpen = swipeState?.offset === -PROFILE_ACTION_SWIPE_WIDTH;
                   return (
@@ -266,12 +254,9 @@ export function ProfilePage({
                         }}
                       >
                         <div className="tag-action-summary">
-                          <span className="tag-action-icon" style={{ color: actionTags[0]?.color }}><ContentIcon value={action.icon} /></span>
+                          <span className="tag-action-icon" style={{ color: contentIconColor(action.icon) }}><ContentIcon value={action.icon} /></span>
                           <strong>{action.name}</strong>
                           <span className="action-tag-list">
-                            {actionTags.map((tag) => (
-                              <small key={tag.id} style={{ color: tag.color, borderColor: `${tag.color}35` }}>{tag.name} +{action.value}</small>
-                            ))}
                             {action.temporary && <small className="action-temporary-tag"><AppIcon name="temporary" /> 临时</small>}
                             <small className="action-shell-gain"><span aria-hidden="true">🌰</span>栗壳 +{shellValueFor(action)}</small>
                             {action.repeatable === false && <small>每日一次</small>}
@@ -283,35 +268,6 @@ export function ProfilePage({
                 })}
               </div>
             </section>
-          ))}
-        </div>
-      </section>
-
-      <section className="settings-block">
-        <div className="settings-heading">
-          <div><span className="overline">成长领域</span><h2>成长领域</h2></div>
-          <button type="button" onClick={onOpenAreaManager}>编辑</button>
-        </div>
-        <div className="area-chip-list">
-          {areas.map((area) => (
-            <button
-              type="button"
-              key={area.id}
-              style={{ borderColor: `${area.color}55` }}
-              aria-label={`长按编辑成长领域${area.name}`}
-              onPointerDown={(event) => onStartAreaLongPress(area, event)}
-              onPointerMove={onMoveLongPress}
-              onPointerUp={onFinishLongPress}
-              onPointerCancel={onFinishLongPress}
-              onContextMenu={(event) => { event.preventDefault(); onOpenAreaEditor(area); }}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter" && event.key !== " ") return;
-                event.preventDefault();
-                onOpenAreaEditor(area);
-              }}
-            >
-              <ContentIcon value={area.icon} style={{ color: area.color }} /> {area.name}
-            </button>
           ))}
         </div>
       </section>

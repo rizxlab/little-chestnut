@@ -7,7 +7,6 @@ import { NAV_ITEMS } from "../../app/constants";
 import type { Tab } from "../../app/types";
 import { PROFILE_ACTION_SWIPE_WIDTH } from "../../features/tasks/constants";
 import type { MicroAction } from "../../features/tasks/types";
-import type { GrowthArea } from "../../features/growth/types";
 import type { Language } from "../../features/settings/types";
 import { runtimeNow } from "../utils/runtime";
 
@@ -17,7 +16,6 @@ type UseGestureOptions = {
   showCalendar: boolean;
   showSettings: boolean;
   onChangeTab: (tab: Tab) => void;
-  onOpenAreaEditor: (area: GrowthArea) => void;
 };
 
 export function useGesture(options: UseGestureOptions) {
@@ -72,12 +70,10 @@ export function useGesture(options: UseGestureOptions) {
   } | null>(null);
   const modalAnimationTimerRef = useRef<number | null>(null);
   const changeTabRef = useRef(options.onChangeTab);
-  const openAreaEditorRef = useRef(options.onOpenAreaEditor);
 
   useEffect(() => {
     changeTabRef.current = options.onChangeTab;
-    openAreaEditorRef.current = options.onOpenAreaEditor;
-  }, [options.onChangeTab, options.onOpenAreaEditor]);
+  }, [options.onChangeTab]);
 
   useEffect(() => () => {
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
@@ -377,17 +373,6 @@ export function useGesture(options: UseGestureOptions) {
     }, 520);
   }
 
-  function startAreaLongPress(area: GrowthArea, event: ReactPointerEvent<HTMLButtonElement>) {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-    clearLongPressTimer();
-    longPressStartRef.current = { x: event.clientX, y: event.clientY };
-    longPressTimerRef.current = window.setTimeout(() => {
-      openAreaEditorRef.current(area);
-      if ("vibrate" in navigator) navigator.vibrate(12);
-      longPressTimerRef.current = null;
-    }, 520);
-  }
-
   function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
     if (options.showCalendar || options.showSettings || event.touches.length !== 1) return;
     const target = event.target as HTMLElement;
@@ -509,7 +494,6 @@ export function useGesture(options: UseGestureOptions) {
     finishProfileActionSwipe,
     cancelProfileActionSwipe,
     startManageActionLongPress,
-    startAreaLongPress,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,

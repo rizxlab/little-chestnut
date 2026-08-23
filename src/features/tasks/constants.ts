@@ -17,10 +17,10 @@ export const ACTION_TIME_OPTIONS: Array<{
   icon: string;
   range: string;
 }> = [
-  { id: "morning", label: "早上", icon: "☀️", range: "05:00–11:59" },
-  { id: "noon", label: "中午", icon: "◐", range: "12:00–17:59" },
-  { id: "evening", label: "晚上", icon: "🌙", range: "18:00–04:59" },
-  { id: "anytime", label: "不限时间", icon: "∞", range: "全天" },
+  { id: "morning", label: "早上", icon: "☀️", range: "建议 05:00–11:59" },
+  { id: "noon", label: "中午", icon: "◐", range: "建议 12:00–17:59" },
+  { id: "evening", label: "晚上", icon: "🌙", range: "建议 18:00–04:59" },
+  { id: "anytime", label: "不限时间", icon: "∞", range: "无需分类" },
 ];
 
 export const PROFILE_ACTION_TIME_GROUPS: Array<{
@@ -35,12 +35,10 @@ export const PROFILE_ACTION_TIME_GROUPS: Array<{
 ];
 
 export const DEFAULT_ACTIONS: MicroAction[] = [
-  { id: "water", name: "喝一杯水", icon: "💧", tagIds: ["body"], value: 1, repeatable: true },
-  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", tagIds: ["body"], value: 1, repeatable: true, timerSeconds: 5 },
-  { id: "read", name: "阅读一页", icon: "📖", tagIds: ["wisdom"], value: 1, repeatable: true },
-  { id: "word", name: "学一个单词", icon: "🔤", tagIds: ["wisdom"], value: 1, repeatable: true },
-  { id: "sketch", name: "画一个草图", icon: "✏️", tagIds: ["create"], value: 1, repeatable: true },
-  { id: "idea", name: "记录一个灵感", icon: "💡", tagIds: ["create"], value: 1, repeatable: true },
+  { id: "water", name: "喝一杯水", icon: "💧", repeatable: true, timeWindow: "morning" },
+  { id: "stretch", name: "平板支撑 5 秒", icon: "💪", repeatable: true, timerSeconds: 5 },
+  { id: "read", name: "阅读一页", icon: "📖", repeatable: true },
+  { id: "word", name: "学一个单词", icon: "🔤", repeatable: true },
 ];
 
 export const PROFILE_ACTION_SWIPE_WIDTH = 132;

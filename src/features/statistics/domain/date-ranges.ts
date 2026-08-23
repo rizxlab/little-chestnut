@@ -1,19 +1,31 @@
 import type { GrowthRecord } from "../../growth/types";
 
+export const DAILY_CYCLE_HOUR = 3;
+
 export function localDay(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate(),
   ).padStart(2, "0")}`;
 }
 
+export function activityDay(date: Date) {
+  const shiftedDate = new Date(date);
+  shiftedDate.setHours(shiftedDate.getHours() - DAILY_CYCLE_HOUR);
+  return localDay(shiftedDate);
+}
+
+export function startOfActivityDay(now = new Date()) {
+  const [year, month, day] = activityDay(now).split("-").map(Number);
+  return new Date(year, month - 1, day, DAILY_CYCLE_HOUR);
+}
+
 export function isToday(date: Date, now = new Date()) {
-  return localDay(date) === localDay(now);
+  return activityDay(date) === activityDay(now);
 }
 
 export function startOfWeek(now = new Date()) {
-  const date = new Date(now);
+  const date = startOfActivityDay(now);
   const day = date.getDay() || 7;
-  date.setHours(0, 0, 0, 0);
   date.setDate(date.getDate() - day + 1);
   return date;
 }
@@ -28,10 +40,11 @@ export function recordsForWeek(records: GrowthRecord[], now = new Date()) {
 }
 
 export function recordsForMonth(records: GrowthRecord[], now = new Date()) {
+  const activityMonth = new Date(`${activityDay(now)}T12:00:00`);
   return records.filter((record) => {
-    const date = new Date(record.createdAt);
-    return date.getFullYear() === now.getFullYear()
-      && date.getMonth() === now.getMonth();
+    const date = new Date(`${activityDay(new Date(record.createdAt))}T12:00:00`);
+    return date.getFullYear() === activityMonth.getFullYear()
+      && date.getMonth() === activityMonth.getMonth();
   });
 }
 

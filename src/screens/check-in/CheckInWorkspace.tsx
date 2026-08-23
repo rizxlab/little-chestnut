@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-import { DEFAULT_CARD_MILESTONE_FIRST, DEFAULT_CARD_MILESTONE_SECOND, NAV_ITEMS } from "../../app/constants";
+import { NAV_ITEMS } from "../../app/constants";
 import type { ConfirmDialog, GrowthPeriod, Tab, ToastState } from "../../app/types";
 import { BottomNavigation } from "../../components/layout/BottomNavigation";
 import { AppIcon } from "../../components/ui/AppIcon";
@@ -12,18 +12,17 @@ import { SettingsPage } from "../SettingsPage";
 import { TodayPage } from "../TodayPage";
 import { GrowthPage } from "../GrowthPage";
 import { ProfilePage } from "../ProfilePage";
-import { AREA_COLORS, DEFAULT_AREAS } from "../../features/growth/constants";
-import { growthLevelFor, growthTotals, normalizedTagIds } from "../../features/growth/domain/growth-rules";
-import type { GrowthArea as Area, GrowthRecord, GrowthSource as Source } from "../../features/growth/types";
+import type { GrowthSource as Source } from "../../features/growth/types";
 import { DEFAULT_REWARDS } from "../../features/rewards/constants";
 import type { Reward } from "../../features/rewards/types";
 import { createRewardClaim } from "../../features/rewards/domain/redeem-reward";
+import { reorderRewards } from "../../features/rewards/domain/reward-order";
 import { useRewardEditorState } from "../../features/rewards/hooks/useRewardEditorState";
 import { RewardEditors } from "../../features/rewards/components/RewardEditors";
 import { RewardRedeemDialog } from "../../features/rewards/components/RewardRedeemDialog";
 import { addShells, canAfford, removeShells, spendShells } from "../../features/shells/domain/wallet";
 import { DEFAULT_ACTIONS } from "../../features/tasks/constants";
-import { actionTimeOptionFor, actionTimeWindowFor, actionsInTimeOrder, isActionAvailableNow, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../../features/tasks/domain/task-rules";
+import { actionTimeWindowFor, actionsInTimeOrder, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../../features/tasks/domain/task-rules";
 import { completeTask } from "../../features/tasks/domain/complete-task";
 import { useTimer } from "../../features/tasks/hooks/useTimer";
 import { TimerDialog } from "../../features/tasks/components/TimerDialog";
@@ -33,12 +32,9 @@ import { useTaskEditorState } from "../../features/tasks/hooks/useTaskEditorStat
 import type { MicroAction } from "../../features/tasks/types";
 import { useProfileEditorState } from "../../features/profile/hooks/useProfileEditorState";
 import { ProfileEditor } from "../../features/profile/components/ProfileEditor";
-import { useGrowthEditorState } from "../../features/growth/hooks/useGrowthEditorState";
-import { GrowthEditors } from "../../features/growth/components/GrowthEditors";
-import { GrowthDetailDialog } from "../../features/growth/components/GrowthDetailDialog";
 import { useAccountSync } from "../../features/account/hooks/useAccountSync";
 import { LoginDialog } from "../../features/account/components/LoginDialog";
-import { isToday, localDay, recordsForMonth, recordsForToday, recordsForWeek } from "../../features/statistics/domain/date-ranges";
+import { activityDay, isToday, localDay, recordsForMonth, recordsForToday, recordsForWeek } from "../../features/statistics/domain/date-ranges";
 import { createRuntimeId, runtimeNow } from "../../shared/utils/runtime";
 import { useGesture } from "../../shared/hooks/useGesture";
 import { useAppDataState } from "../../stores/useAppDataState";
@@ -47,7 +43,6 @@ import { ConfirmActionDialog } from "./ConfirmActionDialog";
 
 export function CheckInWorkspace() {
   const taskEditor = useTaskEditorState();
-  const growthEditor = useGrowthEditorState();
   const rewardEditor = useRewardEditorState();
   const profileEditor = useProfileEditorState();
   const {
@@ -58,8 +53,6 @@ export function CheckInWorkspace() {
     draftIcon, setDraftIcon,
     setDraftPresetId,
     setShowActionIconPicker,
-    draftTags, setDraftTags,
-    draftValue, setDraftValue,
     draftShellValue, setDraftShellValue,
     draftRepeatable, setDraftRepeatable,
     draftTemporary, setDraftTemporary,
@@ -68,16 +61,6 @@ export function CheckInWorkspace() {
     draftUsesTimer, setDraftUsesTimer,
     draftTimerSeconds, setDraftTimerSeconds,
   } = taskEditor;
-  const {
-    editingArea, setEditingArea,
-    showAreaManager, setShowAreaManager,
-    showAreaEditor, setShowAreaEditor,
-    growthAreaDetailId, setGrowthAreaDetailId,
-    draftAreaName, setDraftAreaName,
-    draftAreaIcon, setDraftAreaIcon,
-    draftAreaColor, setDraftAreaColor,
-    areaEditorReturnToManager, setAreaEditorReturnToManager,
-  } = growthEditor;
   const {
     pendingReward, setPendingReward,
     editingReward, setEditingReward,
@@ -98,8 +81,6 @@ export function CheckInWorkspace() {
   const {
     nickname,
     setNickname,
-    areas,
-    setAreas,
     actions,
     setActions,
     records,
@@ -108,10 +89,6 @@ export function CheckInWorkspace() {
     setLanguage,
     theme,
     setTheme,
-    cardMilestoneFirst,
-    setCardMilestoneFirst,
-    cardMilestoneSecond,
-    setCardMilestoneSecond,
     shellBalance,
     setShellBalance,
     shellsEarned,
@@ -161,7 +138,6 @@ export function CheckInWorkspace() {
   });
   const [tab, setTab] = useState<Tab>("today");
   const [growthPeriod, setGrowthPeriod] = useState<GrowthPeriod>("today");
-  const [actionAreaFilter, setActionAreaFilter] = useState("all");
   const [orbitRippleKey, setOrbitRippleKey] = useState(1);
   const [lastCheckedAction, setLastCheckedAction] = useState<{
     id: string;
@@ -176,7 +152,7 @@ export function CheckInWorkspace() {
   const [calendarMonth, setCalendarMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
-  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => localDay(new Date()));
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => activityDay(new Date()));
   const {
     appScrollRef,
     dragOffset,
@@ -207,7 +183,6 @@ export function CheckInWorkspace() {
     finishProfileActionSwipe,
     cancelProfileActionSwipe,
     startManageActionLongPress,
-    startAreaLongPress,
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
@@ -221,7 +196,6 @@ export function CheckInWorkspace() {
     showCalendar,
     showSettings,
     onChangeTab: changeTab,
-    onOpenAreaEditor: openAreaEditor,
   });
 
   useEffect(() => {
@@ -248,15 +222,15 @@ export function CheckInWorkspace() {
   }, [tab]);
 
   const todayRecords = useMemo(
-    () => recordsForToday(records),
-    [records],
+    () => recordsForToday(records, clockNow),
+    [clockNow, records],
   );
-  const weekRecords = useMemo(() => recordsForWeek(records), [records]);
-  const monthRecords = useMemo(() => recordsForMonth(records), [records]);
+  const weekRecords = useMemo(() => recordsForWeek(records, clockNow), [clockNow, records]);
+  const monthRecords = useMemo(() => recordsForMonth(records, clockNow), [clockNow, records]);
   const calendarRecordCounts = useMemo(() => {
     const counts = new Map<string, number>();
     records.forEach((record) => {
-      const key = localDay(new Date(record.createdAt));
+      const key = activityDay(new Date(record.createdAt));
       counts.set(key, (counts.get(key) || 0) + 1);
     });
     return counts;
@@ -264,7 +238,7 @@ export function CheckInWorkspace() {
   const selectedDayRecords = useMemo(
     () =>
       records.filter(
-        (record) => localDay(new Date(record.createdAt)) === selectedCalendarDay,
+        (record) => activityDay(new Date(record.createdAt)) === selectedCalendarDay,
       ),
     [records, selectedCalendarDay],
   );
@@ -281,16 +255,6 @@ export function CheckInWorkspace() {
       }),
     ];
   }, [calendarMonth]);
-
-  function tagsFor(value: { tagIds?: string[] }) {
-    return normalizedTagIds(value)
-      .map((id) => areas.find((area) => area.id === id))
-      .filter((area): area is Area => Boolean(area));
-  }
-
-  function totalsFor(source: GrowthRecord[]) {
-    return growthTotals(areas, source);
-  }
 
   async function handleLogin(event: FormEvent) {
     if (await login(event)) {
@@ -364,11 +328,6 @@ export function CheckInWorkspace() {
     count: number,
     source: Source = "主动记录",
   ) {
-    if (!isActionAvailableNow(action)) {
-      const option = actionTimeOptionFor(action);
-      showToast(`${option.label} ${option.range}`, "当前不可打卡");
-      return;
-    }
     if (
       action.repeatable === false
       && records.some(
@@ -379,23 +338,18 @@ export function CheckInWorkspace() {
       showToast("这件小事每天只能打卡一次", "今日已完成");
       return;
     }
-    const actionTags = tagsFor(action);
     const completion = completeTask(action, {
       count,
       source,
-      tagIds: actionTags.map((tag) => tag.id),
       timestamp: runtimeNow(),
     });
     setRecords((current) => [...completion.records, ...current]);
     setLastCheckedAction({ id: action.id, token: runtimeNow() });
     setShellBalance((current) => addShells(current, completion.shellGain));
     setShellsEarned((current) => addShells(current, completion.shellGain));
-    const growthChanges = actionTags.map(
-      (tag) => `${tag.name} +${action.value * completion.count}`,
-    );
     showToast(
-      [...growthChanges, `栗壳 +${completion.shellGain}`].join(" · "),
-      "成长已记录",
+      `栗壳 +${completion.shellGain}`,
+      "小事已记录",
       completion.records[0].id,
     );
   }
@@ -416,11 +370,6 @@ export function CheckInWorkspace() {
 
   function handleQuickActionClick(action: MicroAction) {
     if (consumeSuppressedQuickClick(action.id)) return;
-    if (!isActionAvailableNow(action)) {
-      const option = actionTimeOptionFor(action);
-      showToast(`${option.label} ${option.range}`, "当前不可打卡");
-      return;
-    }
     if (
       action.repeatable === false
       && records.some(
@@ -530,8 +479,6 @@ export function CheckInWorkspace() {
     setDraftIcon(action?.icon || "🌱");
     setDraftPresetId(action ? null : "custom");
     setShowActionIconPicker(false);
-    setDraftTags(action ? normalizedTagIds(action) : [areas[0]?.id || "body"]);
-    setDraftValue(action?.value || 1);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action?.repeatable !== false);
     setDraftTemporary(action?.temporary === true);
@@ -548,8 +495,6 @@ export function CheckInWorkspace() {
     setDraftPresetId(action.id);
     setDraftName(action.name);
     setDraftIcon(action.icon);
-    setDraftTags(normalizedTagIds(action));
-    setDraftValue(action.value);
     setDraftShellValue(shellValueFor(action));
     setDraftRepeatable(action.repeatable !== false);
     setDraftTemporary(false);
@@ -564,8 +509,6 @@ export function CheckInWorkspace() {
     setDraftPresetId("custom");
     setDraftName("");
     setDraftIcon("🌱");
-    setDraftTags([areas[0]?.id || "body"]);
-    setDraftValue(1);
     setDraftShellValue(1);
     setDraftRepeatable(true);
     setDraftTemporary(false);
@@ -583,8 +526,6 @@ export function CheckInWorkspace() {
     setDraftIcon("⏳");
     setDraftPresetId(null);
     setShowActionIconPicker(false);
-    setDraftTags([]);
-    setDraftValue(1);
     setDraftShellValue(1);
     setDraftRepeatable(true);
     setDraftTemporary(true);
@@ -618,17 +559,9 @@ export function CheckInWorkspace() {
     setShowActionIconPicker(false);
   }
 
-  function toggleDraftTag(tagId: string) {
-    setDraftTags((current) =>
-      current.includes(tagId)
-        ? current.filter((id) => id !== tagId)
-        : [...current, tagId],
-    );
-  }
-
   function saveAction(event: FormEvent) {
     event.preventDefault();
-    if (!draftName.trim() || (!draftTemporary && !draftTags.length)) return;
+    if (!draftName.trim()) return;
     const nextTemporaryDays = temporaryActionDays(draftTemporaryDays);
     const nextTemporaryExpiration = draftTemporary
       ? editingAction?.temporary
@@ -646,8 +579,6 @@ export function CheckInWorkspace() {
                 ...action,
                 name: draftName.trim(),
                 icon: draftIcon.trim() || "🌱",
-                tagIds: draftTags,
-                value: Math.max(1, draftValue),
                 shellValue: shellValueFor({ shellValue: draftShellValue }),
                 repeatable: draftRepeatable,
                 temporary: draftTemporary,
@@ -669,8 +600,6 @@ export function CheckInWorkspace() {
           id: createRuntimeId("action"),
           name: draftName.trim(),
           icon: draftIcon.trim() || "🌱",
-          tagIds: draftTags,
-          value: Math.max(1, draftValue),
           shellValue: shellValueFor({ shellValue: draftShellValue }),
           repeatable: draftRepeatable,
           temporary: draftTemporary,
@@ -693,85 +622,6 @@ export function CheckInWorkspace() {
     setConfirmDialog({ kind: "delete-action", action });
   }
 
-  function prepareAreaEditor(area?: Area, returnToManager = false) {
-    setAreaEditorReturnToManager(returnToManager);
-    setEditingArea(area || null);
-    setDraftAreaName(area?.name || "");
-    setDraftAreaIcon(area?.icon || "🌿");
-    setDraftAreaColor(area?.color || AREA_COLORS[areas.length % AREA_COLORS.length]);
-    setShowAreaEditor(true);
-  }
-
-  function openAreaEditor(area?: Area) {
-    if (showAreaManager) {
-      closeSecondaryModal("area-manager", () => {
-        setShowAreaManager(false);
-        prepareAreaEditor(area, true);
-      });
-      return;
-    }
-    prepareAreaEditor(area);
-  }
-
-  function closeAreaEditor() {
-    setShowAreaEditor(false);
-    if (areaEditorReturnToManager) {
-      setShowAreaManager(true);
-    }
-  }
-
-  function saveArea(event: FormEvent) {
-    event.preventDefault();
-    if (!draftAreaName.trim()) return;
-
-    if (editingArea) {
-      setAreas((current) =>
-        current.map((area) =>
-          area.id === editingArea.id
-            ? {
-                ...area,
-                name: draftAreaName.trim(),
-                icon: draftAreaIcon.trim() || "🌿",
-                color: draftAreaColor,
-              }
-            : area,
-        ),
-      );
-      showToast("成长领域已更新");
-    } else {
-      const area: Area = {
-        id: createRuntimeId("area"),
-        name: draftAreaName.trim(),
-        icon: draftAreaIcon.trim() || "🌿",
-        color: draftAreaColor,
-      };
-      setAreas((current) => [...current, area]);
-      showToast("成长领域已创建");
-    }
-    setShowAreaEditor(false);
-    setShowAreaManager(areaEditorReturnToManager);
-  }
-
-  function deleteArea(area: Area) {
-    if (areas.length <= 1) {
-      showToast("至少保留一个成长领域", "暂时不能删除");
-      return;
-    }
-    const blockingAction = actions.find((action) => {
-      const tagIds = normalizedTagIds(action);
-      return tagIds.includes(area.id) && tagIds.length === 1;
-    });
-    if (blockingAction) {
-      showToast(`请先为“${blockingAction.name}”添加其他成长领域`, "暂时不能删除");
-      return;
-    }
-    closeSecondaryModal("area-editor", () => {
-      setShowAreaEditor(false);
-      setShowAreaManager(areaEditorReturnToManager);
-      setConfirmDialog({ kind: "delete-area", area });
-    });
-  }
-
   function scrollScreenToTop(selector: string) {
     window.requestAnimationFrame(() => {
       const screen = appScrollRef.current?.querySelector<HTMLElement>(selector);
@@ -792,8 +642,9 @@ export function CheckInWorkspace() {
 
   function openCalendar() {
     const now = new Date();
-    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
-    setSelectedCalendarDay(localDay(now));
+    const activeDate = new Date(`${activityDay(now)}T12:00:00`);
+    setCalendarMonth(new Date(activeDate.getFullYear(), activeDate.getMonth(), 1));
+    setSelectedCalendarDay(activityDay(now));
     setShowCalendar(true);
     scrollScreenToTop(".calendar-screen");
   }
@@ -845,8 +696,6 @@ export function CheckInWorkspace() {
     setShowProfileEditor(false);
     setShowActionManager(false);
     setShowActionEditor(false);
-    setShowAreaManager(false);
-    setShowAreaEditor(false);
     setShowRewardManager(false);
     setShowRewardEditor(false);
     setConfirmDialog(null);
@@ -878,23 +727,6 @@ export function CheckInWorkspace() {
         current.filter((item) => item.id !== confirmDialog.action.id),
       );
       showToast("微行动已删除");
-    } else if (confirmDialog.kind === "delete-area") {
-      const areaId = confirmDialog.area.id;
-      setAreas((current) => current.filter((area) => area.id !== areaId));
-      setActions((current) =>
-        current.map((action) => ({
-          ...action,
-          tagIds: normalizedTagIds(action).filter((tagId) => tagId !== areaId),
-        })),
-      );
-      setRecords((current) =>
-        current.map((record) => ({
-          ...record,
-          tagIds: normalizedTagIds(record).filter((tagId) => tagId !== areaId),
-        })),
-      );
-      showToast("成长领域已删除");
-      setShowAreaManager(areaEditorReturnToManager);
     } else if (confirmDialog.kind === "delete-reward") {
       setRewards((current) =>
         current.filter((item) => item.id !== confirmDialog.reward.id),
@@ -903,7 +735,6 @@ export function CheckInWorkspace() {
       showToast("奖励项目已删除");
       setShowRewardManager(true);
     } else {
-      setAreas(DEFAULT_AREAS);
       setActions(DEFAULT_ACTIONS);
       setRewards(DEFAULT_REWARDS);
       setRecords([]);
@@ -913,8 +744,6 @@ export function CheckInWorkspace() {
       setPendingReward(null);
       setLanguage("zh");
       setTheme("light");
-      setCardMilestoneFirst(DEFAULT_CARD_MILESTONE_FIRST);
-      setCardMilestoneSecond(DEFAULT_CARD_MILESTONE_SECOND);
       changeTab("today");
       showToast("已恢复为新的开始");
     }
@@ -934,62 +763,30 @@ export function CheckInWorkspace() {
 
   const tr = (zh: string, en: string) => (language === "zh" ? zh : en);
   const locale = language === "zh" ? "zh-CN" : "en-US";
-  const todayTotals = totalsFor(todayRecords).filter((area) => area.total > 0);
-  const todayProgressTotals = totalsFor(todayRecords);
-  const weekProgressTotals = totalsFor(weekRecords);
-  const monthProgressTotals = totalsFor(monthRecords);
-  const allTotals = totalsFor(records);
-  const growthLevels = allTotals.map((area) => ({
-    ...area,
-    ...growthLevelFor(area.total),
-  }));
-  const growthAreaDetail =
-    growthLevels.find((area) => area.id === growthAreaDetailId) || null;
-  const growthAreaDetailActions = growthAreaDetail
-    ? actionsInTimeOrder(
-        actions.filter((action) =>
-          normalizedTagIds(action).includes(growthAreaDetail.id),
-        ),
-      )
-    : [];
-  const maxTodayAreaTotal = Math.max(1, ...todayProgressTotals.map((area) => area.total));
-  const maxWeekAreaTotal = Math.max(1, ...weekProgressTotals.map((area) => area.total));
-  const maxMonthAreaTotal = Math.max(1, ...monthProgressTotals.map((area) => area.total));
-  const maxAreaTotal = Math.max(1, ...allTotals.map((area) => area.total));
   const growthPeriodOptions: {
     id: GrowthPeriod;
     label: string;
     count: number;
-    totals: ReturnType<typeof totalsFor>;
-    maxTotal: number;
   }[] = [
     {
       id: "today",
       label: tr("今日", "Today"),
       count: todayRecords.length,
-      totals: todayProgressTotals,
-      maxTotal: maxTodayAreaTotal,
     },
     {
       id: "week",
       label: tr("本周", "This week"),
       count: weekRecords.length,
-      totals: weekProgressTotals,
-      maxTotal: maxWeekAreaTotal,
     },
     {
       id: "month",
       label: tr("本月", "This month"),
       count: monthRecords.length,
-      totals: monthProgressTotals,
-      maxTotal: maxMonthAreaTotal,
     },
     {
       id: "total",
       label: tr("总计", "Total"),
       count: records.length,
-      totals: allTotals,
-      maxTotal: maxAreaTotal,
     },
   ];
   const activeGrowthPeriod =
@@ -1007,23 +804,7 @@ export function CheckInWorkspace() {
     ? todayRecords.filter((record) => record.actionId === recordActionMenu.id).length
     : 0;
   const activeTabIndex = NAV_ITEMS.findIndex((item) => item.id === tab);
-  const todayCardMilestone =
-    todayRecords.length >= cardMilestoneSecond
-      ? "milestone-20"
-      : todayRecords.length >= cardMilestoneFirst
-        ? "milestone-10"
-        : "";
-  const activeActionAreaFilter =
-    actionAreaFilter === "all" || areas.some((area) => area.id === actionAreaFilter)
-      ? actionAreaFilter
-      : "all";
-  const visibleTodayActions = actionsInTimeOrder(
-    activeActionAreaFilter === "all"
-      ? actions
-      : actions.filter((action) =>
-          normalizedTagIds(action).includes(activeActionAreaFilter),
-        ),
-  );
+  const visibleTodayActions = actionsInTimeOrder(actions);
   const safeDraftTimerSeconds = Math.min(
     3600,
     Math.max(
@@ -1041,8 +822,6 @@ export function CheckInWorkspace() {
     <main
       className={`shell${
         showActionEditor
-        || showAreaEditor
-        || showAreaManager
         || showRewardEditor
         || showRewardManager
         || showProfileEditor
@@ -1079,7 +858,6 @@ export function CheckInWorkspace() {
               onClose={closeCalendar}
               onShiftMonth={shiftCalendarMonth}
               onSelectDay={setSelectedCalendarDay}
-              tagsFor={tagsFor}
             />
           )}
 
@@ -1087,14 +865,10 @@ export function CheckInWorkspace() {
             <SettingsPage
               language={language}
               theme={theme}
-              cardMilestoneFirst={cardMilestoneFirst}
-              cardMilestoneSecond={cardMilestoneSecond}
               isSignedIn={Boolean(account)}
               onClose={closeSettings}
               setLanguage={setLanguage}
               setTheme={setTheme}
-              setCardMilestoneFirst={setCardMilestoneFirst}
-              setCardMilestoneSecond={setCardMilestoneSecond}
             />
           )}
 
@@ -1113,17 +887,11 @@ export function CheckInWorkspace() {
               account={account}
               nickname={nickname}
               todayRecords={todayRecords}
-              todayTotals={todayTotals}
-              milestoneClass={todayCardMilestone}
               orbitRippleKey={orbitRippleKey}
               setOrbitRippleKey={setOrbitRippleKey}
-              areas={areas}
-              activeAreaFilter={activeActionAreaFilter}
-              setAreaFilter={setActionAreaFilter}
               visibleActions={visibleTodayActions}
               clockNow={clockNow}
               lastCheckedAction={lastCheckedAction}
-              tagsFor={tagsFor}
               onOpenCalendar={openCalendar}
               onAddTemporaryAction={openTemporaryActionEditor}
               onActionClick={handleQuickActionClick}
@@ -1141,22 +909,17 @@ export function CheckInWorkspace() {
               records={records}
               weekRecords={weekRecords}
               monthRecords={monthRecords}
-              growthLevels={growthLevels}
               period={growthPeriod}
               periodOptions={growthPeriodOptions}
               activePeriod={activeGrowthPeriod}
               activeRecords={activeGrowthRecords}
-              areas={areas}
               setPeriod={setGrowthPeriod}
               onOpenCalendar={openCalendar}
-              onOpenArea={setGrowthAreaDetailId}
-              tagsFor={tagsFor}
             />
 
             <ProfilePage
               active={tab === "profile"}
               account={account}
-              areas={areas}
               actions={actions}
               records={records}
               rewards={rewards}
@@ -1166,7 +929,6 @@ export function CheckInWorkspace() {
               bankDropKey={bankDropKey}
               profileActionSwipe={profileActionSwipe}
               tr={tr}
-              tagsFor={tagsFor}
               onOpenProfile={openProfileEditor}
               onOpenSettings={openSettings}
               onOpenRewardManager={() => setShowRewardManager(true)}
@@ -1188,9 +950,6 @@ export function CheckInWorkspace() {
               onMoveLongPress={moveActionLongPress}
               onFinishLongPress={finishActionLongPress}
               onOpenActionMenu={openManageActionMenu}
-              onOpenAreaManager={() => setShowAreaManager(true)}
-              onStartAreaLongPress={startAreaLongPress}
-              onOpenAreaEditor={openAreaEditor}
               onResetData={resetData}
             />
               </div>
@@ -1235,12 +994,10 @@ export function CheckInWorkspace() {
       <TaskEditors
         state={taskEditor}
         actions={actions}
-        areas={areas}
         safeTimerSeconds={safeDraftTimerSeconds}
         timerSliderMax={timerSliderMax}
         timerSliderProgress={timerSliderProgress}
         tr={tr}
-        tagsFor={tagsFor}
         closeSecondaryModal={closeSecondaryModal}
         modalClassName={modalMotionClass}
         modalStyle={modalMotionStyle}
@@ -1249,55 +1006,8 @@ export function CheckInWorkspace() {
         onCloseEditor={closeActionEditor}
         onApplyPreset={applyActionPreset}
         onStartCustom={startCustomAction}
-        onToggleTag={toggleDraftTag}
         onSave={saveAction}
         onDelete={deleteAction}
-      />
-
-      {growthAreaDetail && (
-        <GrowthDetailDialog
-          detail={growthAreaDetail}
-          actions={growthAreaDetailActions}
-          language={language}
-          tr={tr}
-          onClose={() => closeSecondaryModal("growth-area-detail", () => setGrowthAreaDetailId(null))}
-          onImmediateClose={() => setGrowthAreaDetailId(null)}
-          modalClassName={modalMotionClass}
-          modalStyle={modalMotionStyle}
-          dragHandle={modalDragHandle}
-          onSwipeStart={startEditorSheetSwipe}
-          onSwipeMove={moveEditorSheetSwipe}
-          onSwipeEnd={finishEditorSheetSwipe}
-          onSwipeCancel={cancelEditorSheetSwipe}
-        />
-      )}
-
-      <GrowthEditors
-        showManager={showAreaManager}
-        showEditor={showAreaEditor}
-        areas={areas}
-        editingArea={editingArea}
-        draftName={draftAreaName}
-        draftIcon={draftAreaIcon}
-        draftColor={draftAreaColor}
-        actionCountFor={(areaId) => actions.filter((action) => normalizedTagIds(action).includes(areaId)).length}
-        onCloseManager={() => closeSecondaryModal("area-manager", () => setShowAreaManager(false))}
-        onImmediateCloseManager={() => setShowAreaManager(false)}
-        onOpenEditor={openAreaEditor}
-        onCloseEditor={() => closeSecondaryModal("area-editor", closeAreaEditor)}
-        onImmediateCloseEditor={closeAreaEditor}
-        onDraftNameChange={setDraftAreaName}
-        onDraftIconChange={setDraftAreaIcon}
-        onDraftColorChange={setDraftAreaColor}
-        onSave={saveArea}
-        onDelete={deleteArea}
-        modalClassName={modalMotionClass}
-        modalStyle={modalMotionStyle}
-        dragHandle={modalDragHandle}
-        onSwipeStart={startEditorSheetSwipe}
-        onSwipeMove={moveEditorSheetSwipe}
-        onSwipeEnd={finishEditorSheetSwipe}
-        onSwipeCancel={cancelEditorSheetSwipe}
       />
 
       <RewardEditors
@@ -1320,6 +1030,7 @@ export function CheckInWorkspace() {
         onDraftCostChange={setDraftRewardCost}
         onSave={saveReward}
         onDelete={deleteReward}
+        onReorder={(sourceId, targetId) => setRewards((current) => reorderRewards(current, sourceId, targetId))}
         modalClassName={modalMotionClass}
         modalStyle={modalMotionStyle}
         dragHandle={modalDragHandle}

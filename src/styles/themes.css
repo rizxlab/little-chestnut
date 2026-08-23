@@ -79,13 +79,11 @@ html[data-theme="dark"] .profile-account-button:not(.guest) {
 html[data-theme="dark"] .quick-action,
 html[data-theme="dark"] .settings-panel,
 html[data-theme="dark"] .settings-block,
-html[data-theme="dark"] .date-display,
+html[data-theme="dark"] .calendar-entry-button,
 html[data-theme="dark"] .day-phase-icon,
 html[data-theme="dark"] .calendar-card,
 html[data-theme="dark"] .reward-history,
 html[data-theme="dark"] .stat-grid article,
-html[data-theme="dark"] .growth-level-card,
-html[data-theme="dark"] .growth-area,
 html[data-theme="dark"] .empty-state,
 html[data-theme="dark"] .temporary-action-add,
 html[data-theme="dark"] .tag-action-card {
@@ -105,21 +103,6 @@ html[data-theme="dark"] .quick-action.completed {
   border-color: rgba(154, 170, 144, .28);
   background: var(--leaf-soft);
 }
-html[data-theme="dark"] .quick-action.time-locked {
-  border-color: rgba(255, 255, 255, .08);
-  background: rgba(23, 26, 31, .72);
-}
-html[data-theme="dark"] .action-filter-list button {
-  border-color: var(--line);
-  color: var(--muted);
-  background: var(--surface-card);
-  box-shadow: none;
-}
-html[data-theme="dark"] .action-filter-list button.active {
-  border-color: rgba(208, 160, 132, .24);
-  color: var(--chestnut);
-  background: var(--chestnut-soft);
-}
 html[data-theme="dark"] .action-filter-empty {
   border-color: var(--line);
   background: rgba(28, 32, 38, .6);
@@ -129,37 +112,6 @@ html[data-theme="dark"] .temporary-action-add {
   color: var(--ink);
   background: var(--surface-card);
 }
-html[data-theme="dark"] .today-progress-group .growth-area {
-  border-color: var(--line);
-  background:
-    linear-gradient(135deg, rgba(48, 53, 62, .72), rgba(28, 32, 38, .74)),
-    var(--paper);
-}
-html[data-theme="dark"] .growth-level-card {
-  border-color: var(--line);
-  background: var(--surface-card);
-}
-html[data-theme="dark"] .growth-level-track {
-  background: rgba(255, 255, 255, .08);
-}
-html[data-theme="dark"] .growth-level-card.max-level {
-  border-color: rgba(222, 173, 97, .24);
-  background:
-    radial-gradient(circle at 90% 12%, rgba(221, 166, 77, .12), transparent 72px),
-    linear-gradient(135deg, #302d2a, #25272b);
-}
-html[data-theme="dark"] .growth-area-detail-hero,
-html[data-theme="dark"] .growth-area-detail-stats > span,
-html[data-theme="dark"] .growth-area-detail-list article {
-  border-color: var(--line);
-  background-color: rgba(35, 39, 46, .86);
-}
-html[data-theme="dark"] .growth-area-detail-list article > span,
-html[data-theme="dark"] .growth-area-detail-heading small {
-  background: rgba(255, 255, 255, .07);
-}
-html[data-theme="dark"] .week-progress-group .growth-progress-heading h2 { color: #a8bd9c; }
-html[data-theme="dark"] .month-progress-group .growth-progress-heading h2 { color: #b8a9cf; }
 html[data-theme="dark"] .growth-period-tabs {
   border-color: var(--line);
   background: rgba(17, 20, 25, .64);
@@ -360,16 +312,6 @@ html[data-theme="dark"] .theme-choice-grid button.selected {
   color: #f2c1a2;
   background: #302d33;
 }
-html[data-theme="dark"] .milestone-threshold-row {
-  border-color: var(--line);
-  background: #171a1f;
-}
-html[data-theme="dark"] .milestone-threshold-row button,
-html[data-theme="dark"] .milestone-threshold-row input {
-  border-color: var(--line);
-  color: #f2c1a2;
-  background: #292d34;
-}
 html[data-theme="dark"] .reward-cost-options button,
 html[data-theme="dark"] .reward-editor .reward-cost-custom {
   border-color: var(--line);
@@ -383,7 +325,6 @@ html[data-theme="dark"] .reward-cost-options button.selected {
 }
 html[data-theme="dark"] .action-editor input,
 html[data-theme="dark"] .action-editor select,
-html[data-theme="dark"] .area-editor input,
 html[data-theme="dark"] .reward-editor input,
 html[data-theme="dark"] .profile-editor input,
 html[data-theme="dark"] .login-card input,

@@ -11,8 +11,6 @@ export function useTaskEditorState() {
   const [draftIcon, setDraftIcon] = useState("🌱");
   const [draftPresetId, setDraftPresetId] = useState<string | null>("custom");
   const [showActionIconPicker, setShowActionIconPicker] = useState(false);
-  const [draftTags, setDraftTags] = useState<string[]>(["body"]);
-  const [draftValue, setDraftValue] = useState(1);
   const [draftShellValue, setDraftShellValue] = useState(1);
   const [draftRepeatable, setDraftRepeatable] = useState(true);
   const [draftTemporary, setDraftTemporary] = useState(false);
@@ -29,8 +27,6 @@ export function useTaskEditorState() {
     draftIcon, setDraftIcon,
     draftPresetId, setDraftPresetId,
     showActionIconPicker, setShowActionIconPicker,
-    draftTags, setDraftTags,
-    draftValue, setDraftValue,
     draftShellValue, setDraftShellValue,
     draftRepeatable, setDraftRepeatable,
     draftTemporary, setDraftTemporary,
