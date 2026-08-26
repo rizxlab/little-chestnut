@@ -481,7 +481,14 @@
   max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
-  padding: 26px 22px max(72px, calc(env(safe-area-inset-bottom) + 44px));
+  padding: 26px 22px max(
+    72px,
+    calc(
+      env(safe-area-inset-bottom)
+      + 44px
+      + var(--editor-keyboard-inset, 0px)
+    )
+  );
   background: transparent;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
@@ -1037,6 +1044,19 @@
   font-size: 10px;
   cursor: pointer;
 }
+.redeem-reward-button {
+  width: 100%;
+  border: 1px solid rgba(122, 74, 54, .18);
+  border-radius: var(--radius-control);
+  margin-top: 9px;
+  padding: 11px;
+  color: var(--chestnut);
+  background: var(--chestnut-soft);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.redeem-reward-button:active { transform: scale(.98); }
 .sheet-description {
   margin: -8px 0 4px;
   color: var(--muted);

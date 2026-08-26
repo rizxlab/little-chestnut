@@ -26,6 +26,7 @@ type RewardEditorsProps = {
   onDraftIconChange: (value: string) => void;
   onDraftCostChange: (value: number) => void;
   onSave: (event: FormEvent) => void;
+  onRedeem: (reward: Reward) => void;
   onDelete: (reward: Reward) => void;
   onReorder: (sourceId: string, targetId: string) => void;
   modalClassName: (key: string, baseClassName: string) => string;
@@ -43,7 +44,7 @@ export function RewardEditors(props: RewardEditorsProps) {
     draftDescription, draftIcon, draftCost, onCloseEditor,
     onImmediateCloseEditor, onCloseManager, onImmediateCloseManager,
     onOpenEditor, onDraftNameChange, onDraftDescriptionChange,
-    onDraftIconChange, onDraftCostChange, onSave, onDelete, onReorder, modalClassName,
+    onDraftIconChange, onDraftCostChange, onSave, onRedeem, onDelete, onReorder, modalClassName,
     modalStyle, dragHandle, onSwipeStart, onSwipeMove, onSwipeEnd, onSwipeCancel,
   } = props;
   const [draggingRewardId, setDraggingRewardId] = useState<string | null>(null);
@@ -114,6 +115,7 @@ export function RewardEditors(props: RewardEditorsProps) {
               <label className="reward-cost-custom"><span>自定义</span><input type="number" inputMode="numeric" min="1" max="9999" value={draftCost} onChange={(event) => onDraftCostChange(Number(event.target.value))} /><small>枚</small></label>
             </fieldset>
             <button className="save-button" type="submit" disabled={!draftName.trim() || draftCost < 1}>{editingReward ? "保存奖励" : "加入奖励清单"}</button>
+            {editingReward && <button className="redeem-reward-button" type="button" onClick={() => onRedeem(editingReward)}>兑换这个奖励</button>}
             {editingReward && <button className="delete-reward-button" type="button" onClick={() => onDelete(editingReward)}>删除这个奖励</button>}
           </form>
         </div>

@@ -6,7 +6,9 @@ type SettingsPageProps = {
   language: Language;
   theme: Theme;
   isSignedIn: boolean;
+  recordCount: number;
   onClose: () => void;
+  onResetData: () => void;
   setLanguage: Dispatch<SetStateAction<Language>>;
   setTheme: Dispatch<SetStateAction<Theme>>;
 };
@@ -47,6 +49,26 @@ export function SettingsPage(props: SettingsPageProps) {
             <AppIcon name="moon" /><strong>{tr("夜间", "Dark")}</strong><small>{tr("柔和低亮", "Soft and dim")}</small>
           </button>
         </div>
+      </section>
+
+      <details className="settings-block philosophy">
+        <summary>
+          <span className="philosophy-title"><AppIcon name="sparkle" /><span><strong>{tr("关于栗子小事", "About Little Chestnut Things")}</strong></span></span>
+          <AppIcon className="summary-chevron" name="chevronDown" />
+        </summary>
+        <div className="philosophy-content">
+          <blockquote>{tr("“成长不是由几个重大事件组成，而是由无数微小行动累积而成。”", "“Growth is built not from a few major events, but from countless tiny actions.”")}</blockquote>
+          <ul>
+            <li><AppIcon name="check" />{tr("记录成长，而不是记录失败", "Record growth, not failure")}</li>
+            <li><AppIcon name="check" />{tr("默认展示已经做到的事情", "Show what has been done by default")}</li>
+            <li><AppIcon name="check" />{tr("数据服务于回顾，而不是竞争", "Use data for reflection, not competition")}</li>
+          </ul>
+        </div>
+      </details>
+
+      <section className="settings-block data-settings">
+        <div><strong>{tr("设备本地数据", "Local device data")}</strong><small>{tr(`当前共有 ${props.recordCount} 条成长记录`, `${props.recordCount} growth records on this device`)}</small></div>
+        <button type="button" onClick={props.onResetData}>{tr("清空并重置", "Clear and reset")}</button>
       </section>
 
       <div className="settings-sync-note">

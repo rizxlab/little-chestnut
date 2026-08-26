@@ -1,15 +1,19 @@
 import type { ActionTimeWindow, MicroAction } from "./types";
 
 export const ACTION_ICON_OPTIONS = [
-  "🌱", "🌿", "🌳", "🌸", "🌻", "✨", "⭐", "🔥", "💧", "☀️",
-  "🌙", "🌈", "🍎", "🍊", "🥗", "🥛", "☕", "🍵", "🥤", "💊",
-  "🧘", "💪", "🏃", "🚶", "🚴", "🏊", "🤸", "🏋️", "🫁", "🫀",
-  "🧠", "🛏️", "🛁", "🪥", "📖", "📚", "✏️", "📝", "🔤", "💡",
-  "🎨", "🖌️", "📷", "🎬", "🎧", "🎵", "🎹", "🎸", "💻", "⌨️",
-  "🧹", "🧺", "🪴", "🍳", "🏡", "🗂️", "📅", "⏰", "⏳", "✅", "🎯",
-  "💰", "🪙", "💼", "🤝", "💬", "📞", "✉️", "🫶", "😊", "🙏",
-  "🧭", "🗺️", "✈️", "🚆", "🌍", "🎁", "🎉", "🧩", "🎮", "🏆",
+  "🌱", "✨", "🔥", "💧", "☀️", "🌙",
+  "🍎", "🍊", "🥗", "🥛", "☕", "💊",
+  "🧘", "💪", "🏃", "📖", "✏️", "🔤", "💡",
+  "🎨", "📷", "🎧", "💻", "🧹", "🏡", "📅",
+  "🎯", "💰", "💼", "🤝", "💬", "🧭", "✈️",
+  "🎁", "🎮", "🏆",
 ];
+
+export function randomActionIcon(random = Math.random) {
+  return ACTION_ICON_OPTIONS[
+    Math.floor(random() * ACTION_ICON_OPTIONS.length)
+  ] ?? ACTION_ICON_OPTIONS[0];
+}
 
 export const ACTION_TIME_OPTIONS: Array<{
   id: ActionTimeWindow;

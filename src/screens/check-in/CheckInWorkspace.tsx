@@ -21,7 +21,7 @@ import { useRewardEditorState } from "../../features/rewards/hooks/useRewardEdit
 import { RewardEditors } from "../../features/rewards/components/RewardEditors";
 import { RewardRedeemDialog } from "../../features/rewards/components/RewardRedeemDialog";
 import { addShells, canAfford, removeShells, spendShells } from "../../features/shells/domain/wallet";
-import { DEFAULT_ACTIONS } from "../../features/tasks/constants";
+import { DEFAULT_ACTIONS, randomActionIcon } from "../../features/tasks/constants";
 import { actionTimeWindowFor, actionsInTimeOrder, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../../features/tasks/domain/task-rules";
 import { completeTask } from "../../features/tasks/domain/complete-task";
 import { useTimer } from "../../features/tasks/hooks/useTimer";
@@ -93,7 +93,6 @@ export function CheckInWorkspace() {
     setShellBalance,
     shellsEarned,
     setShellsEarned,
-    rewardClaims,
     setRewardClaims,
     rewards,
     setRewards,
@@ -408,6 +407,13 @@ export function CheckInWorkspace() {
       showToast(`再积累 ${reward.cost - shellBalance} 枚栗壳就可以兑换`, "栗壳还不够");
       return;
     }
+    if (showRewardEditor) {
+      closeSecondaryModal("reward-editor", () => {
+        setShowRewardEditor(false);
+        setPendingReward(reward);
+      });
+      return;
+    }
     setPendingReward(reward);
   }
 
@@ -476,7 +482,7 @@ export function CheckInWorkspace() {
   function prepareActionEditor(action?: MicroAction) {
     setEditingAction(action || null);
     setDraftName(action?.name || "");
-    setDraftIcon(action?.icon || "🌱");
+    setDraftIcon(action?.icon || randomActionIcon());
     setDraftPresetId(action ? null : "custom");
     setShowActionIconPicker(false);
     setDraftShellValue(shellValueFor(action));
@@ -508,7 +514,7 @@ export function CheckInWorkspace() {
   function startCustomAction() {
     setDraftPresetId("custom");
     setDraftName("");
-    setDraftIcon("🌱");
+    setDraftIcon(randomActionIcon());
     setDraftShellValue(1);
     setDraftRepeatable(true);
     setDraftTemporary(false);
@@ -829,14 +835,23 @@ export function CheckInWorkspace() {
           : ""
       }`}
     >
-      <button
-        className="global-home-button"
-        type="button"
-        aria-label={tr("回到主页今日", "Return to Today")}
-        onClick={returnToToday}
-      >
-        <AppIcon name="home" />
-      </button>
+      {(tab !== "today"
+        || showCalendar
+        || showSettings
+        || showActionManager
+        || showActionEditor
+        || showRewardManager
+        || showRewardEditor
+        || showProfileEditor) && (
+        <button
+          className="global-home-button"
+          type="button"
+          aria-label={tr("回到主页今日", "Return to Today")}
+          onClick={returnToToday}
+        >
+          <AppIcon name="home" />
+        </button>
+      )}
 
       <section className="app-frame">
         <div
@@ -866,7 +881,9 @@ export function CheckInWorkspace() {
               language={language}
               theme={theme}
               isSignedIn={Boolean(account)}
+              recordCount={records.length}
               onClose={closeSettings}
+              onResetData={resetData}
               setLanguage={setLanguage}
               setTheme={setTheme}
             />
@@ -883,16 +900,12 @@ export function CheckInWorkspace() {
             <TodayPage
               active={tab === "today"}
               language={language}
-              locale={locale}
-              account={account}
-              nickname={nickname}
               todayRecords={todayRecords}
               orbitRippleKey={orbitRippleKey}
               setOrbitRippleKey={setOrbitRippleKey}
               visibleActions={visibleTodayActions}
               clockNow={clockNow}
               lastCheckedAction={lastCheckedAction}
-              onOpenCalendar={openCalendar}
               onAddTemporaryAction={openTemporaryActionEditor}
               onActionClick={handleQuickActionClick}
               onOpenActionMenu={openRecordActionMenu}
@@ -921,9 +934,7 @@ export function CheckInWorkspace() {
               active={tab === "profile"}
               account={account}
               actions={actions}
-              records={records}
               rewards={rewards}
-              rewardClaims={rewardClaims}
               shellBalance={shellBalance}
               shellsEarned={shellsEarned}
               bankDropKey={bankDropKey}
@@ -932,7 +943,6 @@ export function CheckInWorkspace() {
               onOpenProfile={openProfileEditor}
               onOpenSettings={openSettings}
               onOpenRewardManager={() => setShowRewardManager(true)}
-              onRequestReward={requestReward}
               onOpenActionManager={() => setShowActionManager(true)}
               onEditAction={(action) => {
                 setProfileActionSwipe(null);
@@ -950,7 +960,6 @@ export function CheckInWorkspace() {
               onMoveLongPress={moveActionLongPress}
               onFinishLongPress={finishActionLongPress}
               onOpenActionMenu={openManageActionMenu}
-              onResetData={resetData}
             />
               </div>
             </div>
@@ -1029,6 +1038,7 @@ export function CheckInWorkspace() {
         onDraftIconChange={setDraftRewardIcon}
         onDraftCostChange={setDraftRewardCost}
         onSave={saveReward}
+        onRedeem={requestReward}
         onDelete={deleteReward}
         onReorder={(sourceId, targetId) => setRewards((current) => reorderRewards(current, sourceId, targetId))}
         modalClassName={modalMotionClass}

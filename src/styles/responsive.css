@@ -68,7 +68,6 @@
     padding-bottom: 24px;
   }
   .screen { padding: 24px 18px 34px; }
-  .welcome,
   .page-heading,
   .calendar-heading,
   .settings-page-heading { padding-top: max(2px, env(safe-area-inset-top)); }

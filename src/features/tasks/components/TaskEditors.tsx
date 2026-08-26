@@ -6,6 +6,7 @@ import { ContentIcon } from "../../../components/ui/ContentIcon";
 import { ACTION_ICON_OPTIONS, ACTION_TIME_OPTIONS, DEFAULT_ACTIONS } from "../constants";
 import { actionTimeOptionFor, actionTimeWindowFor, shellValueFor, temporaryActionDays, temporaryExpirationDay } from "../domain/task-rules";
 import { useTaskEditorState } from "../hooks/useTaskEditorState";
+import { useTaskEditorKeyboard } from "../hooks/useTaskEditorKeyboard";
 import type { MicroAction } from "../types";
 
 type TaskEditorsProps = {
@@ -30,6 +31,11 @@ type TaskEditorsProps = {
 export function TaskEditors(props: TaskEditorsProps) {
   const { state, actions, safeTimerSeconds: safeDraftTimerSeconds, timerSliderMax, timerSliderProgress, tr, closeSecondaryModal, modalClassName: modalMotionClass, modalStyle: modalMotionStyle, dragHandle: modalDragHandle, onOpenEditor: openActionEditor, onCloseEditor: closeActionEditor, onApplyPreset: applyActionPreset, onStartCustom: startCustomAction, onSave: saveAction, onDelete: deleteAction } = props;
   const { editingAction, showActionManager, setShowActionManager, showActionEditor, draftName, setDraftName, draftIcon, setDraftIcon, draftPresetId, showActionIconPicker, setShowActionIconPicker, draftShellValue, setDraftShellValue, draftRepeatable, setDraftRepeatable, draftTemporary, draftTemporaryDays, setDraftTemporaryDays, draftTimeWindow, setDraftTimeWindow, draftUsesTimer, setDraftUsesTimer, draftTimerSeconds, setDraftTimerSeconds } = state;
+  const {
+    editorRef: actionEditorRef,
+    handleFocusCapture: handleActionEditorFocus,
+    handlePointerDownCapture: handleActionEditorPointerDown,
+  } = useTaskEditorKeyboard(showActionEditor);
   return (
     <>
       {showActionManager && (
@@ -104,8 +110,11 @@ export function TaskEditors(props: TaskEditorsProps) {
       {showActionEditor && (
         <div className="action-editor-page-layer">
           <form
+            ref={actionEditorRef}
             className="screen action-editor action-editor-page"
             onSubmit={saveAction}
+            onFocusCapture={handleActionEditorFocus}
+            onPointerDownCapture={handleActionEditorPointerDown}
           >
             <section className="action-editor-page-heading">
               <button

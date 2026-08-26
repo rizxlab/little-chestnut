@@ -3,14 +3,12 @@ import type {
   TouchEvent as ReactTouchEvent,
 } from "react";
 
-import type { GrowthRecord } from "../features/growth/types";
-import type { Reward, RewardClaim } from "../features/rewards/types";
+import type { Reward } from "../features/rewards/types";
 import { prioritizedLockedReward } from "../features/rewards/domain/reward-order";
 import { PROFILE_ACTION_SWIPE_WIDTH, PROFILE_ACTION_TIME_GROUPS } from "../features/tasks/constants";
 import { actionTimeWindowFor, shellValueFor } from "../features/tasks/domain/task-rules";
 import type { MicroAction } from "../features/tasks/types";
 import type { Account } from "../features/profile/types";
-import { formatRecordDate } from "../features/statistics/domain/date-ranges";
 import { AppIcon } from "../components/ui/AppIcon";
 import { ContentIcon, contentIconColor } from "../components/ui/ContentIcon";
 
@@ -24,9 +22,7 @@ type ProfilePageProps = {
   active: boolean;
   account: Account | null;
   actions: MicroAction[];
-  records: GrowthRecord[];
   rewards: Reward[];
-  rewardClaims: RewardClaim[];
   shellBalance: number;
   shellsEarned: number;
   bankDropKey: number;
@@ -35,7 +31,6 @@ type ProfilePageProps = {
   onOpenProfile: () => void;
   onOpenSettings: () => void;
   onOpenRewardManager: () => void;
-  onRequestReward: (reward: Reward) => void;
   onOpenActionManager: () => void;
   onEditAction: (action: MicroAction) => void;
   onDeleteAction: (action: MicroAction) => void;
@@ -47,16 +42,13 @@ type ProfilePageProps = {
   onMoveLongPress: (event: ReactPointerEvent<HTMLButtonElement>) => void;
   onFinishLongPress: () => void;
   onOpenActionMenu: (action: MicroAction, rect: DOMRect) => void;
-  onResetData: () => void;
 };
 
 export function ProfilePage({
   active,
   account,
   actions,
-  records,
   rewards,
-  rewardClaims,
   shellBalance,
   shellsEarned,
   bankDropKey,
@@ -65,7 +57,6 @@ export function ProfilePage({
   onOpenProfile,
   onOpenSettings,
   onOpenRewardManager,
-  onRequestReward,
   onOpenActionManager,
   onEditAction,
   onDeleteAction,
@@ -77,7 +68,6 @@ export function ProfilePage({
   onMoveLongPress,
   onFinishLongPress,
   onOpenActionMenu,
-  onResetData,
 }: ProfilePageProps) {
   const nextReward = prioritizedLockedReward(rewards, shellBalance);
   const shellProgress = nextReward
@@ -165,37 +155,6 @@ export function ProfilePage({
             <span>给自己的奖励</span>
             <button type="button" onClick={onOpenRewardManager}>管理</button>
           </div>
-          {rewards.length ? (
-            <div className="shell-reward-list">
-              {rewards.map((reward) => {
-                const available = shellBalance >= reward.cost;
-                return (
-                  <button className={available ? "available" : ""} type="button" key={reward.id} onClick={() => onRequestReward(reward)}>
-                    <ContentIcon value={reward.icon} />
-                    <strong>{reward.name}</strong>
-                    <small>{available ? `${reward.cost} 枚 · 兑换` : `还差 ${reward.cost - shellBalance}`}</small>
-                  </button>
-                );
-              })}
-            </div>
-          ) : (
-            <button className="shell-reward-empty" type="button" onClick={onOpenRewardManager}><AppIcon name="add" /> 添加一个奖励</button>
-          )}
-
-          {rewardClaims.length > 0 && (
-            <details className="reward-history shell-reward-history">
-              <summary><span>最近兑换</span><AppIcon name="chevronDown" /></summary>
-              <div>
-                {rewardClaims.slice(0, 5).map((claim) => (
-                  <article key={claim.id}>
-                    <ContentIcon value={claim.icon} />
-                    <strong>{claim.rewardName}</strong>
-                    <small>{formatRecordDate(claim.createdAt)} · −{claim.cost} 栗壳</small>
-                  </article>
-                ))}
-              </div>
-            </details>
-          )}
         </div>
       </section>
 
@@ -272,21 +231,6 @@ export function ProfilePage({
         </div>
       </section>
 
-      <details className="settings-block philosophy">
-        <summary>
-          <span className="philosophy-title"><AppIcon name="sparkle" /><span><strong>关于栗子小事</strong></span></span>
-          <AppIcon className="summary-chevron" name="chevronDown" />
-        </summary>
-        <div className="philosophy-content">
-          <blockquote>“成长不是由几个重大事件组成，而是由无数微小行动累积而成。”</blockquote>
-          <ul><li><AppIcon name="check" />记录成长，而不是记录失败</li><li><AppIcon name="check" />默认展示已经做到的事情</li><li><AppIcon name="check" />数据服务于回顾，而不是竞争</li></ul>
-        </div>
-      </details>
-
-      <section className="settings-block data-settings">
-        <div><strong>设备本地数据</strong><small>当前共有 {records.length} 条成长记录</small></div>
-        <button type="button" onClick={onResetData}>清空并重置</button>
-      </section>
     </div>
   );
 }

@@ -80,7 +80,6 @@ html[data-theme="dark"] .quick-action,
 html[data-theme="dark"] .settings-panel,
 html[data-theme="dark"] .settings-block,
 html[data-theme="dark"] .calendar-entry-button,
-html[data-theme="dark"] .day-phase-icon,
 html[data-theme="dark"] .calendar-card,
 html[data-theme="dark"] .reward-history,
 html[data-theme="dark"] .stat-grid article,
@@ -352,6 +351,19 @@ html[data-theme="dark"] .tag-action-summary .action-tag-list small.action-shell-
   border-color: rgba(229, 170, 111, .3);
   color: #efbd8d;
   background: rgba(203, 132, 68, .13);
+}
+html[data-theme="dark"] .profile-actions,
+html[data-theme="dark"] .philosophy {
+  border-color: var(--line);
+  color: var(--ink);
+  background: transparent;
+  box-shadow: none;
+}
+html[data-theme="dark"] .profile-actions .profile-action-card {
+  border-color: transparent;
+  color: var(--ink);
+  background: var(--surface-card);
+  box-shadow: none;
 }
 html[data-theme="dark"] .modal-backdrop,
 html[data-theme="dark"] .login-modal-backdrop,
