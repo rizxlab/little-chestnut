@@ -36,7 +36,6 @@ export function useAccountSync(data: AppDataState) {
     data.setRewardClaims(next.rewardClaims);
     data.setNickname(next.profile.nickname);
     data.setLanguage(next.preferences.language);
-    data.setTheme(next.preferences.theme);
   }
 
   async function hydrateAccount(nextAccount: Account) {
@@ -69,7 +68,6 @@ export function useAccountSync(data: AppDataState) {
       profile: { nickname: data.nickname },
       preferences: {
         language: data.language,
-        theme: data.theme,
       },
       accountUsername: account?.username,
     }),
@@ -83,7 +81,6 @@ export function useAccountSync(data: AppDataState) {
       data.rewards,
       data.shellBalance,
       data.shellsEarned,
-      data.theme,
     ],
   );
 

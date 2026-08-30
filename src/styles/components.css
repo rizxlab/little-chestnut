@@ -1,31 +1,38 @@
 .bottom-nav {
+  position: absolute;
   z-index: 5;
-  display: grid;
-  min-height: 68px;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--line);
-  padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  display: flex;
+  width: auto;
+  min-height: 0;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  padding: 5px;
   background: rgba(255, 252, 247, .94);
-  box-shadow: 0 -6px 22px rgba(74, 54, 42, .045);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-floating);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
 }
 .bottom-nav button,
 .bottom-nav button.primary-tab {
   position: relative;
   display: grid;
-  min-height: 48px;
-  gap: 4px;
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  gap: 0;
   place-items: center;
   border: 0;
-  border-radius: var(--radius-control);
-  padding: 4px 8px;
+  border-radius: 50%;
+  padding: 0;
   color: var(--muted);
   background: transparent;
-  font-size: var(--type-caption);
-  font-weight: 500;
+  box-shadow: none;
   cursor: pointer;
-  transition: color 160ms ease, background 160ms ease, transform 160ms ease;
+  transition: color 160ms ease, border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 .bottom-nav button > span,
 .bottom-nav button.primary-tab > span {
@@ -46,25 +53,18 @@
 .bottom-nav button.active,
 .bottom-nav button.primary-tab.active {
   color: var(--chestnut);
-  background: transparent;
+  background: var(--chestnut-soft);
   font-weight: 700;
 }
 .bottom-nav button.active > span,
 .bottom-nav button.primary-tab.active > span {
   color: var(--chestnut);
-  background: var(--chestnut-soft);
+  background: transparent;
 }
-.bottom-nav button.active::after {
-  position: absolute;
-  bottom: 1px;
-  width: 12px;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--chestnut-light);
-  content: "";
-}
+.bottom-nav button:active { transform: scale(.94); }
 .bottom-nav button:focus-visible { outline: none; }
-.bottom-nav button:focus-visible > span { box-shadow: 0 0 0 2px rgba(122, 74, 54, .34); }
+.bottom-nav button:focus-visible { box-shadow: 0 0 0 2px rgba(122, 74, 54, .34); }
+.tab-screen.screen { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
 
 .toast-stack {
   position: fixed;

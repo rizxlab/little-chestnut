@@ -20,9 +20,14 @@ test("keeps the Today header quiet and the temporary-action entry compact", asyn
   assert.doesNotMatch(page, /welcome-meta/);
   assert.doesNotMatch(page, /calendar-entry-button/);
   assert.doesNotMatch(page, /day-phase-icon/);
-  assert.doesNotMatch(page, /添加临时小事/);
-  assert.match(page, /tr\("小事", "Thing"\)/);
+  assert.match(page, /aria-label=\{tr\("添加临时小事", "Add temporary action"\)\}/);
+  assert.doesNotMatch(page, /tr\("小事", "Thing"\)/);
+  assert.match(page, /<AppIcon name="add" \/><\/button>/);
+  assert.match(page, /className="action-repeatable-badge"><AppIcon name="repeat" \/><\/span>/);
+  assert.doesNotMatch(page, /<AppIcon name="repeat" \/> \{tr\("可重复"/);
+  assert.doesNotMatch(page, /className="temporary-action-add"[^\n]*<AppIcon name="timer"/);
   assert.match(styles, /\.temporary-action-add[\s\S]*?width: auto;[\s\S]*?min-height: 42px/);
+  assert.match(styles, /\.temporary-action-add[\s\S]*?margin: 0 0 10px auto/);
   assert.doesNotMatch(styles, /\.welcome-meta/);
-  assert.match(workspace, /\{\(tab !== "today"[\s\S]*?className="global-home-button"/);
+  assert.doesNotMatch(workspace, /global-home-button/);
 });

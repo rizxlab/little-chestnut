@@ -1,7 +1,7 @@
 import type { Reward } from "../features/rewards/types";
 import type { MicroAction } from "../features/tasks/types";
 
-export type Tab = "today" | "growth" | "profile";
+export type Tab = "today" | "profile";
 export type GrowthPeriod = "today" | "week" | "month" | "total";
 
 export type ToastState = {

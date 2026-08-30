@@ -12,10 +12,7 @@ body {
   margin: 0;
   touch-action: pan-x pan-y;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 18% 4%, rgba(189, 139, 112, .055), transparent 30rem),
-    linear-gradient(rgba(122, 74, 54, .018) 1px, transparent 1px) 0 0 / 28px 28px,
-    var(--cream);
+  background: #fff;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
@@ -204,57 +201,16 @@ summary:focus-visible {
   overscroll-behavior: none;
 }
 
-.global-home-button {
-  position: fixed;
-  z-index: 70;
-  top: max(42px, calc((100svh - 920px) / 2 + 18px));
-  right: max(22px, calc((100vw - 500px) / 2 + 22px));
-  display: grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  padding: 0;
-  color: var(--chestnut);
-  background: rgba(255, 252, 247, .92);
-  box-shadow: var(--shadow-floating);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  font-size: 19px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
-}
-.global-home-button span {
-  width: auto;
-  height: auto;
-  border: 0;
-  border-radius: 0;
-  color: inherit;
-  background: transparent;
-  box-shadow: none;
-  font-size: inherit;
-  line-height: 1;
-}
-.global-home-button:active {
-  transform: scale(.95);
-  background: var(--surface-muted);
-  box-shadow: var(--shadow-card);
-}
-
 .app-frame {
   position: relative;
   display: grid;
   width: min(100%, 500px);
   height: min(920px, calc(100svh - 48px));
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 1fr;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-modal);
-  background:
-    linear-gradient(rgba(122, 74, 54, .014) 1px, transparent 1px) 0 0 / 28px 28px,
-    var(--cream);
+  background: #fff;
   box-shadow: var(--shadow-modal);
 }
 
@@ -263,7 +219,7 @@ summary:focus-visible {
   overflow: hidden;
   overscroll-behavior: contain;
   scrollbar-width: none;
-  touch-action: pan-x pan-y;
+  touch-action: pan-y;
 }
 .app-scroll::-webkit-scrollbar { display: none; }
 
@@ -279,10 +235,6 @@ summary:focus-visible {
   will-change: transform;
   transition: transform 340ms cubic-bezier(.22, .78, .24, 1);
 }
-.tab-track.dragging {
-  user-select: none;
-  transition: none;
-}
 .tab-screen {
   flex: 0 0 100%;
   width: 100%;
@@ -295,11 +247,6 @@ summary:focus-visible {
 }
 .tab-screen::-webkit-scrollbar { display: none; }
 .tab-screen[aria-hidden="true"] { pointer-events: none; }
-.app-scroll.tab-swipe-active .tab-screen {
-  overflow-y: hidden;
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: auto;
-}
 
 .screen {
   min-height: 100%;

@@ -1,16 +1,14 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { Language, Theme } from "../features/settings/types";
+import type { Language } from "../features/settings/types";
 import { AppIcon } from "../components/ui/AppIcon";
 
 type SettingsPageProps = {
   language: Language;
-  theme: Theme;
   isSignedIn: boolean;
   recordCount: number;
   onClose: () => void;
   onResetData: () => void;
   setLanguage: Dispatch<SetStateAction<Language>>;
-  setTheme: Dispatch<SetStateAction<Theme>>;
 };
 
 export function SettingsPage(props: SettingsPageProps) {
@@ -36,20 +34,22 @@ export function SettingsPage(props: SettingsPageProps) {
         </div>
       </section>
 
-      <section className="settings-panel">
+      <section className="settings-panel daily-reset-note">
         <div className="settings-option-copy">
-          <span className="settings-option-icon" aria-hidden="true"><AppIcon name="sun" /></span>
-          <div><strong>{tr("外观模式", "Appearance")}</strong></div>
-        </div>
-        <div className="theme-choice-grid" role="group" aria-label={tr("外观模式", "Appearance")}>
-          <button className={props.theme === "light" ? "selected" : ""} type="button" aria-pressed={props.theme === "light"} onClick={() => props.setTheme("light")}>
-            <AppIcon name="sun" /><strong>{tr("日间", "Light")}</strong><small>{tr("温暖明亮", "Warm and bright")}</small>
-          </button>
-          <button className={props.theme === "dark" ? "selected" : ""} type="button" aria-pressed={props.theme === "dark"} onClick={() => props.setTheme("dark")}>
-            <AppIcon name="moon" /><strong>{tr("夜间", "Dark")}</strong><small>{tr("柔和低亮", "Soft and dim")}</small>
-          </button>
+          <span className="settings-option-icon" aria-hidden="true"><AppIcon name="timer" /></span>
+          <div><strong>{tr("每日重置时间", "Daily reset time")}</strong><small>{tr("每天凌晨 3:00 开始新的一天；凌晨 3 点前的记录仍属于前一天。", "A new day starts at 3:00 AM; records before then belong to the previous day.")}</small></div>
         </div>
       </section>
+
+      <section className="settings-block data-settings">
+        <div><strong>{tr("设备本地数据", "Local device data")}</strong><small>{tr(`当前共有 ${props.recordCount} 条成长记录`, `${props.recordCount} growth records on this device`)}</small></div>
+        <button type="button" onClick={props.onResetData}>{tr("清空并重置", "Clear and reset")}</button>
+      </section>
+
+      <div className="settings-sync-note">
+        <AppIcon name="check" />
+        <p>{props.isSignedIn ? tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.") : tr("设置与记录会保存在当前设备。", "Settings and records are saved on this device.")}</p>
+      </div>
 
       <details className="settings-block philosophy">
         <summary>
@@ -65,16 +65,6 @@ export function SettingsPage(props: SettingsPageProps) {
           </ul>
         </div>
       </details>
-
-      <section className="settings-block data-settings">
-        <div><strong>{tr("设备本地数据", "Local device data")}</strong><small>{tr(`当前共有 ${props.recordCount} 条成长记录`, `${props.recordCount} growth records on this device`)}</small></div>
-        <button type="button" onClick={props.onResetData}>{tr("清空并重置", "Clear and reset")}</button>
-      </section>
-
-      <div className="settings-sync-note">
-        <AppIcon name="check" />
-        <p>{props.isSignedIn ? tr("设置会自动保存到当前账号。", "Settings are saved to your account automatically.") : tr("设置与记录会保存在当前设备。", "Settings and records are saved on this device.")}</p>
-      </div>
     </div>
   );
 }

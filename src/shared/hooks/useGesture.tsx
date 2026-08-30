@@ -3,19 +3,13 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 
-import { NAV_ITEMS } from "../../app/constants";
-import type { Tab } from "../../app/types";
 import { PROFILE_ACTION_SWIPE_WIDTH } from "../../features/tasks/constants";
 import type { MicroAction } from "../../features/tasks/types";
 import type { Language } from "../../features/settings/types";
 import { runtimeNow } from "../utils/runtime";
 
 type UseGestureOptions = {
-  tab: Tab;
   language: Language;
-  showCalendar: boolean;
-  showSettings: boolean;
-  onChangeTab: (tab: Tab) => void;
 };
 
 export function useGesture(options: UseGestureOptions) {
@@ -30,8 +24,6 @@ export function useGesture(options: UseGestureOptions) {
     offset: number;
     dragging: boolean;
   } | null>(null);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isDraggingTabs, setIsDraggingTabs] = useState(false);
   const appScrollRef = useRef<HTMLDivElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const longPressStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -43,15 +35,8 @@ export function useGesture(options: UseGestureOptions) {
     time: number;
     baseOffset: number;
     axis: "horizontal" | "vertical" | null;
+    engaged: boolean;
   } | null>(null);
-  const touchStartRef = useRef<{
-    x: number;
-    y: number;
-    time: number;
-    screen: HTMLElement | null;
-    scrollTop: number;
-  } | null>(null);
-  const gestureAxisRef = useRef<"horizontal" | "vertical" | null>(null);
   const modalDragStartRef = useRef<{
     id: string;
     y: number;
@@ -69,12 +54,6 @@ export function useGesture(options: UseGestureOptions) {
     instantClose: boolean;
   } | null>(null);
   const modalAnimationTimerRef = useRef<number | null>(null);
-  const changeTabRef = useRef(options.onChangeTab);
-
-  useEffect(() => {
-    changeTabRef.current = options.onChangeTab;
-  }, [options.onChangeTab]);
-
   useEffect(() => () => {
     if (longPressTimerRef.current) window.clearTimeout(longPressTimerRef.current);
     if (modalAnimationTimerRef.current) window.clearTimeout(modalAnimationTimerRef.current);
@@ -312,8 +291,11 @@ export function useGesture(options: UseGestureOptions) {
       time: runtimeNow(),
       baseOffset,
       axis: null,
+      engaged: false,
     };
-    setProfileActionSwipe({ id: action.id, offset: baseOffset, dragging: true });
+    if (baseOffset !== 0) {
+      setProfileActionSwipe({ id: action.id, offset: baseOffset, dragging: false });
+    }
   }
 
   function moveProfileActionSwipe(event: ReactTouchEvent<HTMLDivElement>) {
@@ -323,8 +305,8 @@ export function useGesture(options: UseGestureOptions) {
     const touch = event.touches[0];
     const deltaX = touch.clientX - start.x;
     const deltaY = touch.clientY - start.y;
-    if (!start.axis && Math.max(Math.abs(deltaX), Math.abs(deltaY)) >= 6) {
-      start.axis = Math.abs(deltaX) > Math.abs(deltaY) ? "horizontal" : "vertical";
+    if (!start.axis && Math.max(Math.abs(deltaX), Math.abs(deltaY)) >= 12) {
+      start.axis = Math.abs(deltaX) > Math.abs(deltaY) * 1.25 ? "horizontal" : "vertical";
     }
     if (start.axis === "vertical") {
       clearLongPressTimer();
@@ -333,6 +315,7 @@ export function useGesture(options: UseGestureOptions) {
       return;
     }
     if (start.axis !== "horizontal") return;
+    start.engaged = true;
     event.preventDefault();
     clearLongPressTimer();
     const offset = Math.max(-PROFILE_ACTION_SWIPE_WIDTH, Math.min(8, start.baseOffset + deltaX));
@@ -344,14 +327,15 @@ export function useGesture(options: UseGestureOptions) {
     if (!start) return;
     event.stopPropagation();
     profileActionSwipeStartRef.current = null;
-    if (start.axis !== "horizontal" || event.changedTouches.length !== 1) {
-      setProfileActionSwipe(null);
+    if (start.axis !== "horizontal" || !start.engaged || event.changedTouches.length !== 1) {
+      if (start.baseOffset === 0) setProfileActionSwipe(null);
       return;
     }
     const deltaX = event.changedTouches[0].clientX - start.x;
     const velocity = deltaX / Math.max(1, runtimeNow() - start.time);
     const finalOffset = Math.max(-PROFILE_ACTION_SWIPE_WIDTH, Math.min(8, start.baseOffset + deltaX));
-    const shouldOpen = velocity < -0.25 || (velocity <= 0.25 && finalOffset < -PROFILE_ACTION_SWIPE_WIDTH / 2);
+    const isDeliberateLeftFlick = deltaX <= -24 && velocity < -0.25;
+    const shouldOpen = isDeliberateLeftFlick || finalOffset < -PROFILE_ACTION_SWIPE_WIDTH / 2;
     setProfileActionSwipe(shouldOpen ? { id: start.id, offset: -PROFILE_ACTION_SWIPE_WIDTH, dragging: false } : null);
   }
 
@@ -373,76 +357,6 @@ export function useGesture(options: UseGestureOptions) {
     }, 520);
   }
 
-  function handleTouchStart(event: ReactTouchEvent<HTMLDivElement>) {
-    if (options.showCalendar || options.showSettings || event.touches.length !== 1) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("input, select, textarea")) {
-      touchStartRef.current = null;
-      return;
-    }
-    const screen = target.closest<HTMLElement>(".tab-screen");
-    touchStartRef.current = {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
-      time: runtimeNow(),
-      screen,
-      scrollTop: screen?.scrollTop || 0,
-    };
-    gestureAxisRef.current = null;
-  }
-
-  function handleTouchMove(event: ReactTouchEvent<HTMLDivElement>) {
-    const start = touchStartRef.current;
-    if (!start || event.touches.length !== 1) return;
-    const deltaX = event.touches[0].clientX - start.x;
-    const deltaY = event.touches[0].clientY - start.y;
-    if (!gestureAxisRef.current) {
-      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 7) return;
-      gestureAxisRef.current = Math.abs(deltaX) > Math.abs(deltaY) * 1.08 ? "horizontal" : "vertical";
-    }
-    if (gestureAxisRef.current === "vertical") {
-      if (recordActionMenu) setRecordActionMenu(null);
-      return;
-    }
-    if (gestureAxisRef.current !== "horizontal") return;
-    if (event.cancelable) event.preventDefault();
-    if (start.screen && start.screen.scrollTop !== start.scrollTop) start.screen.scrollTop = start.scrollTop;
-    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === options.tab);
-    const atFirstEdge = currentIndex === 0 && deltaX > 0;
-    const atLastEdge = currentIndex === NAV_ITEMS.length - 1 && deltaX < 0;
-    setIsDraggingTabs(true);
-    setDragOffset(atFirstEdge || atLastEdge ? deltaX * 0.24 : deltaX);
-  }
-
-  function handleTouchEnd(event: ReactTouchEvent<HTMLDivElement>) {
-    const start = touchStartRef.current;
-    touchStartRef.current = null;
-    const axis = gestureAxisRef.current;
-    gestureAxisRef.current = null;
-    if (!start || event.changedTouches.length !== 1 || axis !== "horizontal") {
-      setIsDraggingTabs(false);
-      setDragOffset(0);
-      return;
-    }
-    const deltaX = event.changedTouches[0].clientX - start.x;
-    const currentIndex = NAV_ITEMS.findIndex((item) => item.id === options.tab);
-    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
-    const velocity = Math.abs(deltaX) / Math.max(1, runtimeNow() - start.time);
-    if ((Math.abs(deltaX) >= 68 || velocity >= 0.42) && nextIndex >= 0 && nextIndex < NAV_ITEMS.length) {
-      changeTabRef.current(NAV_ITEMS[nextIndex].id);
-    } else {
-      setIsDraggingTabs(false);
-      setDragOffset(0);
-    }
-  }
-
-  function cancelTouchGesture() {
-    touchStartRef.current = null;
-    gestureAxisRef.current = null;
-    setIsDraggingTabs(false);
-    setDragOffset(0);
-  }
-
   function consumeSuppressedQuickClick(actionId: string) {
     if (suppressQuickClickRef.current !== actionId) return false;
     suppressQuickClickRef.current = null;
@@ -450,8 +364,6 @@ export function useGesture(options: UseGestureOptions) {
   }
 
   function resetForNavigation() {
-    setDragOffset(0);
-    setIsDraggingTabs(false);
     setManageActionMenu(null);
     setProfileActionSwipe(null);
   }
@@ -466,8 +378,6 @@ export function useGesture(options: UseGestureOptions) {
   return {
     appScrollRef,
     closingModal,
-    dragOffset,
-    isDraggingTabs,
     recordActionMenu,
     setRecordActionMenu,
     recordActionMenuPosition,
@@ -494,10 +404,6 @@ export function useGesture(options: UseGestureOptions) {
     finishProfileActionSwipe,
     cancelProfileActionSwipe,
     startManageActionLongPress,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    cancelTouchGesture,
     consumeSuppressedQuickClick,
     resetForNavigation,
     dismissTransientUi,

@@ -341,13 +341,33 @@
   opacity: .3;
   cursor: default;
 }
-.action-shell-stepper output {
+.action-shell-value-input {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 0;
   color: var(--chestnut);
   text-align: center;
   font-family: var(--font-number);
   font-size: 20px;
   font-weight: 600;
 }
+.action-shell-value-input > span { flex: 0 0 auto; }
+.action-shell-value-input input {
+  width: 31px;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  text-align: center;
+  background: transparent;
+  font: inherit;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.action-shell-value-input input::-webkit-inner-spin-button,
+.action-shell-value-input input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+.action-shell-value-input input:focus { outline: 0; }
 .temporary-action-settings {
   display: grid;
   gap: 11px;
@@ -805,84 +825,11 @@
   scroll-padding-bottom: 180px;
   overscroll-behavior: contain;
 }
-.reward-cost-fieldset {
-  display: grid;
-  gap: 9px;
-  border: 0;
-  margin: 16px 0 0;
-  padding: 0;
+.reward-cost-stepper { margin-top: 16px; }
+.reward-cost-stepper > div:last-child {
+  grid-template-columns: 38px 64px 38px;
 }
-.reward-cost-fieldset legend {
-  margin-bottom: 8px;
-  color: var(--muted);
-  font-size: 10px;
-}
-.reward-cost-options {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-.reward-cost-options button {
-  display: grid;
-  min-width: 0;
-  min-height: 48px;
-  place-items: center;
-  align-content: center;
-  gap: 2px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  padding: 7px 5px;
-  color: var(--ink);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
-}
-.reward-cost-options button:active { transform: scale(.95); }
-.reward-cost-options button.selected {
-  border-color: rgba(111, 59, 39, .42);
-  color: var(--chestnut);
-  background: #f8ecdf;
-  box-shadow: inset 0 0 0 1px rgba(111, 59, 39, .06);
-}
-.reward-cost-options strong {
-  font-family: var(--font-number);
-  font-size: 17px;
-  font-weight: 600;
-}
-.reward-cost-options small {
-  color: var(--muted);
-  font-size: 9px;
-}
-.reward-editor .reward-cost-custom {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 9px;
-  align-items: center;
-  margin-top: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  padding: 6px 10px 6px 12px;
-  background: rgba(255, 253, 249, .7);
-}
-.reward-cost-custom > span {
-  color: var(--ink);
-  font-size: 10px;
-  font-weight: 600;
-}
-.reward-editor .reward-cost-custom input {
-  height: 38px;
-  border: 0;
-  padding: 7px 4px;
-  text-align: right;
-  background: transparent;
-  font-family: var(--font-number);
-  font-size: 18px;
-  font-weight: 600;
-}
-.reward-cost-custom > small {
-  color: var(--muted);
-  font-size: 10px;
-}
+.reward-cost-stepper .action-shell-value-input input { width: 54px; }
 .reward-manager,
 .action-manager {
   min-height: min(680px, calc(100dvh - 90px));
@@ -891,10 +838,7 @@
   padding-bottom: max(26px, env(safe-area-inset-bottom));
   overscroll-behavior: contain;
 }
-.reward-manager h2,
 .action-manager h2 { margin-bottom: 14px; }
-.reward-manager-create,
-.reward-manager-edit,
 .action-manager-create,
 .action-manager-list > button {
   display: grid;
@@ -910,14 +854,11 @@
   background: var(--surface-card);
   cursor: pointer;
 }
-.reward-manager-create,
 .action-manager-create {
   border-color: rgba(111, 59, 39, .18);
   color: var(--chestnut);
   background: #fff8ed;
 }
-.reward-manager-create > span,
-.reward-manager-edit > span,
 .action-manager-create > span,
 .action-manager-list > button > span {
   display: grid;
@@ -928,26 +869,19 @@
   background: #f3e8da;
   font-size: 19px;
 }
-.reward-manager-create > span,
 .action-manager-create > span {
   color: var(--text-on-accent);
   background: var(--chestnut);
   font-family: var(--font-number);
 }
-.reward-manager-create > div,
-.reward-manager-edit > div,
 .action-manager-create > div,
 .action-manager-list > button > div {
   display: grid;
   min-width: 0;
   gap: 3px;
 }
-.reward-manager-create strong,
-.reward-manager-list strong,
 .action-manager-create strong,
 .action-manager-list strong { font-size: 11px; }
-.reward-manager-create small,
-.reward-manager-list small,
 .action-manager-create small,
 .action-manager-list small {
   overflow: hidden;
@@ -956,23 +890,129 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.reward-manager-list,
 .action-manager-list {
   display: grid;
   gap: 8px;
   margin-top: 9px;
 }
-.reward-manager-order-hint {
-  margin: 10px 2px -1px;
+.action-manager-list > button > .app-icon {
+  color: #a7988a;
+  font-family: var(--font-number);
+  font-size: 20px;
+  font-style: normal;
+}
+.action-manager-create:active,
+.action-manager-list > button:active { transform: scale(.98); }
+
+.reward-manager {
+  padding-inline: 18px;
+  background: var(--surface-raised);
+}
+.reward-manager-title {
+  margin: 10px 48px 20px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.reward-wallet-summary,
+.reward-wishlist {
+  border: 1px solid rgba(122, 74, 54, .08);
+  border-radius: 22px;
+  padding: 18px;
+  background: rgba(248, 244, 238, .82);
+}
+.reward-wallet-summary h3,
+.reward-wishlist h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.reward-wallet-summary h3 > span {
+  font-size: 18px;
+  line-height: 1;
+}
+.reward-wallet-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 15px;
+}
+.reward-wallet-stats > div {
+  display: grid;
+  min-width: 0;
+  min-height: 78px;
+  place-content: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  padding: 10px 5px;
+  text-align: center;
+  background: var(--surface-card);
+}
+.reward-wallet-stats strong {
+  color: var(--chestnut);
+  font-family: var(--font-number);
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1;
+}
+.reward-wallet-stats small {
+  overflow: hidden;
   color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reward-wishlist { margin-top: 14px; }
+.reward-wishlist > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.reward-wishlist h3 > .app-icon {
+  color: var(--chestnut-light);
+  font-size: 17px;
+}
+.reward-manager-create {
+  display: inline-flex;
+  min-height: 38px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  padding: 8px 12px;
+  color: var(--chestnut);
+  background: var(--chestnut-soft);
   font-size: 10px;
-  line-height: 1.5;
+  font-weight: 700;
+  cursor: pointer;
+}
+.reward-manager-create > .app-icon { font-size: 13px; }
+.reward-manager-list {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
 }
 .reward-manager-item {
+  position: relative;
   display: grid;
-  grid-template-columns: 30px minmax(0, 1fr) 48px;
-  gap: 6px;
-  align-items: stretch;
+  grid-template-columns: 20px minmax(0, 1fr) 36px 64px;
+  min-height: 76px;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 8px;
+  background: var(--surface-card);
   transition: opacity 140ms ease, transform 140ms ease;
 }
 .reward-manager-item.is-dragging {
@@ -982,14 +1022,14 @@
 }
 .reward-manager-drag {
   display: grid;
-  min-height: 64px;
+  min-height: 46px;
   grid-template-columns: 3px;
   grid-auto-rows: 3px;
   gap: 4px;
   place-content: center;
   border: 0;
   padding: 0;
-  color: #aa9a8b;
+  color: #b3a79b;
   background: transparent;
   cursor: grab;
   touch-action: none;
@@ -1001,38 +1041,104 @@
   height: 3px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 7px 0 currentColor;
+  box-shadow: 6px 0 currentColor;
 }
-.reward-manager-edit > .app-icon,
-.action-manager-list > button > .app-icon {
-  color: #a7988a;
+.reward-manager-edit {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+.reward-manager-edit > .content-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 16px;
+  color: var(--chestnut);
+  background: var(--chestnut-soft);
+  font-size: 22px;
+}
+.reward-manager-edit > div {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+.reward-manager-edit strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reward-manager-edit small {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--chestnut-light);
   font-family: var(--font-number);
-  font-size: 20px;
+  font-size: 10px;
+}
+.reward-manager-edit small > span { font-family: var(--font-body); }
+.reward-manager-edit em {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
   font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reward-manager-delete,
+.reward-manager-redeem {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
 }
 .reward-manager-delete {
-  display: grid;
-  min-height: 64px;
-  place-items: center;
-  border: 1px solid rgba(161, 81, 69, .16);
-  border-radius: 16px;
+  width: 36px;
   padding: 0;
-  color: #a1554b;
-  background: rgba(249, 235, 228, .72);
+  color: #b3a79b;
+  background: var(--surface-muted);
+  font-size: 16px;
+}
+.reward-manager-redeem {
+  gap: 4px;
+  padding: 0 10px;
+  color: var(--text-on-accent);
+  background: var(--chestnut);
   font-size: 10px;
   font-weight: 700;
-  cursor: pointer;
-  transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
 }
-.reward-manager-delete:active {
-  border-color: rgba(161, 81, 69, .3);
-  background: rgba(245, 220, 211, .9);
-  transform: scale(.96);
-}
+.reward-manager-redeem > .app-icon { font-size: 13px; }
 .reward-manager-create:active,
 .reward-manager-edit:active,
-.action-manager-create:active,
-.action-manager-list > button:active { transform: scale(.98); }
+.reward-manager-redeem:active,
+.reward-manager-delete:active { transform: scale(.96); }
+.reward-manager-order-hint,
+.reward-manager-empty {
+  margin: 12px 2px 0;
+  color: #b1a69b;
+  text-align: center;
+  font-size: 9px;
+  line-height: 1.5;
+}
+.reward-manager-empty {
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  padding: 24px 12px;
+  background: var(--surface-card);
+}
 .delete-action-button,
 .delete-reward-button {
   width: 100%;
@@ -1602,8 +1708,7 @@
 .calendar-record-list article > div > small,
 .calendar-record-list .action-tag-list i,
 .calendar-day-detail .section-title-row > small,
-.settings-option-copy small,
-.theme-choice-grid small {
+.settings-option-copy small {
   font-size: var(--type-caption);
 }
 .overline { font-size: 11px; }
@@ -1613,10 +1718,6 @@
 .growth-progress-heading small,
 .timeline small,
 .timeline span,
-.bottom-nav button {
-  font-size: var(--type-caption);
-}
-.bottom-nav button.primary-tab { font-size: 11px; }
 .tag-action-summary > strong {
   font-size: 12px;
 }
@@ -1645,10 +1746,7 @@
 .icon-picker button,
 .action-preset-picker button,
 .action-time-setting button,
-.reward-cost-options button,
 .action-manager-list > button,
-.reward-manager-edit,
-.reward-manager-delete,
 .timer-editor-setting > button,
 .temporary-action-settings,
 .action-shell-stepper {
@@ -1658,12 +1756,10 @@
 }
 .icon-picker button,
 .action-preset-picker button,
-.action-time-setting button,
-.reward-cost-options button { border-radius: var(--radius-control); }
+.action-time-setting button { border-radius: var(--radius-control); }
 .icon-picker button.selected,
 .action-preset-picker button.selected,
 .action-time-setting button.selected,
-.reward-cost-options button.selected,
 .timer-editor-setting > button.enabled {
   border-color: rgba(122, 74, 54, .26);
   color: var(--chestnut);

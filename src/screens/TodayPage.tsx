@@ -38,7 +38,7 @@ export function TodayPage(props: TodayPageProps) {
       </section>
 
       <section className="content-section today-actions-section">
-        <button className="temporary-action-add" type="button" onClick={props.onAddTemporaryAction}><AppIcon name="add" /><div><strong>{tr("小事", "Thing")}</strong></div><i aria-hidden="true"><AppIcon name="timer" /></i></button>
+        <button className="temporary-action-add" type="button" aria-label={tr("添加临时小事", "Add temporary action")} onClick={props.onAddTemporaryAction}><AppIcon name="add" /></button>
         <div className="quick-grid">
           {props.visibleActions.map((action) => {
             const iconColor = contentIconColor(action.icon);
@@ -50,7 +50,7 @@ export function TodayPage(props: TodayPageProps) {
                 <span className="action-icon" style={{ color: iconColor, background: `${iconColor}18` }}><ContentIcon value={action.icon} /></span>
                 <strong>{action.name}</strong>
                 <span className="action-badge-row" aria-hidden="true">
-                  {action.repeatable !== false && <span className="action-repeatable-badge"><AppIcon name="repeat" /> {tr("可重复", "Repeat")}</span>}
+                  {action.repeatable !== false && <span className="action-repeatable-badge"><AppIcon name="repeat" /></span>}
                   {action.temporary && <span className="action-temporary-badge"><AppIcon name="temporary" /> {action.expiresOn === activityDay(props.clockNow) ? tr("今天", "Today") : tr(`至 ${action.expiresOn?.slice(5).replace("-", "/")}`, `Until ${action.expiresOn?.slice(5).replace("-", "/")}`)}</span>}
                   {actionTimeWindowFor(action) !== "anytime" && <span className="action-time-badge"><ContentIcon value={timeOption.icon} /> {timeOption.label}</span>}
                   {Boolean(action.timerSeconds && action.timerSeconds > 0) && <span className="action-timer-badge"><AppIcon name="timer" /> {action.timerSeconds}s</span>}

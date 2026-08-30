@@ -5,12 +5,10 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { NAV_ITEMS } from "../../app/constants";
 import type { ConfirmDialog, GrowthPeriod, Tab, ToastState } from "../../app/types";
 import { BottomNavigation } from "../../components/layout/BottomNavigation";
-import { AppIcon } from "../../components/ui/AppIcon";
 import { ToastStack } from "../../components/ui/ToastStack";
 import { CalendarPage } from "../CalendarPage";
 import { SettingsPage } from "../SettingsPage";
 import { TodayPage } from "../TodayPage";
-import { GrowthPage } from "../GrowthPage";
 import { ProfilePage } from "../ProfilePage";
 import type { GrowthSource as Source } from "../../features/growth/types";
 import { DEFAULT_REWARDS } from "../../features/rewards/constants";
@@ -87,12 +85,11 @@ export function CheckInWorkspace() {
     setRecords,
     language,
     setLanguage,
-    theme,
-    setTheme,
     shellBalance,
     setShellBalance,
     shellsEarned,
     setShellsEarned,
+    rewardClaims,
     setRewardClaims,
     rewards,
     setRewards,
@@ -154,8 +151,6 @@ export function CheckInWorkspace() {
   const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => activityDay(new Date()));
   const {
     appScrollRef,
-    dragOffset,
-    isDraggingTabs,
     recordActionMenu,
     setRecordActionMenu,
     recordActionMenuPosition,
@@ -182,19 +177,11 @@ export function CheckInWorkspace() {
     finishProfileActionSwipe,
     cancelProfileActionSwipe,
     startManageActionLongPress,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    cancelTouchGesture,
     consumeSuppressedQuickClick,
     resetForNavigation,
     dismissTransientUi,
   } = useGesture({
-    tab,
     language,
-    showCalendar,
-    showSettings,
-    onChangeTab: changeTab,
   });
 
   useEffect(() => {
@@ -208,9 +195,8 @@ export function CheckInWorkspace() {
   }, []);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
     document.documentElement.lang = language === "en" ? "en" : "zh-CN";
-  }, [language, theme]);
+  }, [language]);
 
   useEffect(() => {
     if (tab !== "profile") return;
@@ -410,6 +396,13 @@ export function CheckInWorkspace() {
     if (showRewardEditor) {
       closeSecondaryModal("reward-editor", () => {
         setShowRewardEditor(false);
+        setPendingReward(reward);
+      });
+      return;
+    }
+    if (showRewardManager) {
+      closeSecondaryModal("reward-manager", () => {
+        setShowRewardManager(false);
         setPendingReward(reward);
       });
       return;
@@ -637,7 +630,6 @@ export function CheckInWorkspace() {
 
   function changeTab(nextTab: Tab) {
     resetForNavigation();
-    if (nextTab === "growth") setGrowthPeriod("today");
     if (nextTab === "today") {
       setOrbitRippleKey((current) => current + 1);
     }
@@ -696,23 +688,6 @@ export function CheckInWorkspace() {
     });
   }
 
-  function returnToToday() {
-    setShowCalendar(false);
-    setShowSettings(false);
-    setShowProfileEditor(false);
-    setShowActionManager(false);
-    setShowActionEditor(false);
-    setShowRewardManager(false);
-    setShowRewardEditor(false);
-    setConfirmDialog(null);
-    setPendingReward(null);
-    setRecordActionMenu(null);
-    setManageActionMenu(null);
-    closeActionTimer();
-    changeTab("today");
-    scrollScreenToTop('[data-tab="today"]');
-  }
-
   function shiftCalendarMonth(offset: number) {
     setCalendarMonth((current) => {
       const next = new Date(current.getFullYear(), current.getMonth() + offset, 1);
@@ -749,7 +724,6 @@ export function CheckInWorkspace() {
       setRewardClaims([]);
       setPendingReward(null);
       setLanguage("zh");
-      setTheme("light");
       changeTab("today");
       showToast("已恢复为新的开始");
     }
@@ -768,7 +742,6 @@ export function CheckInWorkspace() {
   }
 
   const tr = (zh: string, en: string) => (language === "zh" ? zh : en);
-  const locale = language === "zh" ? "zh-CN" : "en-US";
   const growthPeriodOptions: {
     id: GrowthPeriod;
     label: string;
@@ -835,32 +808,10 @@ export function CheckInWorkspace() {
           : ""
       }`}
     >
-      {(tab !== "today"
-        || showCalendar
-        || showSettings
-        || showActionManager
-        || showActionEditor
-        || showRewardManager
-        || showRewardEditor
-        || showProfileEditor) && (
-        <button
-          className="global-home-button"
-          type="button"
-          aria-label={tr("回到主页今日", "Return to Today")}
-          onClick={returnToToday}
-        >
-          <AppIcon name="home" />
-        </button>
-      )}
-
       <section className="app-frame">
         <div
-          className={`app-scroll${isDraggingTabs ? " tab-swipe-active" : ""}`}
+          className="app-scroll"
           ref={appScrollRef}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onTouchCancel={cancelTouchGesture}
           onScrollCapture={dismissTransientUi}
         >
           {showCalendar && (
@@ -870,6 +821,15 @@ export function CheckInWorkspace() {
               recordCounts={calendarRecordCounts}
               selectedDay={selectedCalendarDay}
               selectedRecords={selectedDayRecords}
+              language={language}
+              records={records}
+              weekRecords={weekRecords}
+              monthRecords={monthRecords}
+              period={growthPeriod}
+              periodOptions={growthPeriodOptions}
+              activePeriod={activeGrowthPeriod}
+              activeRecords={activeGrowthRecords}
+              setPeriod={setGrowthPeriod}
               onClose={closeCalendar}
               onShiftMonth={shiftCalendarMonth}
               onSelectDay={setSelectedCalendarDay}
@@ -879,22 +839,20 @@ export function CheckInWorkspace() {
           {showSettings && (
             <SettingsPage
               language={language}
-              theme={theme}
               isSignedIn={Boolean(account)}
               recordCount={records.length}
               onClose={closeSettings}
               onResetData={resetData}
               setLanguage={setLanguage}
-              setTheme={setTheme}
             />
           )}
 
           {!showCalendar && !showSettings && (
             <div className="tab-viewport">
               <div
-                className={`tab-track ${isDraggingTabs ? "dragging" : ""}`}
+                className="tab-track"
                 style={{
-                  transform: `translate3d(calc(${-activeTabIndex * 100}% + ${dragOffset}px), 0, 0)`,
+                  transform: `translate3d(${-activeTabIndex * 100}%, 0, 0)`,
                 }}
               >
             <TodayPage
@@ -914,33 +872,17 @@ export function CheckInWorkspace() {
               onFinishLongPress={finishActionLongPress}
             />
 
-            <GrowthPage
-              active={tab === "growth"}
-              language={language}
-              locale={locale}
-              now={clockNow}
-              records={records}
-              weekRecords={weekRecords}
-              monthRecords={monthRecords}
-              period={growthPeriod}
-              periodOptions={growthPeriodOptions}
-              activePeriod={activeGrowthPeriod}
-              activeRecords={activeGrowthRecords}
-              setPeriod={setGrowthPeriod}
-              onOpenCalendar={openCalendar}
-            />
-
             <ProfilePage
               active={tab === "profile"}
               account={account}
               actions={actions}
               rewards={rewards}
               shellBalance={shellBalance}
-              shellsEarned={shellsEarned}
               bankDropKey={bankDropKey}
               profileActionSwipe={profileActionSwipe}
               tr={tr}
               onOpenProfile={openProfileEditor}
+              onOpenCalendar={openCalendar}
               onOpenSettings={openSettings}
               onOpenRewardManager={() => setShowRewardManager(true)}
               onOpenActionManager={() => setShowActionManager(true)}
@@ -1023,6 +965,9 @@ export function CheckInWorkspace() {
         showEditor={showRewardEditor}
         showManager={showRewardManager}
         rewards={rewards}
+        shellBalance={shellBalance}
+        shellsEarned={shellsEarned}
+        claimedCount={rewardClaims.length}
         editingReward={editingReward}
         draftName={draftRewardName}
         draftDescription={draftRewardDescription}

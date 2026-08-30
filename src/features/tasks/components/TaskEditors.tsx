@@ -253,7 +253,24 @@ export function TaskEditors(props: TaskEditorsProps) {
                 >
                   −1
                 </button>
-                <output aria-live="polite">+{draftShellValue}</output>
+                <label className="action-shell-value-input">
+                  <span aria-hidden="true">+</span>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min="1"
+                    max="99"
+                    aria-label="每次完成获得的栗壳数量"
+                    value={draftShellValue}
+                    onFocus={(event) => event.currentTarget.select()}
+                    onChange={(event) => {
+                      const value = event.currentTarget.valueAsNumber;
+                      if (Number.isFinite(value)) {
+                        setDraftShellValue(Math.min(99, Math.max(1, Math.floor(value))));
+                      }
+                    }}
+                  />
+                </label>
                 <button
                   type="button"
                   disabled={draftShellValue >= 99}

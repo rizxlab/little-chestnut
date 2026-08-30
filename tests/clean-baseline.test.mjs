@@ -18,7 +18,6 @@ test("uses a fresh browser storage namespace without legacy fallbacks", async ()
 test("removes growth areas, scores, experience, and levels from the product", async () => {
   const files = await Promise.all([
     readFile(new URL("../src/screens/check-in/CheckInWorkspace.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../src/screens/GrowthPage.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/features/tasks/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/features/growth/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../src/services/persistence/app-data.ts", import.meta.url), "utf8"),
@@ -62,6 +61,7 @@ test("removes confirmed starter assets and retired source modules", async () => 
     "../src/features/growth/hooks/useGrowthEditorState.ts",
     "../src/features/growth/components/GrowthEditors.tsx",
     "../src/features/growth/components/GrowthDetailDialog.tsx",
+    "../src/screens/GrowthPage.tsx",
   ];
 
   await Promise.all(

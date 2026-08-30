@@ -24,16 +24,10 @@ export function BottomNavigation({
           type="button"
           key={item.id}
           onClick={() => onChange(item.id)}
+          aria-label={language === "zh" ? item.label : item.id === "today" ? "Today" : "Me"}
           aria-current={activeTab === item.id ? "page" : undefined}
         >
           <AppIcon name={item.icon} />
-          {language === "zh"
-            ? item.label
-            : item.id === "today"
-              ? "Today"
-              : item.id === "growth"
-                ? "Growth"
-                : "Me"}
         </button>
       ))}
     </nav>

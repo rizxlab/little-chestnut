@@ -1,7 +1,7 @@
 import type { GrowthRecord } from "../../features/growth/types";
 import { DEFAULT_REWARDS } from "../../features/rewards/constants";
 import type { Reward, RewardClaim } from "../../features/rewards/types";
-import type { AppPreferences, Language, Theme } from "../../features/settings/types";
+import type { AppPreferences, Language } from "../../features/settings/types";
 import { DEFAULT_ACTIONS } from "../../features/tasks/constants";
 import { actionTimeWindowFor, isTemporaryActionExpired, shellValueFor, temporaryActionDays } from "../../features/tasks/domain/task-rules";
 import type { MicroAction } from "../../features/tasks/types";
@@ -17,7 +17,6 @@ export type AppDataSnapshot = {
   profile: { nickname: string };
   preferences: {
     language: Language;
-    theme: Theme;
   };
 };
 
@@ -119,7 +118,6 @@ export function normalizeAppData(
     },
     preferences: {
       language: preferences?.language === "en" ? "en" : "zh",
-      theme: preferences?.theme === "dark" ? "dark" : "light",
     },
   };
 }

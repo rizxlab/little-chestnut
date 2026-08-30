@@ -7,8 +7,8 @@
 :root {
   --ink: #352f2a;
   --muted: #81776d;
-  --paper: #fffdfa;
-  --cream: #f7f2eb;
+  --paper: #fff;
+  --cream: #fff;
   --cream-deep: #eee6dc;
   --chestnut: #7a4a36;
   --chestnut-light: #bd8b70;
@@ -16,8 +16,8 @@
   --leaf: #6f7c68;
   --leaf-soft: #e7ece3;
   --line: #e7ddd2;
-  --surface-card: #fffdf9;
-  --surface-raised: #fffcf7;
+  --surface-card: #fff;
+  --surface-raised: #fff;
   --surface-muted: #f3ece4;
   --text-on-accent: #fffaf3;
   --text-on-deep: #fffaf3;

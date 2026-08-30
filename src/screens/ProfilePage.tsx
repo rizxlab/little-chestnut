@@ -24,11 +24,11 @@ type ProfilePageProps = {
   actions: MicroAction[];
   rewards: Reward[];
   shellBalance: number;
-  shellsEarned: number;
   bankDropKey: number;
   profileActionSwipe: ProfileActionSwipe;
   tr: (chinese: string, english: string) => string;
   onOpenProfile: () => void;
+  onOpenCalendar: () => void;
   onOpenSettings: () => void;
   onOpenRewardManager: () => void;
   onOpenActionManager: () => void;
@@ -50,11 +50,11 @@ export function ProfilePage({
   actions,
   rewards,
   shellBalance,
-  shellsEarned,
   bankDropKey,
   profileActionSwipe,
   tr,
   onOpenProfile,
+  onOpenCalendar,
   onOpenSettings,
   onOpenRewardManager,
   onOpenActionManager,
@@ -84,9 +84,7 @@ export function ProfilePage({
   return (
     <div className="screen tab-screen" data-tab="profile" aria-hidden={!active}>
       <section className="page-heading profile-page-heading">
-        <span className="overline">MY SPACE</span>
         <div className="profile-heading-row">
-          <h1>{tr("我的栗子", "My Chestnuts")}</h1>
           <button
             className={`profile-account-button ${account ? "" : "guest"}`}
             type="button"
@@ -94,6 +92,14 @@ export function ProfilePage({
             onClick={onOpenProfile}
           >
             <span aria-hidden="true">栗</span>
+          </button>
+          <button
+            className="profile-calendar-button"
+            type="button"
+            aria-label={tr("打开日历记录", "Open calendar records")}
+            onClick={onOpenCalendar}
+          >
+            <AppIcon name="calendar" />
           </button>
           <button
             className="settings-entry-button"
@@ -137,7 +143,6 @@ export function ProfilePage({
               ? `距离“${nextReward.name}”还差 ${nextReward.cost - shellBalance} 枚`
               : rewards.length ? "所有奖励档位都已解锁" : "添加一个想送给自己的奖励"}
           </span>
-          <small>累计获得 {shellsEarned} 枚</small>
         </div>
         <span
           className="shell-progress-track"
@@ -152,7 +157,6 @@ export function ProfilePage({
 
         <div className="shell-rewards-inline">
           <div className="shell-rewards-heading">
-            <span>给自己的奖励</span>
             <button type="button" onClick={onOpenRewardManager}>管理</button>
           </div>
         </div>
@@ -160,7 +164,7 @@ export function ProfilePage({
 
       <section className="settings-block profile-actions">
         <div className="settings-heading">
-          <div><span className="overline">行动管理</span><h2>我的小事</h2></div>
+          <div><h2>我的小事</h2></div>
           <button type="button" onClick={onOpenActionManager}>编辑</button>
         </div>
         <div className="profile-action-time-groups">
@@ -173,6 +177,7 @@ export function ProfilePage({
                 {group.actions.map((action) => {
                   const swipeState = profileActionSwipe?.id === action.id ? profileActionSwipe : null;
                   const swipeOpen = swipeState?.offset === -PROFILE_ACTION_SWIPE_WIDTH;
+                  const swipeRevealed = (swipeState?.offset || 0) < -1;
                   return (
                     <div
                       className="profile-action-swipe-row"
@@ -182,7 +187,7 @@ export function ProfilePage({
                       onTouchEnd={onFinishActionSwipe}
                       onTouchCancel={onCancelActionSwipe}
                     >
-                      <div className="profile-action-swipe-actions" aria-hidden={!swipeOpen}>
+                      <div className={`profile-action-swipe-actions${swipeRevealed ? " is-visible" : ""}`} aria-hidden={!swipeOpen}>
                         <button className="edit" type="button" tabIndex={swipeOpen ? 0 : -1} onClick={() => onEditAction(action)}>
                           <AppIcon name="edit" />编辑
                         </button>

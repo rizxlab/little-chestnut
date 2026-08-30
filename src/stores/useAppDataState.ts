@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { GrowthRecord } from "../features/growth/types";
 import { DEFAULT_REWARDS } from "../features/rewards/constants";
 import type { Reward, RewardClaim } from "../features/rewards/types";
-import type { Language, Theme } from "../features/settings/types";
+import type { Language } from "../features/settings/types";
 import { DEFAULT_ACTIONS } from "../features/tasks/constants";
 import type { MicroAction } from "../features/tasks/types";
 
@@ -17,7 +17,6 @@ export function useAppDataState() {
   const [actions, setActions] = useState<MicroAction[]>(DEFAULT_ACTIONS);
   const [records, setRecords] = useState<GrowthRecord[]>([]);
   const [language, setLanguage] = useState<Language>("zh");
-  const [theme, setTheme] = useState<Theme>("light");
   const [shellBalance, setShellBalance] = useState(0);
   const [shellsEarned, setShellsEarned] = useState(0);
   const [rewardClaims, setRewardClaims] = useState<RewardClaim[]>([]);
@@ -32,8 +31,6 @@ export function useAppDataState() {
     setRecords,
     language,
     setLanguage,
-    theme,
-    setTheme,
     shellBalance,
     setShellBalance,
     shellsEarned,

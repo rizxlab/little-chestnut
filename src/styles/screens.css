@@ -191,13 +191,13 @@
   display: grid;
   width: auto;
   min-height: 42px;
-  grid-template-columns: 28px auto 15px;
-  gap: 7px;
+  grid-template-columns: 28px;
   align-items: center;
+  justify-content: end;
   border: 1px solid var(--line);
   border-radius: 16px;
-  margin-bottom: 10px;
-  padding: 6px 10px 6px 7px;
+  margin: 0 0 10px auto;
+  padding: 6px 7px;
   color: var(--chestnut);
   text-align: left;
   background: var(--surface-card);
@@ -216,17 +216,6 @@
   background: var(--chestnut-soft);
   font-family: var(--font-number);
   font-size: 15px;
-}
-.temporary-action-add > div {
-  display: grid;
-  min-width: 0;
-  gap: 2px;
-}
-.temporary-action-add strong { color: var(--ink); font-size: 11px; }
-.temporary-action-add > i {
-  color: var(--muted);
-  font-size: 14px;
-  font-style: normal;
 }
 .action-filter-empty {
   border: 1px dashed var(--line);
@@ -368,6 +357,9 @@
   background: rgba(178, 127, 70, .11);
 }
 .action-repeatable-badge {
+  width: 22px;
+  justify-content: center;
+  padding-inline: 3px;
   color: var(--leaf);
   background: var(--leaf-soft);
 }
@@ -453,10 +445,6 @@
 .empty-state.compact { min-height: 88px; }
 
 .page-heading { padding: 2px 2px 24px; }
-.growth-page-heading .calendar-entry-button {
-  display: grid;
-  margin-bottom: 18px;
-}
 .profile-page-heading { padding-bottom: 16px; }
 .profile-heading-row {
   display: flex;
@@ -464,8 +452,9 @@
   justify-content: space-between;
   gap: 12px;
 }
-.profile-heading-row h1 { margin-right: auto; }
+.profile-heading-row .profile-calendar-button { margin-left: auto; }
 .settings-entry-button,
+.profile-calendar-button,
 .profile-account-button {
   display: grid;
   width: 40px;
@@ -482,6 +471,7 @@
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .settings-entry-button:active,
+.profile-calendar-button:active,
 .profile-account-button:active {
   transform: scale(.94);
   box-shadow: 0 3px 10px rgba(82, 51, 33, .08);
@@ -501,7 +491,8 @@
   background: rgba(255, 250, 242, .62);
   box-shadow: none;
 }
-.settings-entry-button > .app-icon { font-size: 18px; }
+.settings-entry-button > .app-icon,
+.profile-calendar-button > .app-icon { font-size: 18px; }
 .settings-screen { height: 100%; overflow-y: auto; }
 .settings-page-heading { padding: 2px 2px 22px; }
 .settings-page-heading h1 {
@@ -592,35 +583,13 @@
   box-shadow: none;
   font-weight: 700;
 }
-.theme-choice-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 15px;
-}
-.theme-choice-grid button {
-  display: grid;
-  gap: 4px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  padding: 13px;
-  color: var(--ink);
-  text-align: left;
-  background: var(--surface-card);
-  cursor: pointer;
-}
-.theme-choice-grid button > span {
-  margin-bottom: 5px;
-  color: var(--chestnut);
-  font-size: 20px;
-}
-.theme-choice-grid strong { font-size: 11px; }
-.theme-choice-grid small { color: var(--muted); font-size: 10px; }
-.theme-choice-grid button.selected {
-  border-color: rgba(122, 74, 54, .24);
-  color: var(--chestnut);
-  background: var(--chestnut-soft);
-  box-shadow: none;
+.daily-reset-note .settings-option-copy { align-items: flex-start; }
+.daily-reset-note .settings-option-copy small {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
 }
 .settings-sync-note {
   display: flex;
@@ -838,6 +807,15 @@
   grid-template-columns: repeat(2, 1fr);
   overflow: hidden;
   border-radius: 0 15px 15px 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 80ms ease;
+}
+.profile-action-swipe-actions.is-visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 .profile-action-swipe-actions button {
   display: grid;
@@ -949,6 +927,8 @@
 .stat-grid strong { margin: 4px 0 1px; font-family: var(--font-number); font-size: 27px; font-weight: 400; }
 
 .growth-section { padding-top: 27px; }
+.calendar-growth-section { padding-top: 24px; }
+.calendar-stat-grid { margin-bottom: 18px; }
 .growth-divider {
   height: 1px;
   margin-bottom: 16px;
@@ -1198,13 +1178,11 @@
   position: relative;
   z-index: 1;
   display: flex;
-  justify-content: space-between;
   gap: 12px;
   margin-top: 18px;
   color: #f7e8d5;
   font-size: 10px;
 }
-.shell-progress-copy small { color: rgba(255, 248, 235, .6); font-size: 10px; white-space: nowrap; }
 .shell-progress-track {
   position: relative;
   z-index: 1;
@@ -1235,7 +1213,7 @@
 .shell-rewards-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   color: rgba(255, 248, 235, .62);
   font-size: 10px;
@@ -1403,6 +1381,7 @@
   box-shadow: none;
 }
 .profile-actions .settings-heading { margin-bottom: 10px; }
+.profile-actions .settings-heading h2 { margin-top: 0; }
 .profile-action-time-groups {
   display: grid;
   gap: 15px;
@@ -1439,7 +1418,7 @@
 }
 .profile-actions .profile-action-card:active {
   border-color: transparent;
-  background: rgba(122, 74, 54, .035);
+  background: var(--surface-card);
   box-shadow: none;
 }
 .profile-actions .tag-action-summary {
